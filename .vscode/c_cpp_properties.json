@@ -52,7 +52,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/opt/geant4/include/**",
-                "/home/geant4/miniconda3/envs/dose3d/include/**"
+                "/home/geant4/miniconda3/envs/g4rt/include/**"
             ],
             "defines": [],
             "compilerPath": "/home/geant4/miniconda3/envs/dose3d/bin/g++",

@@ -16,6 +16,8 @@
 #include "G4VPhysicalVolume.hh"
 #include "globals.hh"
 #include "IPhysicalVolume.hh"
+#include <G4SubtractionSolid.hh>
+#include <G4UnionSolid.hh>
 
 
 class VPatient;
@@ -91,6 +93,9 @@ class PatientGeometry : public IPhysicalVolume,
           return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
       }
   };
+
+  ///
+  G4PVPlacement* m_suplementary_volume = nullptr;
 };
 
 #endif // Dose3D_PHANTOMCONSTRUCTION_HH

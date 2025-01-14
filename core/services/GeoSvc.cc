@@ -505,6 +505,8 @@ void GeoSvc::WriteWorldToTFile() {
   setNodesVisByMaterial("G4_Galactic",-1);
   setNodesVisByMaterial("G4_WATER",38,50);
   setNodesVisByMaterial("BaritesConcrete",12,50);
+  // setNodesVisByMaterial("PMMA",12,30);
+  setNodesVisByMaterial("PMMA",38,50);
 
   // Dose3D visibility 
   setNodesVisByName("D3D",49);
@@ -528,7 +530,7 @@ void GeoSvc::WritePatientToCsvCT(){
 ///
 void GeoSvc::WritePatientToDicomCT(){
   // NOTE: Currently this service is using the csv data, 
-  // hence the GeoSvc::WritePatientToCsvCT has to be called!
+  //       hence the GeoSvc::WritePatientToCsvCT has to be called!
   auto output_dir = GetOutputDir()+"/dicom/ct_csv";
   auto dicomSvc = Service<DicomSvc>();
   auto dciom_dir = GetOutputDir()+"/dicom/ct_dcm";

@@ -119,6 +119,9 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
   // here we locate the phantom box in the center of envelope box created in PatientGeometry:
   LOGSVC_DEBUG("centre {} {} {}",m_centre.getX(),m_centre.getY(),m_centre.getZ()," for cell construction... "); 
+  G4cout << "[DEBUG]:: D3DCell:: creating cell: " << label << " with position: " << m_centre << G4endl;
+
+
   // For Painted
   // SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(), label+"PV", dose3dCellLV, pv, false, 0));
   SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label+"PV", dose3dCellLV, m_parentPV, false, 0));

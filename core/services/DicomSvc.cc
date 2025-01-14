@@ -404,7 +404,7 @@ double ICustomPlan::GetRotation(const std::string& planFile) {
 double DicomSvc::GetHounsfieldScaleValue(const std::string& materialName, bool normalized){
   static std::unique_ptr<toml::table> tconfig;
   if(!tconfig){
-    auto hausfieldMaterialMapFile = std::string(PROJECT_DATA_PATH) + "/config/hounsfield_scale_60keV.toml";
+    auto hausfieldMaterialMapFile = std::string(PROJECT_DATA_PATH) + "/config/hounsfield_scale_120keV.toml";
     tconfig = std::make_unique<toml::table>(toml::parse_file(hausfieldMaterialMapFile));
     LOGSVC_INFO("Reading from Hounsfield Material Map File: {}",hausfieldMaterialMapFile);
   }

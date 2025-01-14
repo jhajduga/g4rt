@@ -7,10 +7,12 @@
 #include "G4SystemOfUnits.hh"
 #include "Services.hh"
 #include "G4Box.hh"
+#include "G4Tubs.hh"
 #include "TomlConfigModule.hh"
 #include "WorldConstruction.hh"
 #include "IO.hh"
 #include "DicomSvc.hh"
+#include "CADMesh.hh"
 
 namespace {
   G4Mutex phantomConstructionMutex = G4MUTEX_INITIALIZER;
@@ -48,6 +50,12 @@ void PatientGeometry::Configure() {
   DefineUnit<double>("EnviromentSizeY");
   DefineUnit<double>("EnviromentSizeZ");
   DefineUnit<std::string>("EnviromentMedium");
+  DefineUnit<std::string>("EnviromentPatientEnvelop");
+  DefineUnit<std::string>("SupplementaryGeometry");
+  DefineUnit<std::string>("SupplementaryGeometryMaterial");
+  DefineUnit<double>("SupplementaryGeometryPositionX");
+  DefineUnit<double>("SupplementaryGeometryPositionY");
+  DefineUnit<double>("SupplementaryGeometryPositionZ");
   DefineUnit<std::string>("ConfigFile");
   DefineUnit<std::string>("ConfigPrefix");
   DefineUnit<double>("VoxelSizeXCT");
@@ -99,6 +107,26 @@ void PatientGeometry::DefaultConfig(const std::string &unit) {
  if (unit.compare("EnviromentMedium") == 0){
     thisConfig()->SetTValue<std::string>(unit, std::string("None"));
     }
+  
+  if (unit.compare("EnviromentPatientEnvelop")==0){
+    thisConfig()->SetTValue<std::string>(unit, std::string("None"));
+  }
+
+  if (unit.compare("SupplementaryGeometryPositionX") == 0){
+    thisConfig()->SetTValue<double>(unit, 0.0);
+    }
+  if (unit.compare("SupplementaryGeometryPositionY") == 0){
+    thisConfig()->SetTValue<double>(unit, 0.0);
+    }
+  if (unit.compare("SupplementaryGeometryPositionZ") == 0){
+    thisConfig()->SetTValue<double>(unit, 0.0);
+    }
+  if (unit.compare("SupplementaryGeometry")==0){
+    thisConfig()->SetTValue<std::string>(unit, std::string("None"));
+  }
+  if (unit.compare("SupplementaryGeometryMaterial")==0){
+    thisConfig()->SetTValue<std::string>(unit, std::string("None"));
+  }
 
  if (unit.compare("ConfigFile") == 0){
     thisConfig()->SetTValue<std::string>(unit, std::string("None"));
@@ -151,7 +179,7 @@ bool PatientGeometry::design(void) {
       m_patient->SetTomlConfigFile(projectPath+configFile);
     }
     configFile = m_patient->GetTomlConfigFile();
-    G4cout << "PatientGeometry::ConfigFile:: Importing configuration from:\n"<< configFile << "\n" << G4endl;
+    G4cout << "PatientGeometry::ConfigFile:: Importing configuration for \""<< patientType <<"\" from: "<< configFile << "\n" << G4endl;
   }
   return true;
 }
@@ -165,6 +193,11 @@ void PatientGeometry::Destroy() {
     delete pv;
     SetPhysicalVolume(nullptr);
   }
+  if (m_suplementary_volume){
+    delete m_suplementary_volume;
+    m_suplementary_volume = nullptr;
+  }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +205,8 @@ void PatientGeometry::Destroy() {
 void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   PrintConfig();
   design(); // a call to select the right phantom
-  auto isoToSim = Service<ConfigSvc>()->GetValue<G4ThreeVector>("WorldConstruction", "IsoToSimTransformation");
+  auto envPatientEnvelop = thisConfig()->GetValue<std::string>("EnviromentPatientEnvelop");
+  G4cout << "EnvPatientEnvelop: " << envPatientEnvelop << G4endl; 
 
   auto mediumName = thisConfig()->GetValue<std::string>("EnviromentMedium");
   auto medium = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", mediumName);
@@ -196,19 +230,99 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   regVol->AddRootLogicalVolume(patientEnvLV);
   SetPhysicalVolume(new G4PVPlacement(m_rotation, G4ThreeVector(envPosX,envPosY,envPosZ), "phmWorldPV", patientEnvLV, parentPV, false, 0));
   auto pv = GetPhysicalVolume();
-  // create the actual phantom
-  m_patient->Construct(pv);
-  m_patient->WriteInfo();
 
-  // Creation of bed?
+  // create the actual phantom
+  auto boxMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "PMMA");
+  auto waterMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_WATER");
+  auto smallInterBox = new G4Box("smallInnerBox", 125.0*mm, 25.0*mm, 200.0*mm);
+  auto smallOuterBox = new G4Box("smallOuterBox", 135.0*mm, 35.0*mm, 200.0*mm);
+  auto smallAquariumBox =  new G4SubtractionSolid("smallAquaBox", smallOuterBox, smallInterBox, nullptr, G4ThreeVector(0.0*mm,0.0*mm,-10.0*mm));
+  auto smallWaterFillingBox = new G4Box("smallWaterFillingBox", 125.0*mm, 25.0*mm, 165.0*mm);
+
+  auto bigInterBox = new G4Box("bigInnerBox", 125.0*mm, 125.0*mm, 200.0*mm);
+  auto bigOuterBox = new G4Box("bigOuterBox", 135.0*mm, 135.0*mm, 200.0*mm);
+  auto bigAquariumBox =  new G4SubtractionSolid("bigAquaBox", bigOuterBox, bigInterBox, nullptr, G4ThreeVector(0.0*mm,0.0*mm,-10.0*mm));
+  auto bigWaterFillingBox = new G4Box("bigWaterFillingBox", 125.0*mm, 125.0*mm, 165.0*mm);
+
+  if (envPatientEnvelop.compare("IbaImRT") == 0){
+    auto centreOFPhantomBox = new G4Box("smallCentreOFPhantomBox", 90.0*mm, 90.0*mm, 165.0*mm);
+    auto SideOfPhantomTube = new G4Tubs("SideOfPhantomTube", 0.0*mm, 90.0*mm, 165.0*mm, 0.0*deg, 360.0*deg);
+    auto FirstSideOfPhantom = new G4UnionSolid("SideOfPhantomBox", centreOFPhantomBox, SideOfPhantomTube, nullptr, G4ThreeVector(0.0*mm,-90.0*mm,0.0*mm));
+    auto FullPhantom = new G4UnionSolid("SideOfPhantomBox", FirstSideOfPhantom, SideOfPhantomTube, nullptr, G4ThreeVector(0.0*mm,90.0*mm,0.0*mm));
+
+    // auto FullPhantomLV = new G4LogicalVolume(FullPhantom, waterMaterial.get(), "phantomLV");
+    auto FullPhantomLV = new G4LogicalVolume(FullPhantom, boxMaterial.get(), "phantomLV");
+    auto my_rotation = new G4RotationMatrix;
+    my_rotation->rotateY(90.0*deg);
+    my_rotation->rotateX(90.0*deg);
+
+    auto FullPhantomPV = new G4PVPlacement(my_rotation, G4ThreeVector(envPosX, envPosY, envPosZ), "phantomPV", FullPhantomLV, pv, false, 0);
+
+    m_patient->Construct(FullPhantomPV);
+    m_patient->WriteInfo();
+  }
+  else{
+    m_patient->Construct(pv);
+    m_patient->WriteInfo();
+
+  }
+
+  if(envPatientEnvelop.compare("ModularWaterPhantom") == 0){
+    auto smallAquaBoxLV =  new G4LogicalVolume(smallAquariumBox, boxMaterial.get(), "smallAquaBoxLV");
+    auto bigAquaBoxLV =    new G4LogicalVolume(bigAquariumBox, boxMaterial.get(), "bigAquaBoxLV");
+    auto smallWaterFillingBoxLV = new G4LogicalVolume(smallWaterFillingBox, waterMaterial.get(), "smallWaterFillingBoxLV");
+    auto bigWaterFillingBoxLV =   new G4LogicalVolume(bigWaterFillingBox, waterMaterial.get(), "bigWaterFillingBoxLV");
+    auto pv1 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 150.0*mm, envPosY, envPosZ-260.0*mm), 
+                                          "smallAquaBoxPV1", smallAquaBoxLV, pv, false, 0);
+    auto pv1_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 150.0*mm, envPosY, envPosZ-235.0*mm), 
+                                          "smallWaterFillingBoxPV1", smallWaterFillingBoxLV, pv, false, 0);
+    auto pv2 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 150.0*mm, envPosY, envPosZ-260.0*mm), 
+                                          "smallAquaBoxPV2", smallAquaBoxLV, pv, false, 0);
+    auto pv2_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 150.0*mm, envPosY, envPosZ-235.0*mm), 
+                                          "smallWaterFillingBoxPV2", smallWaterFillingBoxLV, pv, false, 0);
+    auto pv3 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY + 173.0*mm, envPosZ-260.0*mm), 
+                                          "bigAquaBoxPV3",   bigAquaBoxLV,   pv, false, 0);
+    auto pv3_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY + 173.0*mm, envPosZ-235.0*mm), 
+                                          "bigWaterFillingBoxPV3", bigWaterFillingBoxLV, pv, false, 0);
+    auto pv4 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY + 173.0*mm, envPosZ-260.0*mm), 
+                                          "bigAquaBoxPV4",   bigAquaBoxLV,   pv, false, 0);
+    auto pv4_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY + 173.0*mm, envPosZ-235.0*mm), 
+                                          "bigWaterFillingBoxPV4", bigWaterFillingBoxLV, pv, false, 0);
+    auto pv5 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY - 173.0*mm, envPosZ-260.0*mm), 
+                                          "bigAquaBoxPV5",   bigAquaBoxLV,   pv, false, 0);
+    auto pv5_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY - 173.0*mm, envPosZ-235.0*mm), 
+                                          "bigWaterFillingBoxPV5", bigWaterFillingBoxLV, pv, false, 0);
+    auto pv6 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY - 173.0*mm, envPosZ-260.0*mm), 
+                                          "bigAquaBoxPV6",   bigAquaBoxLV,   pv, false, 0);
+    auto pv6_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY - 173.0*mm, envPosZ-235.0*mm), 
+                                          "bigWaterFillingBoxPV6", bigWaterFillingBoxLV, pv, false, 0);
+  }
+
+// Creation of bed?
 
 //  auto tableMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_POLYACRYLONITRILE");
 //  auto tableHeight =  7.0*mm;
 //  auto tableBox = new G4Box("TableBox", 1100.0*mm, 225.0*mm, tableHeight);
 //  auto dcoverLV = new G4LogicalVolume(tableBox, tableMaterial.get(), "TableBoxLV");
 //  SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(900.0,0.0,((1.0*mm)+tableHeight+envPosZ+envSize.z())), "CoverBoxPV", dcoverLV, parentPV, false, 0));
+if (thisConfig()->GetValue<std::string>("SupplementaryGeometry").compare("None")!=0) {
+  auto supplementaryGeometryPath = thisConfig()->GetValue<std::string>("SupplementaryGeometry");
+  if (supplementaryGeometryPath.at(0)!='/'){
+    std::string data_path = PROJECT_DATA_PATH;
+    supplementaryGeometryPath = data_path+"/"+supplementaryGeometryPath;
+  }
+  auto supplementaryGeometryMaterial = thisConfig()->GetValue<std::string>("SupplementaryGeometryMaterial");
+  auto suppGeoPosX = thisConfig()->GetValue<double>("SupplementaryGeometryPositionX");
+  auto suppGeoPosY = thisConfig()->GetValue<double>("SupplementaryGeometryPositionY");
+  auto suppGeoPosZ = thisConfig()->GetValue<double>("SupplementaryGeometryPositionZ");
 
+  auto mesh = CADMesh::TessellatedMesh::FromSTL(supplementaryGeometryPath);
+  G4VSolid* solid = mesh->GetSolid();
+  auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", supplementaryGeometryMaterial);
+  auto supplementaryGeometryLV = new G4LogicalVolume(solid, Medium.get(), "LVStl_Supplementary");
+  m_suplementary_volume = new G4PVPlacement(nullptr, G4ThreeVector(suppGeoPosX,suppGeoPosY,suppGeoPosZ), "PVStl_Supplementary", supplementaryGeometryLV, parentPV, false, 0);
 
+}
 
 
 
@@ -388,7 +502,8 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
 
   auto cp = Service<RunSvc>()->CurrentControlPoint();
   auto run_id = std::to_string(runPtr->GetRunID());
-  auto path_to_output_dir = cp->GetOutputDir()+"/ct_dose_cp-"+run_id;
+  auto plan_file_name = std::filesystem::path(cp->GetPlanFile()).stem().string();
+  auto path_to_output_dir = cp->GetOutputDir()+"/"+plan_file_name;
   
   IO::CreateDirIfNotExits(path_to_output_dir);
 
@@ -418,7 +533,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   LOGSVC_INFO("ExportDoseToCsvCT: Resolution: x {}, y {}, z {}", xResolution, yResolution, zResolution);
 
   // DUMP METADATA TO FILE 
-  auto meta =  path_to_output_dir+"/../ct_series_metadata.csv";
+  auto meta =  path_to_output_dir+"/"+plan_file_name+"_ct_dose_series_metadata.csv";
   std::ofstream metadata_file;
   metadata_file.open(meta.c_str(), std::ios::out);
 
@@ -642,21 +757,37 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   };
 
   // std::cout << &voxelData <<std::endl; 
-
-  IO::CreateDirIfNotExits(path_to_output_dir+"/voxel");
+  auto c_file_merged =  path_to_output_dir+"/"+plan_file_name+"_ct_dose_cell.csv";
+  auto v_file_merged =  path_to_output_dir+"/"+plan_file_name+"_ct_dose_voxel.csv";
+  std::ofstream c_outFile_merged, v_outFile_merged;
+  c_outFile_merged.open(c_file_merged.c_str(), std::ios::out);
+  v_outFile_merged.open(v_file_merged.c_str(), std::ios::out);
+  std::string header_merged = "X [mm],Y [mm],Z [mm],Id,IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor";
+  c_outFile_merged << header_merged << std::endl;
+  v_outFile_merged << header_merged << std::endl;
+  std::string csv_slices_path = path_to_output_dir+"/"+plan_file_name+"_ct_dose_voxel";
+  IO::CreateDirIfNotExits(csv_slices_path);
+  std::string header = "X [mm],Y [mm],Z [mm],IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor";
+  double dose = 0.;
+  double fsf = 0.; // field scaling factor
+  int cellIdX = 0;
+  int cellIdY = 0;
+  int cellIdZ = 0;
   for( int x = 0; x < xResolution; x++ ){
+    dose = 0.;
+    fsf = 0.;
+    cellIdX = -1;
+    cellIdY = -1;
+    cellIdZ = -1;
     std::ostringstream ss;
     ss << std::setw(4) << std::setfill('0') << x+1 ;
     std::string s2(ss.str());
-    auto file =  path_to_output_dir+"/voxel/img"+s2+".csv";
-    std::string header = "X [mm],Y [mm],Z [mm],Material,Dose [Gy],FieldScalingFactor";
-    std::ofstream c_outFile;
-    c_outFile.open(file.c_str(), std::ios::out);
-    c_outFile << header << std::endl;
+    auto file =  csv_slices_path+"/img"+s2+".csv";
+    std::ofstream v_outFile;
+    v_outFile.open(file.c_str(), std::ios::out);
+    v_outFile << header << std::endl;
     for( int y = 0; y < yResolution; y++ ){
       for( int z = 0; z < zResolution; z++ ){
-        double dose = 0.;
-        double fsf = 0.; // field scaling factor
         currentPos.setX((ct_cube_init_x+sizeX*x));
         currentPos.setY((ct_cube_init_y+sizeY*y));
         currentPos.setZ((ct_cube_init_z+sizeZ*z));
@@ -666,27 +797,42 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
         if(voxelHit){
           dose = voxelHit->GetDose();
           fsf = voxelHit->GetFieldScalingFactor();
+          cellIdX = voxelHit->GetGlobalID(0);
+          cellIdY = voxelHit->GetGlobalID(1);
+          cellIdZ = voxelHit->GetGlobalID(2);
+        } else {
+          dose = 0.;
+          fsf = 0.;
+          cellIdX = -1;
+          cellIdY = -1;
+          cellIdZ = -1;
         }
-        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialHU  << "," << dose << "," << fsf << std::endl;
+        v_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
+
+        v_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
       }
     }
-    c_outFile.close();
+    v_outFile.close();
   }
+  v_outFile_merged.close();
 
-    IO::CreateDirIfNotExits(path_to_output_dir+"/cell");
+    csv_slices_path = path_to_output_dir+"/"+plan_file_name+"_ct_dose_cell";
+    IO::CreateDirIfNotExits(csv_slices_path);
     for( int x = 0; x < xResolution; x++ ){
+    dose = 0.;
+    fsf = 0.;
+    cellIdX = -1;
+    cellIdY = -1;
+    cellIdZ = -1;
     std::ostringstream ss;
     ss << std::setw(4) << std::setfill('0') << x+1 ;
     std::string s2(ss.str());
-    auto file =  path_to_output_dir+"/cell/img"+s2+".csv";
-    std::string header = "X [mm],Y [mm],Z [mm],Material,Dose [Gy],FieldScalingFactor";
+    auto file =  csv_slices_path+"/img"+s2+".csv";
     std::ofstream c_outFile;
     c_outFile.open(file.c_str(), std::ios::out);
     c_outFile << header << std::endl;
     for( int y = 0; y < yResolution; y++ ){
       for( int z = 0; z < zResolution; z++ ){
-        double dose = 0.;
-        double fsf = 0.; // field scaling factor
         currentPos.setX((ct_cube_init_x+sizeX*x));
         currentPos.setY((ct_cube_init_y+sizeY*y));
         currentPos.setZ((ct_cube_init_z+sizeZ*z));
@@ -696,11 +842,24 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
         if(voxelHit){
           dose = voxelHit->GetDose();
           fsf = voxelHit->GetFieldScalingFactor();
+          cellIdX = voxelHit->GetGlobalID(0);
+          cellIdY = voxelHit->GetGlobalID(1);
+          cellIdZ = voxelHit->GetGlobalID(2);
+        } else {
+          dose = 0.;
+          fsf = 0.;
+          cellIdX = -1;
+          cellIdY = -1;
+          cellIdZ = -1;
         }
-        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << materialHU  << "," << dose << "," << fsf << std::endl;
+        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
+
+        c_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
       }
     }
     c_outFile.close();
   }
+  c_outFile_merged.close();
+
 }
 

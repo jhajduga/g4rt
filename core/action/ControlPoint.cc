@@ -290,7 +290,9 @@ std::string ControlPoint::GetOutputDir() {
 ///
 std::string ControlPoint::GetOutputFileName() const {
     auto job = Service<RunSvc>()->GetJobNameLabel();
-    return GetOutputDir()+"/cp-"+ std::to_string(GetId()); // No extension here!  
+    auto plan_file_name = std::filesystem::path(GetPlanFile()).stem().string();
+    IO::CreateDirIfNotExits(GetOutputDir()+"/"+plan_file_name);
+    return GetOutputDir()+"/"+plan_file_name+"/"+plan_file_name; // No extension here!  
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -498,11 +500,13 @@ G4double ControlPoint::GetMlcFieldScalingFactor(const G4ThreeVector& position) c
 G4double ControlPoint::GetMlcWeightedInfluenceFactor(const G4ThreeVector& position) const {
     auto mlc_positioning_y1 = MLC()->GetMlcPositioning("Y1");
     auto mlc_positioning_y2 = MLC()->GetMlcPositioning("Y2");
+    // G4cout << "mlc_positioning Y1 | Y2: " << G4endl;
+    // for (int i=0; i<mlc_positioning_y1.size();i++){
+    //     G4cout << mlc_positioning_y1.at(i) << " | " << mlc_positioning_y2.at(i) << G4endl;
+    // }
     // std::vector<G4ThreeVector> mlc_positioning_y1 = {{-2,1,-600},{-1,1,-600},{1,-1,-600},{-1,1,-600}};
     // std::vector<G4ThreeVector> mlc_positioning_y2 = {{-3,1,-600},{-1,1,-600},{1,-1,-600},{-1,2,-600}};
     auto mlc_centre = G4ThreeVector(0,0,mlc_positioning_y2.front().getZ());
-    // std::cout << "\nmlc_centre z = " << mlc_centre.getZ() << std::endl;
-
     auto getInfluenceFactor = [&](const std::vector<G4ThreeVector>& mlc_positioning) -> G4double {
         G4double influence_factor = 0; 
         for(const auto& leaf_position : mlc_positioning){

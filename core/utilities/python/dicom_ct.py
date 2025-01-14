@@ -7,7 +7,7 @@ import time
 import numpy as np
 import pandas as pd
 import pydicom
-import pydicom._storage_sopclass_uids
+import pydicom.uid
 from pydicom.dataset import Dataset, FileDataset
 from pydicom.uid import ExplicitVRLittleEndian
 import json
@@ -79,7 +79,7 @@ class CtSvc():
         print(f"Project root was set to: {project_path}")
 
     def  __set_hounsfield_dictiobnary(self):
-        dictionary = (f"{self.__project_path}config/hounsfield_scale_60keV.json")
+        dictionary = (f"{self.__project_path}config/hounsfield_scale_120keV.json")
         with open(dictionary) as jsn_file:
             self.__hounsfield_units_dictionary, self.__image_type_dictionary = json.load(jsn_file)
 # ------------------------------- Priv Class Methods ----------------------------
@@ -117,7 +117,7 @@ class CtSvc():
         # --------------- overwrite metadata ----------------
         ds.file_meta.MediaStorageSOPInstanceUID = pydicom.uid.generate_uid(prefix="1.2.826.0.1.3680043.8.498.997.")
         ds.file_meta.ImplementationClassUID = "1.2.826.0.1.3680043.8.498.997"
-        ds.file_meta.ImplementationVersionName = "pydicom 2.2.2"
+        ds.file_meta.ImplementationVersionName = "pydicom 3.0.1"
         ds.file_meta.SourceApplicationEntityTitle = "Dose-3D"
         
         # -------------- overwrite flesh ------------------
@@ -126,17 +126,21 @@ class CtSvc():
         ds.StudyTime = "123030"
         ds.SeriesTime = "123100"
         ds.StudyDate = datetime.datetime.now().strftime('%Y%m%d')
+        # ds.StudyDate = datetime.datetime.now().strftime('%Y%m%d')
         ds.SeriesDate = datetime.datetime.now().strftime('%Y%m%d')
+        # ds.SeriesDate = datetime.datetime.now().strftime('%Y%m%d')
         ds.ContentDate = datetime.datetime.now().strftime('%Y%m%d')
+        # ds.ContentDate = datetime.datetime.now().strftime('%Y%m%d')
         ds.Manufacturer = "Dose3D"
         ds.InstitutionName = "AGH WFiIS"
         ds.InstitutionAddress = "Kraków"
         ds.SeriesDescription = "Test slice of CT"
-        ds.ManufacturerModelName = "DICOMaker v. alpha 0.09"
+        ds.ManufacturerModelName = "DICOMaker v. alpha v0.19.33"
         ds.PatientName = self.__label
         ds.StudyDescription = "Describe me!"
         ds.PatientID = "0123456789"
-        ds.SoftwareVersions = "DICOMaker alpha v0.15"
+        ds.PatientBirthDate = '20000101'
+        ds.SoftwareVersions = "DICOMaker v. alpha v0.19.33"
         # Should it be set at same distance?
         ds.DistanceSourceToDetector = self.__SSD
         ds.DistanceSourceToPatient = self.__SSD

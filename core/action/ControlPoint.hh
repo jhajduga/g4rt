@@ -83,6 +83,7 @@ class ControlPoint {
     ControlPoint(ControlPoint&& cp);
     ~ControlPoint();
     int GetId() const { return m_config.Id; }
+    std::string GetPlanFile() const { return m_config.PlanFile; }
     int GetNEvts() const { return m_config.NEvts; }
     G4RotationMatrix* GetRotation() const { return m_rotation; }
     G4double GetDegreeRotation() const {return m_config.RotationInDeg;}

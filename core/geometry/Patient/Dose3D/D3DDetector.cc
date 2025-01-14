@@ -61,8 +61,6 @@ void D3DDetector::ParseTomlConfig(){
     LOGSVC_CRITICAL("File {} not fount.", configFile);
     exit(1);
   }
-
-
   auto configPrefix = GetTomlConfigPrefix();
   LOGSVC_INFO("Importing configuration from:\n{}",configFile);
   std::string configObjDetector("Detector");
@@ -100,6 +98,7 @@ void D3DDetector::ParseTomlConfig(){
   ///
   m_config.m_stl_geometry_file_path = config[configObjDetector]["Geomertry"].value_or("None");
   m_config.m_in_layer_positioning_module = config[configObjLayer]["Positioning"].value_or("None");
+
   ///
   m_config.m_mrow_shift = config[configObjLayer]["MRowShift"].value_or(false);
   m_config.m_mlayer_shift = config[configObjLayer]["MLayerShift"].value_or(false);
@@ -116,6 +115,7 @@ void D3DDetector::ParseTomlConfig(){
   D3DCell::CellScorer(cell_scorer);
   G4bool voxcell_scorer = config[configObjCell]["CellVoxelisedScorer"].value_or(true);
   D3DCell::CellVoxelisedScorer(voxcell_scorer);
+  LOGSVC_INFO("Importing configuration - DONE!");
   }
 
 
@@ -132,7 +132,6 @@ G4bool D3DDetector::LoadDefaultParameterization(){
   m_config.m_mrow_shift = true;
   m_config.m_mlayer_shift = true;
   m_config.m_cell_medium = "PMMA";
-  
   return true;
 }
 
@@ -151,6 +150,8 @@ G4bool D3DDetector::LoadParameterization(){
   return true;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
 void D3DDetector::SetConfig(const D3DDetector::Config& config) {
   m_config = config; 
   m_config.m_initialized = true;
@@ -160,12 +161,24 @@ void D3DDetector::SetConfig(const D3DDetector::Config& config) {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
-  // LOGSVC_INFO("Zaczyna konstrukcję.");
   LoadParameterization();
   auto size = D3DCell::SIZE;
   auto cover = D3DMLayer::COVER_WIDTH;
 
   auto geo_type = D3DDetector::SetGeometrySource();
+  G4cout<< "Zaczyna konstrukcję... "<< geo_type <<G4endl;
+
+  // Set to store unique Y and Z values, this is for calculate dimensions for
+  // StlDetectorWithPositioningFromCsv or PositioningFromCsv
+  std::set<double> nY_cells;
+  std::set<double> nZ_cells;
+
+  auto processLayerDimensionality = [&nY_cells, &nZ_cells](const std::vector<G4ThreeVector>& vecs) {
+      for(const auto& vec:vecs){
+        nY_cells.insert(vec.getY());
+        nZ_cells.insert(vec.getZ());
+      }
+  };
 
   if(geo_type.compare("StlDetectorWithPositioningFromCsv")==0){
     std::string path = PROJECT_DATA_PATH;
@@ -193,14 +206,15 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
       m_d3d_layers.back()->SetCellNVoxels('z',m_config.m_cell_nZ_voxels);
       m_d3d_layers.back()->SetTracksAnalysis(m_tracks_analysis);
       m_d3d_layers.back()->Construct(parentWorld);
-
+      processLayerDimensionality(cells_in_layer_positioning);
     }
   }
 
   if(geo_type.compare("PositioningFromCsv")==0){
     int i_layer = 0;
     for(const auto& cells_in_layer_positioning : m_d3d_cells_in_layers_positioning ){
-      G4cout << "D3DDetector:: \""<<GetName()<<"\" instantiate #layer:" << i_layer << " with #cells: " << cells_in_layer_positioning.size() << G4endl;
+      G4cout << "D3DDetector:: \""<<GetName()<<"\" instantiate #layer:" << i_layer << " with #cells: "
+      << cells_in_layer_positioning.size() << G4endl;
       auto label = m_label+"_Layer_"+std::to_string(i_layer);
       m_d3d_layers.push_back(new D3DMLayer(label, m_config.m_cell_medium, cells_in_layer_positioning));
       m_d3d_layers.back()->SetId(i_layer++);
@@ -210,7 +224,14 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
       m_d3d_layers.back()->SetCellNVoxels('z',m_config.m_cell_nZ_voxels);
       m_d3d_layers.back()->SetTracksAnalysis(m_tracks_analysis);
       m_d3d_layers.back()->Construct(parentWorld);
+      processLayerDimensionality(cells_in_layer_positioning);
     }
+  }
+  if(geo_type.compare("PositioningFromCsv")==0 ||
+     geo_type.compare("StlDetectorWithPositioningFromCsv")==0){
+    m_config.m_nX_cells = m_d3d_cells_in_layers_positioning.size();
+    m_config.m_nY_cells = nY_cells.size();
+    m_config.m_nZ_cells = nZ_cells.size();
   }
   ///////////////////////////////////////////
   /// Building standard procedural generated geometry
@@ -687,7 +708,7 @@ std::string D3DDetector::SetGeometrySource(){
 
   auto geo_type = "";
 
-  std::cout << "1" << std::endl;
+  std::cout << "SetGeometrySource layer csv?: " << m_config.m_in_layer_positioning_module <<std::endl;
 
   if((m_config.m_stl_geometry_file_path.compare("None")==0)&&(m_config.m_in_layer_positioning_module.compare("None")==0)){
     return geo_type = "Standard";
@@ -707,6 +728,7 @@ std::string D3DDetector::SetGeometrySource(){
     ReadCellsInLayersPositioning();
     return geo_type = "StlDetectorWithPositioningFromCsv";
   }
+  return geo_type;
 }
 
 

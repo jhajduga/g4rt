@@ -47,10 +47,10 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
             auto type_str = svc::tolower(Scoring::to_string(scoring_type));
             auto coll_str = svc::tolower(scoring_map.first);
             auto file = cp->GetOutputFileName()+"_"+coll_str+"_"+type_str+".csv";
-            std::string header = "Cell IdX,Cell IdY,Cell IdZ,X [mm],Y [mm],Z [mm],Dose,FieldScalingFactor";
+            std::string header = "Cell IdX,Cell IdY,Cell IdZ,X [mm],Y [mm],Z [mm],Dose [Gy],FieldScalingFactor";
 
             if(scoring_type==Scoring::Type::Voxel)
-                header = "Cell IdX,Cell IdY,Cell IdZ,Voxel IdX,Voxel IdY,Voxel IdZ,X [mm],Y [mm],Z [mm],Dose,FieldScalingFactor";
+                header = "Cell IdX,Cell IdY,Cell IdZ,Voxel IdX,Voxel IdY,Voxel IdZ,X [mm],Y [mm],Z [mm],Dose [Gy],FieldScalingFactor";
 
             std::ofstream c_outFile;
             c_outFile.open(file.c_str(), std::ios::out);

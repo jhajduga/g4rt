@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include "TFile.h"
+#include "hdf5.h"
 
 class IO {
 
@@ -41,6 +42,9 @@ class IO {
 
   ///
   void WriteToFile(const std::string &fileWithFullPath, const std::vector<std::string> &lines);
+
+  ///
+  void ExtendAndWriteHdf5(const std::string &file_path, const std::vector<std::vector<double>> &data);
 
   ///
   void CleanUP();

@@ -1,11 +1,13 @@
 [RunSvc]
 JobName = "web_job_example"
 BeamType = "gps" 
-NTupleAnalysis = true 
-# FieldType = "Rectangular"
-FieldType = "Elipsoidal"
-FieldSizeA = 10 # mm
-FieldSizeB = 30 # mm
+GpsMacFileName = "gps/gpsCLinac_pre.mac"
+PhspEvtVrtxMultiplicityTreshold = 10
+PrintProgressFrequency = 0.05
+GenerateCT = true
+PrimariesAnalysis = false
+NTupleAnalysis = true
+RunAnalysis = true
 
 [PatientGeometry]
 Type = "D3DDetector"
@@ -24,7 +26,7 @@ Voxelization = [5,5,5]
 TracksAnalysis = false
 
 [RunSvc_Plan]
-Control_Points_In_Treatment_Plan = 1
-Gantry_Angle_Per_Control_Point = [0.0]
-Particle_Counter_Per_Control_Point = [1e5]
+PlanInputFile = [
+    "plan/custom/rot00deg_10x10.dat"
+]
 

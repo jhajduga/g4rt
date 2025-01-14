@@ -61,7 +61,8 @@ void RunAnalysis::EndOfRun(const G4Run* runPtr){
     if(m_csv_run_analysis){
         m_csv_run_analysis->WriteDoseToCsv(runPtr);
         m_csv_run_analysis->WriteFieldMaskToCsv(runPtr);
-        PatientGeometry::GetInstance()->ExportDoseToCsvCT(runPtr);
+        if(Service<ConfigSvc>()->GetValue<bool>("RunSvc", "GenerateCT"))
+            PatientGeometry::GetInstance()->ExportDoseToCsvCT(runPtr);
     }
 
     if(m_ntuple_run_analysis){

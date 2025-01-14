@@ -55,6 +55,7 @@ void MaterialsSvc::Configure() {
   DefineUnit<G4MaterialSPtr>("PMMA");
   DefineUnit<G4MaterialSPtr>("PLA");
   DefineUnit<G4MaterialSPtr>("Z-FLEX");
+  DefineUnit<G4MaterialSPtr>("RW3");
 
   DefineUnit<G4MaterialSPtr>("PMMA03");
   DefineUnit<G4MaterialSPtr>("PLA05");
@@ -185,6 +186,15 @@ void MaterialsSvc::DefaultConfig(const std::string &unit) {
       auto zflex = G4NISTManager->ConstructNewMaterial("Z-FLEX", elements, natoms, d);
       thisConfig()->SetValue(unit, std::shared_ptr<G4Material>(zflex));
   }
+
+  if (unit.compare("RW3") == 0) {
+      d = 1.045 * g / cm3;
+      const std::vector<G4String> elm{"H", "C", "O","Ti"};
+      const std::vector<G4double> weight{0.0759, 0.9041, 0.008, 0.012};
+      auto RW3 = G4NISTManager->ConstructNewMaterial("RW3", elm, weight, d);
+      thisConfig()->SetValue(unit, std::shared_ptr<G4Material>(RW3));
+  }
+
   if (unit.compare("Z-FLEX075") == 0) {
       d =0.75* 0.815 * g / cm3;
       const std::vector<G4String> elements{"C", "H", "O"};
