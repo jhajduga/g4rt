@@ -1,7 +1,7 @@
 #----------------------------------------------------------------------------
 # Setup the project
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
-project(Executables)
+project(App)
 
 #----------------------------------------------------------------------------
 # Tell CMake where to find the ROOT installation.
@@ -23,7 +23,11 @@ include(${Geant4_USE_FILE})
 set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 REQUIRED)
 
-#
+#----------------------------------------------------------------------------
+# NanoLog - definiujemy ścieżkę do nagłówków (zamiast add_subdirectory)
+set(NANOLOG_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/externals/NanoLog)
+
+#----------------------------------------------------------------------------
 find_package(spdlog REQUIRED)
 
 #----------------------------------------------------------------------------
@@ -33,8 +37,8 @@ add_definitions(${Core_DEFINITIONS}
         ${TOML_DEFINITIONS}
         ${ConfigSvc_DEFINITIONS}
         ${Geant4_DEFINITIONS}
-        ${spdlog_DEFINITIONS}
-        ${ROOT_DEFINITIONS})
+        ${ROOT_DEFINITIONS}
+        ${spdlog_DEFINITIONS})
 
 set(HEADERS_DIR ${PROJECT_SOURCE_DIR}/basic
                 ${PROJECT_SOURCE_DIR}/bworld/src)
@@ -45,9 +49,10 @@ include_directories(${IAEA_INCLUDE_DIR}
         ${ConfigSvc_INCLUDE_DIR}
         ${TOML_INCLUDE_DIR}
         ${Geant4_INCLUDE_DIRS}
-        ${spdlog_INCLUDE_DIR}
         ${ROOT_INCLUDE_DIRS}
-        ${HEADERS_DIR})
+        ${HEADERS_DIR}
+        ${NANOLOG_INCLUDE_DIR}  # NanoLog nagłówki
+        ${spdlog_INCLUDE_DIR})  # Spdlog pozostaje do momentu usunięcia z kodu
 
         
 #---------------------------------------------------------------------------

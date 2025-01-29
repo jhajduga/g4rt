@@ -8,6 +8,8 @@ project(Externals)
 # NOTE: The order matters! The most independent ones should go first.
 #----------------------------------------------------------------------------
 
+set(NANOLOG_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/externals/NanoLog CACHE INTERNAL "NanoLog include directory")
+
 # cmd for building text user interface
 add_subdirectory(cmd)
 

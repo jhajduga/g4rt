@@ -40,7 +40,6 @@ add_definitions(-DPROJECT_BINARY_PATH=\"${PROJECT_BINARY_DIR}\")
 
 #----------------------------------------------------------------------------
 # Testing suite configuration
-#
 find_package(GTest REQUIRED)
 include(GoogleTest)
 include(CTest)
@@ -48,22 +47,17 @@ include(CTest)
 #----------------------------------------------------------------------------
 # Configure the components (subprojects)
 # NOTE: The order matters! The most independent ones should go first.
-#       If A and B really depend on each other, CMake  can build such correctly,
-#       if you specify full path to the include directlry
+#       If A and B really depend on each other, CMake can build such correctly,
+#       if you specify full path to the include directory
 add_subdirectory(externals)
 add_subdirectory(core)
-# add_subdirectory(executables)
 add_subdirectory(app)
 
 #----------------------------------------------------------------------------
 message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
 
-
 #----------------------------------------------------------------------------
-# Copy all scripts to the build directory, i.e. the directory in which we
-# build g4af. This is so that we can run the executable directly because it
-# relies on these scripts being in the current working directory.
-#
+# Copy all scripts to the build directory
 set(RUN_SCRIPTS
     scoring_pre.mac
     scoring_post.mac
