@@ -14,6 +14,7 @@
 #include <vector>
 #include "Services.hh"
 
+
 namespace {
     G4Mutex CellMutex = G4MUTEX_INITIALIZER;
 }
@@ -104,33 +105,19 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   auto label = GetName();
   auto size = G4ThreeVector(D3DCell::SIZE,D3DCell::SIZE,D3DCell::SIZE);
   // std::cout << "Parent world was set. " << std::endl;
-  m_parentPV = parentWorld;
 
-  // auto dose3dPaintedCellBox = new G4Box(label+"PreBox",0.15*mm + (size.getX()/ 2.), 0.15*mm + (size.getX()/ 2.), 0.15*mm + (size.getX()/ 2.));
-  // auto myMedium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "TiO2");
-  // auto dose3dPaintLV = new G4LogicalVolume(dose3dPaintedCellBox, myMedium.get(), label+"PaintedLV");
-  // SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label+"PaintedPV", dose3dPaintLV, parentWorld, false, 0));
-  // auto pv = GetPhysicalVolume();
-  // std::cout << "Setting medium..." << std::endl;
   auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_cell_medium);
   // create a cell box filled with PMMA, with given side dimensions
   auto dose3dCellBox = new G4Box(label+"Box", size.getX() / 2., size.getY() / 2., size.getZ() / 2.);
   auto dose3dCellLV = new G4LogicalVolume(dose3dCellBox, Medium.get(), label+"LV");
   // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
   // here we locate the phantom box in the center of envelope box created in PatientGeometry:
-  LOGSVC_DEBUG("centre {} {} {}",m_centre.getX(),m_centre.getY(),m_centre.getZ()," for cell construction... "); 
-  G4cout << "[DEBUG]:: D3DCell:: creating cell: " << label << " with position: " << m_centre << G4endl;
-
-
-  // For Painted
-  // SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(), label+"PV", dose3dCellLV, pv, false, 0));
-  SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label+"PV", dose3dCellLV, m_parentPV, false, 0));
-
-  SetGlobalCentre( m_centre + m_parentPV->GetTranslation()); 
-  LOGSVC_DEBUG("Construct() >> current cell translation {}", m_global_centre);
-  // std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << std::endl;
-    // Region for cuts
-  //G4cout << "[DEBUG]:: D3DCell:: creating cuts " << label <<"_G4RegionCuts" << G4endl;
+  //auto tempCentre = svc::getPositionInLocalFrame(m_centre, parentWorld);
+  m_global_centre = m_centre;
+  m_centre = svc::getPositionInGlobalFrame(m_centre,this,false);
+  SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label+"PV", dose3dCellLV, parentWorld, false, 0));
+  //m_global_centre = svc::getPositionInGlobalFrame(m_centre,this);
+  G4cout << "[DEBUG]:: D3DCell:: creating cell: " << label << " with position: " << m_centre << "(local), " << m_global_centre << "(global)" <<G4endl;
 
   // std::cout << "[DEBUG]:: D3DCell:: creating cuts " << label <<"_G4RegionCuts" << G4endl;
   auto regVol = new G4Region(label+"_G4RegionCuts");
@@ -160,8 +147,6 @@ bool D3DCell::IsRunCollectionScoringVolumeVoxelised(const G4String& run_collecti
   return false;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void D3DCell::DefineSensitiveDetector(){
@@ -175,6 +160,15 @@ void D3DCell::DefineSensitiveDetector(){
     auto envBox = dynamic_cast<G4Box*>(pv->GetLogicalVolume()->GetSolid());
     auto label = GetName();
     m_patientSD.Put(new D3DCellSD(label+"_SD",centre,m_id_x,m_id_y,m_id_z));
+    // TODO: pass pv and extract global coordinates from it!
+    // m_patientSD.Put(new D3DCellSD(label+"_SD",pv,m_id_x,m_id_y,m_id_z));
+    // 1. Sometimes we want to dump local, but sometimes global positioning
+    // 2. The easiest way for human would be defining positioning of cells in local system.
+    //    In fact now it's in local? Why Kuba had to tweak positioning for testbeam phantom?
+    //    Because initial frame of phantom box is for "rotated" box;
+    //    Would be nice to have for this model a function rotateX(-90) and rotateY(-90),
+    //    of intuitively placed cells, then this placement pass to the actual phantomenv
+    //    which frame is rotated.
     auto patientSD = m_patientSD.Get();
     patientSD->SetTracksAnalysis(m_tracks_analysis);
 

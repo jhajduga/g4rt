@@ -413,7 +413,8 @@ G4int VPatientSD::ScoringVolume::GetVoxelID(G4int axisId, const G4ThreeVector& h
   // Check for underflow and overflow is being performed below, however it shouldn't happen,
   // - we are inside sensitive volume boundaries. Nonetheless give warning in case...
   auto OutOfRangeWarning = [=](char axis, G4double val, G4double min, G4double max){
-    LOGSVC_WARN("Out of range hit {} | {}, value is {} => valid range: ({},{})", hitPosition,axis,val,min,max);
+    // LOGSVC_WARN("Out of range hit {} | {}, value is {} => valid range: ({},{})", hitPosition,axis,val,min,max);
+    G4cout << "Out of range hit "<<hitPosition<< " | "<<axis<<", value is "<<val<<" => valid range: ("<<min<<","<<max<<")"<< G4endl;
   };
 
   // Make sure that we does not critically rely on the result of a comparison of very close values
@@ -531,7 +532,16 @@ void VPatientSD::ProcessHitsCollection(const G4String& hitsCollectionName, G4Ste
     auto inScoringVolume = scoringVolumePtr->IsInside(position);
     auto isOnBorder = scoringVolumePtr->IsOnBorder(position);
 
-    if (!inScoringVolume || (isOnBorder && ((aStep->GetTotalEnergyDeposit())==0.))) return; // Nothing to do for this HC
+    if (!inScoringVolume || (isOnBorder && ((aStep->GetTotalEnergyDeposit())==0.))){
+      if (!isOnBorder && aStep->GetTotalEnergyDeposit()>0 ){
+        G4cout << "hit: " << position << " cell(" << m_id_x<<","<<m_id_y<<","<<m_id_z
+                << ") ScoringBox x(" << scoringVolumePtr->m_rangeMinX << " - " << scoringVolumePtr->m_rangeMaxX
+                              << ") y(" << scoringVolumePtr->m_rangeMinY << " - " << scoringVolumePtr->m_rangeMaxY
+                              << ") z(" << scoringVolumePtr->m_rangeMinZ << " - " << scoringVolumePtr->m_rangeMaxZ 
+                              << ")" <<  G4endl;
+      }
+      return; // Nothing to do for this HC
+    }
 
     // IMPORTANT: this feature reduce photons hits at small angle scattering!!!
     //if (edep == 0.) return false;

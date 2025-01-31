@@ -74,8 +74,7 @@ void BeamCollimation::Destroy() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void BeamCollimation::Construct(G4VPhysicalVolume *parentWorld) {
-  m_parentPV = parentWorld;
-  MLC();
+  MLC(parentWorld);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -189,7 +188,7 @@ void BeamCollimation::SetJawAperture(const std::string& name, G4ThreeVector &cen
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-bool BeamCollimation::Jaws() {
+bool BeamCollimation::Jaws(G4VPhysicalVolume *parentWorld) {
   auto jaw = [&](const std::string& name, G4ThreeVector centre, const G4ThreeVector& halfSize) {
     auto tungsten = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_W");
     auto cRotation = new G4RotationMatrix();
@@ -197,7 +196,7 @@ bool BeamCollimation::Jaws() {
     auto logVol = new G4LogicalVolume(box, tungsten.get(), name + "LV", 0, 0, 0);
     if(m_physicalVolume[name]!=nullptr)
       delete m_physicalVolume[name];
-    m_physicalVolume[name] = new G4PVPlacement(cRotation, centre, name + "PV", logVol, m_parentPV, false, 0);
+    m_physicalVolume[name] = new G4PVPlacement(cRotation, centre, name + "PV", logVol, parentWorld, false, 0);
 
     // Region for cuts
     auto regVol = new G4Region(name + "R");
@@ -217,7 +216,7 @@ bool BeamCollimation::Jaws() {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-bool BeamCollimation::MLC() {
+bool BeamCollimation::MLC(G4VPhysicalVolume *parentWorld) {
 
   auto model = Service<GeoSvc>()->GetMlcModel();
 
@@ -228,12 +227,13 @@ bool BeamCollimation::MLC() {
     G4cout << "[INFO]:: BeamCollimation::MLC: Constructing the MLC model instantiation! " << G4endl;
     switch (model) {
       case EMlcModel::Millennium:
-        Jaws();
-        //m_mlc = std::make_unique<MlcMillennium>(m_parentPV);
+        Jaws(parentWorld);
+        //m_mlc = std::make_unique<MlcMillennium>(parentWorld);
         break;
       case EMlcModel::HD120:
-        Jaws();
-        m_mlc = new MlcHd120(m_parentPV);
+        Jaws(parentWorld);
+        m_mlc = new MlcHd120();
+        dynamic_cast<MlcHd120*>(m_mlc)->IPhysicalVolume::Construct(this);
         break;
       case EMlcModel::Simplified:
         LOGSVC_INFO("Using Simplified type of MLC");
@@ -244,13 +244,14 @@ bool BeamCollimation::MLC() {
     G4cout << "[INFO]:: BeamCollimation::MLC: RESET the MLC model instantiation! " << G4endl;
     switch (model) {
       case EMlcModel::Millennium:
-        Jaws();
+        Jaws(parentWorld);
         //m_mlc.reset(new MlcMillennium(m_parentPV));
         break;
       case EMlcModel::HD120:
-        Jaws();
+        Jaws(parentWorld);
         delete m_mlc;
-        m_mlc = new MlcHd120(m_parentPV);
+        m_mlc = new MlcHd120();
+        dynamic_cast<MlcHd120*>(m_mlc)->IPhysicalVolume::Construct(this);
         break;
       case EMlcModel::Simplified:
         delete m_mlc;
@@ -258,7 +259,6 @@ bool BeamCollimation::MLC() {
         m_mlc = new MlcSimplified();
         break;
     }
-
   }
   return true;
 }

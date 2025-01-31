@@ -81,10 +81,10 @@ class BeamCollimation : public IPhysicalVolume, public RunComponet {
   void SetJawAperture(const std::string& name, G4ThreeVector &centre, G4ThreeVector halfSize, G4RotationMatrix *cRotation);
 
   ///
-  bool Jaws();
+  bool Jaws(G4VPhysicalVolume *parentWorld);
 
   /// 
-  bool MLC();
+  bool MLC(G4VPhysicalVolume *parentWorld);
 
   ///
   static VMlc* m_mlc;

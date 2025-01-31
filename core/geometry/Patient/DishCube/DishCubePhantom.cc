@@ -39,14 +39,13 @@ void DishCubePhantom::Destroy() {
 ///
 void DishCubePhantom::Construct(G4VPhysicalVolume *parentWorld) {
   G4cout << "[INFO]:: DishCubePhantom construction... " << G4endl;
-  m_parentPV = parentWorld;
   auto PMMA = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "PMMA");
 
   auto upperDishHole  = new G4Tubs("UpperDishHole", 0,46.75,5.5,0,360);
   auto bottomDishHole = new G4Tubs("BottomDishHole",0,44.25,5.0,0,360);
 
   // parent is now environemt box being created at the level of Patient Geometry
-  auto phantom0 = m_parentPV->GetLogicalVolume()->GetSolid();
+  auto phantom0 = parentWorld->GetLogicalVolume()->GetSolid();
   auto phantom1 = new G4SubtractionSolid("DishCubePhantom1", phantom0, upperDishHole, nullptr, G4ThreeVector(-43.5*mm,(-50-1.5)*mm,-5.5*mm)); // create 1st upper dish hole
   auto phantom2 = new G4SubtractionSolid("DishCubePhantom2", phantom1, bottomDishHole,nullptr, G4ThreeVector(-43.5*mm,(-50-1.5)*mm, 5.0*mm)); // create 1st bottom dish hole
 
@@ -62,7 +61,7 @@ void DishCubePhantom::Construct(G4VPhysicalVolume *parentWorld) {
   // the placement of phantom center in global coordinate system is managed by PatientGeometry class
   // here we locate the phantom box in the center of envelope box created in PatientGeometry, 
   // hence centre set to (0,0,0):
-  SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(0.,0.,0.), "DishCubePhantomPV", phantomLV, m_parentPV, false, 0));
+  SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(0.,0.,0.), "DishCubePhantomPV", phantomLV, parentWorld, false, 0));
 
   // Region for cuts
   auto regVol = new G4Region("DishCubePhantomR");

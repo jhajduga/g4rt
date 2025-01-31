@@ -6,6 +6,8 @@
 #include "colors.hh"
 #include "LogSvc.hh"
 #include "G4Box.hh"
+#include "IPhysicalVolume.hh"
+
 #include <regex>
 
 namespace fs = std::filesystem;
@@ -344,4 +346,113 @@ G4ThreeVector svc::getHalfSize(G4VPhysicalVolume* volume){
   auto solid = dynamic_cast<G4Box*>(volume->GetLogicalVolume()->GetSolid());
   return G4ThreeVector(solid->GetXHalfLength(),solid->GetYHalfLength(),solid->GetZHalfLength());
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///
+G4ThreeVector svc::getPositionInGlobalFrame(const G4ThreeVector& localPosition, IPhysicalVolume* volumeOfLocalFrame, bool localToGlobal){
+  G4cout << "getPositionInGlobalFrame: " << localPosition << "..." << G4endl;
+  G4ThreeVector globalPosition = localPosition; // Start with local position
+  // Traverse up the hierarchy
+  auto currentVolume = volumeOfLocalFrame->GetParentPtr();
+  while (currentVolume) {
+    G4cout << " current volume of local frame: " << currentVolume->GetName() << G4endl;
+    auto pv = currentVolume->GetPhysicalVolume();
+    if (pv){
+      G4cout << " got physical volume: " << pv->GetName() << G4endl;
+
+      auto is_rotated = false;
+      auto is_translated = false;
+      // Get the frame rotation and translation of the current volume
+      auto frameRotation = pv->GetFrameRotation();
+      auto frameTranslation = pv->GetFrameTranslation();
+
+      if (frameRotation)
+        is_rotated = frameRotation->norm2() > 1e-10 ? true : false;
+
+      is_translated = frameTranslation.mag2() > 1e-10 ? true : false;
+
+      if(is_rotated){
+        G4cout << " got frame rotation: " << *frameRotation << G4endl;
+        G4cout << " performing inverse rotation... " << G4endl;
+        if (localToGlobal)
+          globalPosition = frameRotation->inverse() * globalPosition;
+        else
+         globalPosition = *frameRotation * globalPosition;
+      } else {
+        G4cout << " no rotation. " << G4endl;
+      }
+      // if(is_translated){
+      //   G4cout << " got frame translation: " << frameTranslation << G4endl;
+      //   G4cout << " performing inverse translation... " << G4endl;
+      //   globalPosition -= frameTranslation;
+      // } else {
+      //   G4cout << " no translation. " << G4endl;
+      // }
+    } else {
+        G4cout << " no physical volume found." << G4endl;
+    }
+    // Move to the parent volume
+    currentVolume = currentVolume->GetParentPtr();
+    // G4LogicalVolume* motherLogical = currentVolume->GetMotherLogical();
+    // if (motherLogical) {
+    //     // G4cout << " end of geoemtry tree... " << G4endl;
+    //     break; // This is the world volume, stop traversal
+    // }
+    // // Find the physical volume corresponding to the mother
+    // currentVolume = motherLogical->GetDaughter(0); // Traverse upwards
+  }
+  return globalPosition;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+G4ThreeVector svc::getPositionInLocalFrame(const G4ThreeVector& globalPosition, G4VPhysicalVolume* volumeOfLocalFrame) {
+  G4cout << "getPositionInLocalFrame: " << globalPosition << "..." << G4endl;
+  G4ThreeVector localPosition = globalPosition; // Start with global position
+  // Traverse up the hierarchy
+  G4VPhysicalVolume* currentVolume = volumeOfLocalFrame;
+  while (currentVolume) {
+    G4cout << " current volume: " << currentVolume->GetName() << G4endl;
+    
+    // Get the frame rotation and translation of the current volume
+    auto frameRotation = currentVolume->GetFrameRotation();
+    auto frameTranslation = currentVolume->GetFrameTranslation();
+
+    auto is_rotated = frameRotation->norm2() > 1e-10 ? true : false;
+    auto is_translated = frameTranslation.mag2() > 1e-10 ? true : false;
+
+    if (is_translated) {
+      G4cout << " applying translation: " << frameTranslation << G4endl;
+      localPosition += frameTranslation; // Apply translation
+    } else {
+      G4cout << " no translation. " << G4endl;
+    }
+    
+    if (is_rotated) {
+      G4cout << " applying rotation: " << *frameRotation << G4endl;
+      localPosition = (*frameRotation) * localPosition; // Apply rotation
+    } else {
+      G4cout << " no rotation. " << G4endl;
+    }
+    // auto worldInstance = Service<GeoSvc>()->World();
+    // // g4Navigator->SetWorldVolume(worldInstance->GetPhysicalVolume());
+    // // Check if this is the world volume
+    // if (currentVolume == worldInstance->GetWorldPV()) {
+    //   G4cout << " reached world volume, stopping traversal... " << G4endl;
+    //   break;
+    // }
+    
+    // Move to the daughter volume
+    G4LogicalVolume* motherLogical = currentVolume->GetMotherLogical();
+    if (motherLogical) {
+      currentVolume = motherLogical->GetDaughter(0); // Traverse downwards
+    } else {
+      break; // This is the world volume, stop traversal
+    }
+  }
+  
+  return localPosition;
+}
+
+
 

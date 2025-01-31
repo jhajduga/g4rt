@@ -16,12 +16,11 @@
 #include <memory>
 ////////////////////////////////////////////////////////////////////////////////
 ///
-MlcHd120::MlcHd120(G4VPhysicalVolume* parentPV):IPhysicalVolume("MlcHd120"), VMlc("MlcHd120"){
+MlcHd120::MlcHd120():IPhysicalVolume("MlcHd120"), VMlc("MlcHd120"){
     // Region and default production cuts
     m_mlc_region = std::make_unique<G4Region>("MlcHd120Region");
     m_mlc_region->SetProductionCuts(new G4ProductionCuts());
     m_mlc_region->GetProductionCuts()->SetProductionCut(1.0 * cm);
-    Construct(parentPV);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -29,7 +28,6 @@ MlcHd120::MlcHd120(G4VPhysicalVolume* parentPV):IPhysicalVolume("MlcHd120"), VMl
 void MlcHd120::Construct(G4VPhysicalVolume *parentPV){
     G4cout << "\n[INFO]::  Construction of the " << GetName() << G4endl;
 
-    m_parentPV = parentPV;
     auto W_All = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "tungstenAlloy1");
 
     CreateMlcModules(parentPV,W_All.get());

@@ -61,10 +61,7 @@ class MlcHd120 :  public IPhysicalVolume, public VMlc {
 
   public:
 
-    MlcHd120() = delete;
-
-    ///
-    explicit MlcHd120(G4VPhysicalVolume* parentPV);
+    MlcHd120();
 
     ////
     ~MlcHd120() = default;

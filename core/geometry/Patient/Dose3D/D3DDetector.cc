@@ -189,7 +189,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
     auto dose3dCellLV = new G4LogicalVolume(solid, Medium.get(), "LVStl");
     // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
     // here we locate the phantom box in the center of envelope box created in PatientGeometry:
-    SetPhysicalVolume(new G4PVPlacement(nullptr, m_config.m_top_position_in_env, "PVStl", dose3dCellLV, parentWorld, false, 0));
+    auto pv = new G4PVPlacement(nullptr, m_config.m_top_position_in_env, "PVStl", dose3dCellLV, parentWorld, false, 0);
     // auto pv = GetPhysicalVolume();
 
 
@@ -205,7 +205,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
       m_d3d_layers.back()->SetCellNVoxels('y',m_config.m_cell_nY_voxels);
       m_d3d_layers.back()->SetCellNVoxels('z',m_config.m_cell_nZ_voxels);
       m_d3d_layers.back()->SetTracksAnalysis(m_tracks_analysis);
-      m_d3d_layers.back()->Construct(parentWorld);
+      m_d3d_layers.back()->IPhysicalVolume::Construct(this);
       processLayerDimensionality(cells_in_layer_positioning);
     }
   }
@@ -223,7 +223,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
       m_d3d_layers.back()->SetCellNVoxels('y',m_config.m_cell_nY_voxels);
       m_d3d_layers.back()->SetCellNVoxels('z',m_config.m_cell_nZ_voxels);
       m_d3d_layers.back()->SetTracksAnalysis(m_tracks_analysis);
-      m_d3d_layers.back()->Construct(parentWorld);
+      m_d3d_layers.back()->IPhysicalVolume::Construct(this);
       processLayerDimensionality(cells_in_layer_positioning);
     }
   }
@@ -271,7 +271,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
       ///
       m_d3d_layers.back()->SetTracksAnalysis(m_tracks_analysis);
       ///
-      m_d3d_layers.back()->Construct(parentWorld);
+      m_d3d_layers.back()->IPhysicalVolume::Construct(this);
     }
 
     // G4RotationMatrix * RotMat = new G4RotationMatrix();

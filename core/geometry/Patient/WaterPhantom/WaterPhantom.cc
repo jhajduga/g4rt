@@ -133,7 +133,6 @@ void WaterPhantom::Construct(G4VPhysicalVolume *parentWorld) {
   
   LoadParameterization();
   
-  m_parentPV = parentWorld;
   auto medium = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", detectorMediumName);
 
   // create a phantom box filled with water, with given side dimensions
@@ -143,7 +142,7 @@ void WaterPhantom::Construct(G4VPhysicalVolume *parentWorld) {
 
   // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
   // here we locate the phantom box in the center of envelope box created in PatientGeometry:
-  SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(m_centrePositionX*mm , m_centrePositionY*mm  , m_centrePositionZ*mm), "WaterPhantomPV", waterPhantomLV, m_parentPV, false, 0));
+  SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(m_centrePositionX*mm , m_centrePositionY*mm  , m_centrePositionZ*mm), "WaterPhantomPV", waterPhantomLV, parentWorld, false, 0));
 
   // Region for cuts
   auto regVol = new G4Region("waterPhantomR");
@@ -169,7 +168,9 @@ G4bool WaterPhantom::Update() {
 ///
 void WaterPhantom::ConstructSensitiveDetector(){
   if(m_patientSD.Get()==0){
-    auto centre = GetPhysicalVolume()->GetTranslation() + m_parentPV->GetTranslation();
+    // TODO: To be veryfied
+    auto centre = GetPhysicalVolume()->GetTranslation();
+    centre += GetParentPtr()->GetPhysicalVolume()->GetTranslation();
     m_patientSD.Put(new WaterPhantomSD("PhantomSD",centre));
     m_patientSD.Get()->SetTracksAnalysis(m_tracks_analysis);
   }

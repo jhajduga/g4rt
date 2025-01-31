@@ -1,8 +1,9 @@
 [RunSvc]
-JobName = "better_plan"
+JobName = "imrt_test"
 BeamType = "IAEA"
-# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
-PhspInputFileName = "/mnt/c/Users/Jakub/Desktop/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
+PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
+# PhspInputFileName = "/mnt/c/Users/Jakub/Desktop/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
+# PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH Dell-XPS location
 PhspEvtVrtxMultiplicityTreshold = 20
 PrintProgressFrequency = 0.05
 GenerateCT = true
@@ -19,10 +20,10 @@ Type = "D3DDetector"
 EnviromentPositionX = 0.0
 EnviromentPositionY = 0.0
 EnviromentPositionZ = 0.0
-EnviromentSizeX = 500.0
-EnviromentSizeY = 500.0
-EnviromentSizeZ = 500.0
-EnviromentMedium = "G4_Galactic"
+EnviromentSizeX = 380.0
+EnviromentSizeY = 380.0
+EnviromentSizeZ = 200.0
+EnviromentMedium = "Usr_G4AIR20C"
 EnviromentPatientEnvelop = "IbaImRT" # Simplified iba Im'RT model
 # SupplementaryGeometryMaterial = "PMMA"
 # SupplementaryGeometry = "dose3d/geo/WaterPhantom/PhantomTop.stl"
@@ -31,15 +32,16 @@ EnviromentPatientEnvelop = "IbaImRT" # Simplified iba Im'RT model
 # SupplementaryGeometryPositionZ = 0.0
 
 [D3DDetector_Detector]
-TopPositionInEnv = [-30.55,-59.45,-117.05] # In mm | 21.12.2024 testbeam
+# TopPositionInEnv = [-30.55,-59.45,-117.05] # In mm | 21.12.2024 testbeam
+TopPositionInEnv = [-59.45,-117.05,-30.55] # In mm | 21.12.2024 testbeam global
 # TopPositionInEnv = [-10.55,-69.45,-117.05] # In mm | g4rt pub
+# TopPositionInEnv = [0,0,0] # In mm | test
 # Voxelization = [5,5,5] # Number of cels in every direction
 
 [D3DDetector_Layer]
-# Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_TB21122024.csv"
-Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_g4rt_pub.csv"
-# MRowShift = false
-# MLayerShift = false
+Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_TB21122024_global.csv"
+# Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_g4rt_pub.csv"
+# Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_t.csv"
 
 [D3DDetector_Cell]
 Medium = "RMPS470" #G4_WATER, PMMA
@@ -47,6 +49,6 @@ Voxelization = [5,5,5]
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 PlanInputFile = [
-    "plan/custom/cp5x5.dat"
-    # "plan/custom/cp10x10.dat"
+    # "plan/custom/cp5x5.dat"
+    "plan/custom/cp10x10.dat"
 ]
