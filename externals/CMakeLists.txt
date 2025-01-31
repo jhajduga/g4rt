@@ -7,17 +7,19 @@ project(Externals)
 # Konfiguracja komponentów (podprojektów)
 # UWAGA: Kolejność ma znaczenie! Najbardziej niezależne komponenty powinny być dodane jako pierwsze.
 
-# Znajdowanie Loguru
+#----------------------------------------------------------------------------
+# Dodanie ścieżek dla Loguru (loguru.cpp będzie dołączany tylko w projekcie Core)
 set(LOGURU_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/externals/loguru)
-set(LOGURU_SRC ${LOGURU_INCLUDE_DIR}/loguru.cpp)
+
+#----------------------------------------------------------------------------
+# Dodanie podprojektów
 
 # Podprojekt cmd (interfejs użytkownika tekstowego)
 add_subdirectory(cmd)
 
-#----------------------------------------------------------------------------
-# Konfiguracja podsystemu IAEA
+# Podprojekt IAEA
 add_subdirectory(iaea)
 
-#----------------------------------------------------------------------------
-# Konfiguracja ConfigSvc
+# Podprojekt ConfigSvc (biblioteka konfiguracji)
 add_subdirectory(config/library)
+

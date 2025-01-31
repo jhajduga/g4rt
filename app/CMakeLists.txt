@@ -14,7 +14,6 @@ find_package(Geant4 REQUIRED)
 include(${Geant4_USE_FILE})
 
 #----------------------------------------------------------------------------
-# Konfiguracja Pybind11
 # Konfiguracja Pybind11 i Python
 find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 find_package(pybind11 REQUIRED)
@@ -54,25 +53,29 @@ include_directories(${HEADERS_DIR}
                     ${ROOT_INCLUDE_DIRS}
                     ${LOGURU_INCLUDE_DIR})
 
-#----------------------------------------------------------------------------
+# Dodanie biblioteki Core
+
 # Główna aplikacja g4rt
 file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/basic/*.cc)
-add_executable(g4rt ${SOURCES} basic/main.cc ${LOGURU_SRC})
+add_executable(g4rt ${SOURCES} basic/main.cc ${LOGURU_SRC} ${CMAKE_SOURCE_DIR}/core/services/logger.cpp)
 target_link_libraries(g4rt PRIVATE IAEA ConfigSvc Core ${Geant4_LIBRARIES} dl Python3::Python)
 target_include_directories(g4rt PRIVATE ${ROOT_INCLUDE_DIRS} ${LOGURU_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
-target_sources(g4rt PRIVATE ${CMAKE_SOURCE_DIR}/core/services/logger.cpp)
 
-#----------------------------------------------------------------------------
-# Kompilacja innych aplikacji (opcjonalna)
-# file(GLOB_RECURSE SOURCES_BWORLD ${PROJECT_SOURCE_DIR}/bworld/*.cc)
-# add_executable(g4rt_bworld ${SOURCES_BWORLD} bworld/main.cc)
-# target_link_libraries(g4rt_bworld PRIVATE IAEA ConfigSvc Core ${Geant4_LIBRARIES})
+# ----------------------------------------------------------------------------
+# Aplikacja g4rt_bworld
+file(GLOB_RECURSE SOURCES_BWORLD ${PROJECT_SOURCE_DIR}/bworld/*.cc)
+add_executable(g4rt_bworld ${SOURCES_BWORLD} bworld/main.cc ${LOGURU_SRC} ${CMAKE_SOURCE_DIR}/core/services/logger.cpp)
+target_link_libraries(g4rt_bworld PRIVATE IAEA ConfigSvc Core ${Geant4_LIBRARIES} dl Python3::Python)
+target_include_directories(g4rt_bworld PRIVATE ${ROOT_INCLUDE_DIRS} ${LOGURU_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
 
-# file(GLOB_RECURSE SOURCES_DCM2DAT ${PROJECT_SOURCE_DIR}/rtplan_converter/*.cc)
-# add_executable(g4rt_dcm2dat ${SOURCES_DCM2DAT} rtplan_converter/main.cc)
-# target_link_libraries(g4rt_dcm2dat PRIVATE IAEA ConfigSvc Core ${Geant4_LIBRARIES})
+# ----------------------------------------------------------------------------
+# Aplikacja g4rt_dcm2dat
+file(GLOB_RECURSE SOURCES_DCM2DAT ${PROJECT_SOURCE_DIR}/rtplan_converter/*.cc)
+add_executable(g4rt_dcm2dat ${SOURCES_DCM2DAT} rtplan_converter/main.cc ${LOGURU_SRC} ${CMAKE_SOURCE_DIR}/core/services/logger.cpp)
+target_link_libraries(g4rt_dcm2dat PRIVATE IAEA ConfigSvc Core ${Geant4_LIBRARIES} dl Python3::Python)
+target_include_directories(g4rt_dcm2dat PRIVATE ${ROOT_INCLUDE_DIRS} ${LOGURU_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
 
-#----------------------------------------------------------------------------
+# #----------------------------------------------------------------------------
 # Instalacja aplikacji
 install(TARGETS g4rt
         RUNTIME DESTINATION "${PROJECT_INSTALL_DIR}")
@@ -87,10 +90,3 @@ set(CPACK_PACKAGE_VERSION "0.0.5")
 set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
 # set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/postinst")
 include(CPack)
-
-
-
-
-
-
-

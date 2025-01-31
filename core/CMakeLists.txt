@@ -19,9 +19,19 @@ find_package(Geant4 REQUIRED)
 include(${Geant4_USE_FILE})
 
 #----------------------------------------------------------------------------
-# Konfiguracja Pybind11
-set(PYBIND11_FINDPYTHON ON)
+# Konfiguracja Pybind11 i Python
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 find_package(pybind11 REQUIRED)
+
+# Ustawienia dla Python.h i bibliotek Pythona
+include_directories(${Python3_INCLUDE_DIRS})
+link_directories(${Python3_LIBRARY_DIRS})
+add_definitions(-DPYTHON_EXECUTABLE=\"${Python3_EXECUTABLE}\")
+
+#----------------------------------------------------------------------------
+# Konfiguracja Loguru
+set(LOGURU_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/externals/loguru)
+set(LOGURU_SRC ${LOGURU_INCLUDE_DIR}/loguru.cpp)
 
 #----------------------------------------------------------------------------
 # Konfiguracja Loguru
@@ -84,3 +94,16 @@ target_link_libraries(${PROJECT_NAME} PRIVATE IAEA ConfigSvc ${Geant4_LIBRARIES}
 # Expose project's public includes to other subprojects
 set(${PROJECT_NAME}_INCLUDE_DIRS ${HEADERS_DIR} CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE)
 
+### Test the Dose3D Detector construction
+set(TESTNAME D3DDetectorTest)
+add_executable(${TESTNAME} ${PROJECT_SOURCE_DIR}/geometry/Patient/Dose3D/test/D3DDetectorTest.cc ${LOGURU_SRC})
+target_link_libraries(${TESTNAME} IAEA ConfigSvc Core ${Geant4_LIBRARIES} gtest gtest_main dl Python3::Python)
+target_include_directories(${TESTNAME} PRIVATE ${ROOT_INCLUDE_DIRS} ${LOGURU_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
+gtest_discover_tests(${TESTNAME})
+
+### Test the Water Phantom construction
+set(TESTNAME WaterPhantomTest)
+add_executable(${TESTNAME} ${PROJECT_SOURCE_DIR}/geometry/Patient/WaterPhantom/test/WaterPhantomTest.cc ${LOGURU_SRC})
+target_link_libraries(${TESTNAME} IAEA ConfigSvc Core ${Geant4_LIBRARIES} gtest gtest_main dl Python3::Python)
+target_include_directories(${TESTNAME} PRIVATE ${ROOT_INCLUDE_DIRS} ${LOGURU_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
+gtest_discover_tests(${TESTNAME})
