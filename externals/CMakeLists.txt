@@ -4,19 +4,20 @@ cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(Externals)
 
 #----------------------------------------------------------------------------
-# Configure the components (subprojects)
-# NOTE: The order matters! The most independent ones should go first.
-#----------------------------------------------------------------------------
+# Konfiguracja komponentów (podprojektów)
+# UWAGA: Kolejność ma znaczenie! Najbardziej niezależne komponenty powinny być dodane jako pierwsze.
 
-set(NANOLOG_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/externals/NanoLog CACHE INTERNAL "NanoLog include directory")
+# Znajdowanie Loguru
+set(LOGURU_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/externals/loguru)
+set(LOGURU_SRC ${LOGURU_INCLUDE_DIR}/loguru.cpp)
 
-# cmd for building text user interface
+# Podprojekt cmd (interfejs użytkownika tekstowego)
 add_subdirectory(cmd)
 
 #----------------------------------------------------------------------------
-# iaea
+# Konfiguracja podsystemu IAEA
 add_subdirectory(iaea)
 
 #----------------------------------------------------------------------------
-# ConfigSvc
+# Konfiguracja ConfigSvc
 add_subdirectory(config/library)

@@ -5,7 +5,7 @@
 #include "Services.hh"
 #include "cxxopts.h"
 #include <pybind11/embed.h>
-#include "LogSvc.hh"
+// #include "LogSvc.hh"
 
 // Helper functions to parse a pair from a string
 std::pair<float, float> convertPair(const std::pair<std::string, std::string>& input) {
@@ -34,11 +34,11 @@ int main(int argc, const char *argv[]) {
   pybind11::module sys = pybind11::module::import("sys");
   sys.attr("path").attr("append")(std::string(PROJECT_PY_PATH));
 
-  SPDLOG_DEBUG("Initialize services");
+  // SPDLOG_DEBUG("Initialize services");
   auto dicomSvc = Service<DicomSvc>();    //
-  SPDLOG_DEBUG("End of initialize services");
+  // SPDLOG_DEBUG("End of initialize services");
 
-  SPDLOG_INFO("Wellcome G4RT!");
+  // SPDLOG_INFO("Wellcome G4RT!");
 
   if (argc > 1) {
   cxxopts::Options options(argv[0], "Text UI mode - command line options");
@@ -69,7 +69,7 @@ int main(int argc, const char *argv[]) {
     // GENERAL
     // --------------------------------------------------------------------
     if (cmdopts.count("version")) {
-      SPDLOG_INFO("Geant-RT verson v 1.0.0");
+      // SPDLOG_INFO("Geant-RT verson v 1.0.0");
       std::exit(EXIT_SUCCESS);
       }
 
@@ -209,7 +209,7 @@ int main(int argc, const char *argv[]) {
                                       std::vector<G4double>& mlc_a, 
                                       std::vector<G4double>& mlc_b) {
         if(mlc_a.empty() || mlc_b.empty()){
-          SPDLOG_ERROR("MLC data is empty!");
+          // SPDLOG_ERROR("MLC data is empty!");
         }
         std::ofstream outFile(dat_plan_file);
         if (outFile.is_open()) {
@@ -225,10 +225,11 @@ int main(int argc, const char *argv[]) {
 
           // Close file
           outFile.close();
-          SPDLOG_INFO("Plan data written into file: {}", dat_plan_file);
+          // SPDLOG_INFO("Plan data written into file: {}", dat_plan_file);
 
       } else 
-          SPDLOG_ERROR("Unable to open file: {}", dat_plan_file);
+          // SPDLOG_ERROR("Unable to open file: {}", dat_plan_file);
+          std::cout << "Unable to open file: " << dat_plan_file << std::endl;
       };
 
 

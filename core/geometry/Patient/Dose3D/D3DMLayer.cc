@@ -40,7 +40,7 @@ void D3DMLayer::WriteInfo() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void D3DMLayer::Destroy() {
-  LOGSVC_INFO("Destroing the D3DMLayer {} volume", GetName());
+  // LOGSVC_INFO("Destroing the D3DMLayer {} volume", GetName());
   auto phantomVolume = GetPhysicalVolume();
   if (phantomVolume) {
     delete phantomVolume;
@@ -126,7 +126,7 @@ void D3DMLayer::Construct(G4VPhysicalVolume *parentWorld) {
       G4cout << "D3DMLayer: \""<< GetName() << "\" translation: " << G4ThreeVector(m_init_x,m_init_y,m_init_z) << G4endl;
     } else { // 
       G4String msg = "Initial position of the layer hasn't been set properly";
-      LOGSVC_CRITICAL(msg.data());
+      // LOGSVC_CRITICAL(msg.data());
       G4Exception("D3DMLayer", "Construct", FatalErrorInArgument, msg);
     }
     G4double layer_width = D3DCell::SIZE + 2*D3DMLayer::COVER_WIDTH;

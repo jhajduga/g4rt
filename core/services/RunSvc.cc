@@ -23,10 +23,12 @@
 #include "TGeoVolume.h"
 #include "TFile.h"
 #include "TTree.h"
+#include "logger.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-RunSvc::RunSvc() : TomlConfigurable("RunSvc"), Logable("RunSvc"){
+// RunSvc::RunSvc() : TomlConfigurable("RunSvc"), Logable("RunSvc"){
+RunSvc::RunSvc() : TomlConfigurable("RunSvc"){
   std::cout << "Config start" << std::endl;
   Configure();
   std::cout << "Config end" << std::endl;
@@ -58,7 +60,7 @@ void RunSvc::RegisterRunComponent(RunComponet *element){
 void RunSvc::Configure() {
 
   // G4cout << "[INFO]:: RunSvc :: Service default configuration " << G4endl;
-  LOGSVC_INFO("Service default configuration ");
+  // LOGSVC_INFO("Service default configuration ");
   DefineUnit<std::string>("JobName");
 
   // MULTI RUN
@@ -232,15 +234,15 @@ void RunSvc::Initialize(WorldConstruction* world) {
   world->Create();
   Service<GeoSvc>()->SetWorld(world);
   InitializeOutputDir();
-  LogSvc::Configure();
-  m_logger = LogSvc::RecreateLogger("RunSvc");
-  LOGSVC_INFO("Logger recreated.");
+  // LogSvc::Configure();
+  // m_logger = LogSvc::RecreateLogger("RunSvc");
+  // LOGSVC_INFO("Logger recreated.");
 
   if (m_application_mode == OperationalMode::BuildGeometry)
     return;
 
   if (!m_isInitialized) {
-    LOGSVC_INFO("Service initialization...");
+    // LOGSVC_INFO("Service initialization...");
 
     Configurable::ValidateConfig();
     PrintConfig();
@@ -267,9 +269,9 @@ void RunSvc::Initialize(WorldConstruction* world) {
     auto numberOfThreads = m_configSvc->GetValue<int>("RunSvc", "NumberOfThreads");
     auto physics = m_configSvc->GetValue<std::string>("RunSvc", "Physics");
     auto numberOfControlPoints = m_control_points.size();
-    LOGSVC_INFO("Launching {} thread(s)",numberOfThreads);
-    LOGSVC_INFO("Launching {} physics model",physics);
-    LOGSVC_INFO("Launching {} control points",numberOfControlPoints);
+    // LOGSVC_INFO("Launching {} thread(s)",numberOfThreads);
+    // LOGSVC_INFO("Launching {} physics model",physics);
+    // LOGSVC_INFO("Launching {} control points",numberOfControlPoints);
 
     
  
@@ -280,7 +282,7 @@ void RunSvc::Initialize(WorldConstruction* world) {
 #endif
     m_isInitialized = true;
   } else {
-    LOGSVC_WARN("RunSvc Service is already initialized.");
+    // LOGSVC_WARN("RunSvc Service is already initialized.");
   }
   m_g4RunManager->SetRunIDCounter(1);
   
@@ -325,8 +327,8 @@ void RunSvc::Finalize() {
     runWorld->Destroy();
   }
 
-  LOGSVC_INFO("Goodbye from G4RT!");
-  LogSvc::ShutDown();
+  // LOGSVC_INFO("Goodbye from G4RT!");
+  // LogSvc::ShutDown();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -335,14 +337,14 @@ void RunSvc::UserG4Initialization() {
   if (!m_isUsrG4Initialized) {
     G4Timer timer;
     timer.Start();
-    LOGSVC_INFO("UserG4Initialization...");
+    // LOGSVC_INFO("UserG4Initialization...");
     m_g4RunManager->SetUserInitialization(Service<GeoSvc>()->World());
     m_g4RunManager->SetUserInitialization(new PhysicsList());
     m_g4RunManager->SetUserInitialization(new ActionInitialization());
 
     // measure initialization time
     timer.Stop();
-    LOGSVC_INFO( "Initialisation elapsed time [s]: {}", timer.GetRealElapsed());
+    // LOGSVC_INFO( "Initialisation elapsed time [s]: {}", timer.GetRealElapsed());
     m_isUsrG4Initialized = true;
   }
 }
@@ -358,7 +360,8 @@ void RunSvc::Run() {
       FullSimulationMode();
       break;
     default:
-      LOGSVC_ERROR("Operational mode missing!");
+      // LOGSVC_ERROR("Operational mode missing!");
+      G4cout <<"[ERROR]::Operational mode missing!"<< G4endl;
   }
 }
 
@@ -367,13 +370,13 @@ void RunSvc::Run() {
 void RunSvc::ParseTomlConfig(){
 
   auto criticalError = [&](const G4String& msg){
-    LOGSVC_CRITICAL(msg.data());
+    // LOGSVC_CRITICAL(msg.data());
     G4Exception("RunSvc", "ParseTomlConfig", FatalErrorInArgument, msg);
   };
   
   auto configFile = GetTomlConfigFile();
   auto configPrefix = GetTomlConfigPrefix();
-  LOGSVC_INFO("Importing configuration from: {}",configFile);
+  // LOGSVC_INFO("Importing configuration from: {}",configFile);
   std::string configObj("Plan");
   if(!configPrefix.empty() || configPrefix=="None" ){ // It shouldn't be empty!
     configObj.insert(0,configPrefix+"_");
@@ -393,14 +396,14 @@ void RunSvc::ParseTomlConfig(){
         criticalError("CP#"+std::to_string(i)+" File not found: "+planFile);
       }
       // Define the new control point configuration
-      LOGSVC_INFO("Importing control point from plan file: {}",planFile);
+      // LOGSVC_INFO("Importing control point from plan file: {}",planFile);
       m_control_points_config.push_back(DicomSvc::GetControlPointConfig(i,planFile));
     }
     return;
   }
   // __________________________________________________________________________
   // Reading the plan from custom TOML inteface is defined with the next priority
-  LOGSVC_INFO("Importing control point configuration from file: {}",configFile);
+  // LOGSVC_INFO("Importing control point configuration from file: {}",configFile);
   G4double rotationInDeg = 0.;
   auto numberOfCP = config[configObj]["nControlPoints"].value_or(0);
   if(numberOfCP>0){
@@ -451,7 +454,7 @@ void RunSvc::DefineControlPoints() {
     m_current_control_point = &m_control_points.at(0);
   } else {
     G4String msg = "Any control point is created. Verify job definition";
-    LOGSVC_CRITICAL(msg.data());
+    // LOGSVC_CRITICAL(msg.data());
     G4Exception("RunSvc", "DefineControlPoints", FatalErrorInArgument, msg);
   }
 }
@@ -460,15 +463,15 @@ void RunSvc::DefineControlPoints() {
 /// Define simply single Control Point
 void RunSvc::DefineSimDefaultConfig(){
   auto planFile = "plan/custom/rot00deg_stat1e3_3x3.dat";
-  LOGSVC_INFO(" *** SETTING THE G4RUN DEFAULT CONFIGURATION *** ");
-  LOGSVC_INFO(" Plan file: {}",planFile);
+  // LOGSVC_INFO(" *** SETTING THE G4RUN DEFAULT CONFIGURATION *** ");
+  // LOGSVC_INFO(" Plan file: {}",planFile);
   m_control_points_config.push_back(DicomSvc::GetControlPointConfig(0,planFile));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunSvc::LoadSimulationPlan(){
-  LOGSVC_INFO(" *** LOADING THE SIMULATION PLAN FOR #{} CONTROL POINT *** ",m_current_control_point->GetId());
+  // LOGSVC_INFO(" *** LOADING THE SIMULATION PLAN FOR #{} CONTROL POINT *** ",m_current_control_point->GetId());
   for(auto& rcomponent : m_run_components){
     rcomponent->SetRunConfiguration(m_current_control_point);
   }
@@ -480,16 +483,25 @@ void RunSvc::LoadSimulationPlan(){
 ///
 /// TODO: implement methods for exporting particular world volumes
 void RunSvc::BuildGeometryMode() {
-  LOGSVC_INFO("Building World Geometry...");
-  m_logger->flush();
+  // LOGSVC_INFO("Building World Geometry...");
+  // m_logger->flush();
   Service<GeoSvc>()->Build();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunSvc::FullSimulationMode() {
-  LOGSVC_INFO("FullSimulationMode");
-  auto sourceName = m_configSvc->GetValue<std::string>("RunSvc", "BeamType");
+  // LOGSVC_INFO("FullSimulationMode");
+  Logger::LogInfo("Starting simulation in RunSvc");
+
+  // Log to the RunSvc module-specific file
+  Logger::LogToModule("RunSvc", loguru::Verbosity_INFO, "Simulation in progress...");
+
+  Logger::LogWarning("Simulation encountered a warning");
+  Logger::LogError("Simulation encountered an error");
+
+  Logger::LogToModule("RunSvc", loguru::Verbosity_INFO, "Simulation completed in RunSvc");
+auto sourceName = m_configSvc->GetValue<std::string>("RunSvc", "BeamType");
   if (sourceName.compare("gps") == 0){
     auto macFile = m_configSvc->GetValue<std::string>("RunSvc", "GpsMacFileName");
     if(macFile.at(0)!='/'){ // Assuming that the path is relative to prejct data
@@ -506,7 +518,7 @@ void RunSvc::FullSimulationMode() {
     G4Random::setTheSeeds(seeds);
   }
 
-  LOGSVC_INFO("RNG Seed: {} ", G4Random::getTheSeed()); 
+  // LOGSVC_INFO("RNG Seed: {} ", G4Random::getTheSeed()); 
 
   #ifdef G4MULTITHREADED
     auto NofThreads = m_configSvc->GetValue<int>("RunSvc", "NumberOfThreads");
@@ -542,7 +554,7 @@ void RunSvc::SetNofThreads(int val) {
   auto MaxNThresds = thisConfig()->GetValue<int>("MaxNumberOfThreads");
   m_configSvc->SetValue("RunSvc", "NumberOfThreads", val);
   if (val > MaxNThresds) {
-    LOGSVC_WARN("Specified number of threads is higher than available CPUs.");
+    // LOGSVC_WARN("Specified number of threads is higher than available CPUs.");
   }
 }
 
@@ -560,7 +572,7 @@ std::string RunSvc::GetJobNameLabel() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunSvc::WriteGeometryData() const {
-  LOGSVC_DEBUG("Writing Geometry Data");
+  // LOGSVC_DEBUG("Writing Geometry Data");
   auto geoSvc = Service<GeoSvc>();
   geoSvc->WriteWorldToGdml();
   geoSvc->WriteWorldToTFile();
@@ -576,7 +588,7 @@ void RunSvc::WriteGeometryData() const {
 ///
 void RunSvc::MergeOutput(bool cleanUp) const {
   auto output_dir = thisConfig()->GetValue<std::string>("OutputDir");
-  LOGSVC_INFO("Job output dir: {}",output_dir);
+  // LOGSVC_INFO("Job output dir: {}",output_dir);
   auto output_file = output_dir+"/"+GetJobNameLabel()+".root";
   TFileMerger fm(kFALSE);
   fm.OutputFile(output_file.c_str());
@@ -592,14 +604,14 @@ void RunSvc::MergeOutput(bool cleanUp) const {
   }
   files_to_merge.insert(std::end(files_to_merge), std::begin(files_to_merge_geo), std::end(files_to_merge_geo));
   for(const auto& file : files_to_merge){
-    LOGSVC_DEBUG("AddFile: {}",file);
+    // LOGSVC_DEBUG("AddFile: {}",file);
     fm.AddFile((file).c_str());
   }
   fm.Merge();
-  LOGSVC_INFO("Merging to file: {} - done!",output_file);
+  // LOGSVC_INFO("Merging to file: {} - done!",output_file);
 
   if(cleanUp){
-    LOGSVC_INFO("Clean-up....");
+    // LOGSVC_INFO("Clean-up....");
     for(const auto& file : files_to_merge){
       svc::deleteFileIfExists(file);
     }

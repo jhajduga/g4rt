@@ -15,6 +15,7 @@
 #include <random>
 #include "VMlc.hh"
 #include "Services.hh"
+#include "logger.hh"
 #include <numeric> 
 
 double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.50 * mm;
@@ -35,14 +36,16 @@ ControlPointConfig::ControlPointConfig(int id, int nevts, double rot)
 ///
 void ControlPointRun::InitializeScoringCollection(){
     std::string worker = G4Threading::IsWorkerThread() ? "worker" : "master";
+    // if (G4Threading::IsWorkerThread() == false) {
+    Logger::LogInfo("Message from Worker thread.");
     auto scoring_types = Service<RunSvc>()->GetScoringTypes(); 
     auto run_collections = ControlPoint::m_run_collections; 
-    // LOGSVC_INFO("Run scoring initialization for #{} collections ({})",run_collections.size(),worker);
+    // // LOGSVC_INFO("Run scoring initialization for #{} collections ({})",run_collections.size(),worker);
     for(const auto& run_collection : run_collections){
         auto run_collection_name = run_collection.first;
         for(const auto& scoring_type: scoring_types){
             if(m_hashed_scoring_map.find(run_collection_name)==m_hashed_scoring_map.end()){
-                // LOGSVC_INFO("Initializing new run collection map: {}",run_collection_name);
+                // // LOGSVC_INFO("Initializing new run collection map: {}",run_collection_name);
                 m_hashed_scoring_map.insert(std::pair<G4String,ScoringMap>(run_collection_name,ScoringMap()));
             }
             auto& scoring_collection = m_hashed_scoring_map.at(run_collection_name);
@@ -59,17 +62,17 @@ void ControlPointRun::InitializeScoringCollection(){
                 }
             }
             if(sc.empty()){
-                LOGSVC_WARN("Couldn't get scoring collection for {}",Scoring::to_string(scoring_type));
+                // LOGSVC_WARN("Couldn't get scoring collection for {}",Scoring::to_string(scoring_type));
             }
-            // LOGSVC_INFO("Added scoring collection type: {}",Scoring::to_string(scoring_type));
+            // // LOGSVC_INFO("Added scoring collection type: {}",Scoring::to_string(scoring_type));
             scoring_collection[scoring_type] = sc;
             if(scoring_collection[scoring_type].empty()){
-                LOGSVC_INFO("Erasing empty scoring collection {}",Scoring::to_string(scoring_type));
+                // LOGSVC_INFO("Erasing empty scoring collection {}",Scoring::to_string(scoring_type));
                 scoring_collection.erase(scoring_type);
             }
             else
                 continue;
-                // LOGSVC_INFO("Scoring collection size for {}: {}",Scoring::to_string(scoring_type),scoring_collection.at(scoring_type).size());
+                // // LOGSVC_INFO("Scoring collection size for {}: {}",Scoring::to_string(scoring_type),scoring_collection.at(scoring_type).size());
         }
         // G4cout << "Run scoring map size: " << m_hashed_scoring_map[run_collection_name].size() << G4endl;
     }
@@ -78,7 +81,7 @@ void ControlPointRun::InitializeScoringCollection(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ControlPointRun::Merge(const G4Run* worker_run){
-    LOGSVC_INFO("Run-{} merging...",worker_run->GetRunID());
+    // LOGSVC_INFO("Run-{} merging...",worker_run->GetRunID());
     auto cell_size = D3DCell::SIZE;
     auto cell_volume = cell_size*cell_size*cell_size;
     auto merge = [&](ScoringMap& left, const ScoringMap& right){
@@ -86,30 +89,30 @@ void ControlPointRun::Merge(const G4Run* worker_run){
             G4double total_dose(0);
             auto& type = scoring.first;
             bool isVoxel = type == Scoring::Type::Voxel ? true : false;
-            // LOGSVC_INFO("Scoring type: {}",Scoring::to_string(type));
+            // // LOGSVC_INFO("Scoring type: {}",Scoring::to_string(type));
             auto& hashed_scoring_left = scoring.second;
             const auto& hashed_scoring_right = right.at(type);
             for(auto& hashed_voxel : hashed_scoring_left){
                 hashed_voxel.second.Cumulate(hashed_scoring_right.at(hashed_voxel.first),isVoxel); // VoxelHit+=VoxelHit
                 auto voxel_volume = hashed_voxel.second.GetVolume();
                 if(isVoxel && voxel_volume < cell_volume){
-                    //LOGSVC_INFO("Voxel / Cell volume: {} / {}",voxel_volume,cell_volume);
+                    //// LOGSVC_INFO("Voxel / Cell volume: {} / {}",voxel_volume,cell_volume);
                     total_dose += hashed_voxel.second.GetDose()*voxel_volume/cell_volume;
                 } else {
                     total_dose += hashed_voxel.second.GetDose();
                 }
             }
-            // LOGSVC_INFO("Total dose: {}",total_dose);
+            // // LOGSVC_INFO("Total dose: {}",total_dose);
         } 
     };
 
     for(auto& scoring : m_hashed_scoring_map){
         auto scoring_name = scoring.first;
-        // LOGSVC_INFO("Merging collection: {}",scoring_name);
+        // // LOGSVC_INFO("Merging collection: {}",scoring_name);
         auto& master_scoring = scoring.second;
-        // LOGSVC_DEBUG("Master scoring #types: {}",master_scoring.size());
+        // // LOGSVC_DEBUG("Master scoring #types: {}",master_scoring.size());
         const auto& worker_scoring = dynamic_cast<const ControlPointRun*>(worker_run)->m_hashed_scoring_map.at(scoring_name);
-        // LOGSVC_DEBUG("Worker scoring #types: {}",worker_scoring.size());
+        // // LOGSVC_DEBUG("Worker scoring #types: {}",worker_scoring.size());
         merge(master_scoring,worker_scoring);
     }
 
@@ -126,7 +129,7 @@ void ControlPointRun::Merge(const G4Run* worker_run){
 ///
 ScoringMap& ControlPointRun::GetScoringCollection(const G4String& name){
     if (m_hashed_scoring_map.find(name) == m_hashed_scoring_map.end())
-        LOGSVC_ERROR("Couldn't find scoring collection in current run: {}",name)
+        // LOGSVC_ERROR("Couldn't find scoring collection in current run: {}",name)
     return m_hashed_scoring_map.at(name);
 }
 
@@ -134,11 +137,11 @@ ScoringMap& ControlPointRun::GetScoringCollection(const G4String& name){
 ///
 void ControlPointRun::EndOfRun(){
     if(m_hashed_scoring_map.size()>0){
-        LOGSVC_INFO("ControlPointRun::EndOfRun...");
+        // LOGSVC_INFO("ControlPointRun::EndOfRun...");
         FillMlcFieldScalingFactor();
     }
     else {
-        LOGSVC_INFO("ControlPointRun::EndOfRun:: Nothing to do.");
+        // LOGSVC_INFO("ControlPointRun::EndOfRun:: Nothing to do.");
         return;
     }
 }
@@ -167,14 +170,14 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
         }
     }
     auto patientNormalizationFactor = wx*nx+wy*ny+wz*nz;
-    LOGSVC_INFO("ControlPointRun::Filling Field Scaling Factor with Patient Normalization Factor {},{},{}->{}",nx,ny,nz,patientNormalizationFactor);
+    // LOGSVC_INFO("ControlPointRun::Filling Field Scaling Factor with Patient Normalization Factor {},{},{}->{}",nx,ny,nz,patientNormalizationFactor);
 
 
     for(auto& scoring_map: m_hashed_scoring_map){
-        LOGSVC_INFO("ControlPointRun::Filling Field Scaling Factor for \"{}\" run collection",scoring_map.first);
+        // LOGSVC_INFO("ControlPointRun::Filling Field Scaling Factor for \"{}\" run collection",scoring_map.first);
         
         for(auto& scoring: scoring_map.second){
-            LOGSVC_INFO("ControlPointRun::Processing {} scoring... size: {}",Scoring::to_string(scoring.first),scoring.second.size()); 
+            // LOGSVC_INFO("ControlPointRun::Processing {} scoring... size: {}",Scoring::to_string(scoring.first),scoring.second.size()); 
             G4double max = -10000.;
             G4double min =  10000.;
             for(auto& hit : scoring.second){
@@ -185,7 +188,7 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
                 if (fsf > max) max = fsf;
                 if (fsf < min) min = fsf;
             } 
-            LOGSVC_INFO("ControlPointRun:: Performing min-max normalization...");
+            // LOGSVC_INFO("ControlPointRun:: Performing min-max normalization...");
             // Normalization (min-max scaling):
             G4double max_new = 0.98;
             G4double min_new = 0.02;
@@ -196,7 +199,7 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
             } 
         }
     }
-    LOGSVC_INFO("ControlPointRun:: Field Scaling Factor processing - done!");
+    // LOGSVC_INFO("ControlPointRun:: Field Scaling Factor processing - done!");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -314,7 +317,8 @@ std::string ControlPoint::GetSimOutputTFileName(bool workerMT) const {
 ///
 const std::vector<G4ThreeVector>& ControlPoint::GetFieldMask(const std::string& type) {
     if(!Service<GeoSvc>()->IsWorldBuilt()){
-        LOGSVC_WARN("World not yet built, returning empty sim mask point vector");
+        std::cout << "World not yet built, returning empty sim mask point vector" << std::endl;
+        // LOGSVC_WARN("World not yet built, returning empty sim mask point vector");
         return m_plan_mask_points;
     }
     if(type=="Plan") {
@@ -323,11 +327,13 @@ const std::vector<G4ThreeVector>& ControlPoint::GetFieldMask(const std::string& 
         return m_plan_mask_points;
     } else if(type=="Sim") {
         if(m_cp_run.Get()->GetSimMaskPoints().empty())
-            LOGSVC_WARN("Returning empty sim mask point vector");
+            std::cout << "Returning empty sim mask point vector" << std::endl;
+            // LOGSVC_WARN("Returning empty sim mask point vector");
         return m_cp_run.Get()->GetSimMaskPoints();
     }
     G4String msg = "Couldn't recognize control point field mask type!";
-    LOGSVC_CRITICAL(msg.data());
+    std::cout << msg << std::endl;
+    // LOGSVC_CRITICAL(msg.data());
     G4Exception("ControlPoint", "GetFieldMask", FatalErrorInArgument , msg);
     return m_plan_mask_points;
 }
@@ -354,15 +360,15 @@ void ControlPoint::FillPlanFieldMask(){
     // when the current control point is set, see RunSvc::CurrentControlPoint
     // NOTE: The field mask is formed at the isocentre Z position!
     if(m_plan_mask_points.empty()){
-        LOGSVC_DEBUG("Filling the field mask points");
+        // LOGSVC_DEBUG("Filling the field mask points");
     }
     else{
         G4String msg = "Control Point mask is already filled! This shouldn't happen!";
-        LOGSVC_CRITICAL(msg.data());
+        // LOGSVC_CRITICAL(msg.data());
         G4Exception("ControlPoint", "FillPlanFieldMask", FatalErrorInArgument , msg);
     }
     auto configSvc = Service<ConfigSvc>();
-    LOGSVC_DEBUG("Using the {} field shape and {} deg rotation",m_config.FieldType,GetDegreeRotation());
+    // LOGSVC_DEBUG("Using the {} field shape and {} deg rotation",m_config.FieldType,GetDegreeRotation());
 
     double z_position = configSvc->GetValue<G4ThreeVector>("WorldConstruction", "Isocentre").getZ();
     
@@ -378,10 +384,10 @@ void ControlPoint::FillPlanFieldMask(){
     }
     if(m_plan_mask_points.empty()){
         G4String msg = "Field Mask not filled! Verify job configuration!";
-        LOGSVC_CRITICAL(msg.data());
+        // LOGSVC_CRITICAL(msg.data());
         G4Exception("ControlPoint", "FillPlanFieldMask", FatalErrorInArgument, msg);
     }
-    LOGSVC_DEBUG("Filled with {} number of points",m_plan_mask_points.size());
+    // LOGSVC_DEBUG("Filled with {} number of points",m_plan_mask_points.size());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -397,7 +403,7 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(double current_z){
     y_range = m_config.FieldSizeB;
     if(x_range < 0 || y_range < 0){
         G4String msg = "Field size is not correct";
-        LOGSVC_CRITICAL("Field size is not correct: A {}, B {}",x_range,y_range);
+        // LOGSVC_CRITICAL("Field size is not correct: A {}, B {}",x_range,y_range);
         G4Exception("ControlPoint", "FillPlanFieldMask", FatalErrorInArgument, msg);
     }
 
@@ -535,14 +541,14 @@ G4double ControlPoint::GetMlcWeightedInfluenceFactor(const G4ThreeVector& positi
 /// 
 void ControlPoint::FillEventCollections(G4HCofThisEvent* evtHC){
     for(const auto& run_collection: ControlPoint::m_run_collections){
-        // LOGSVC_DEBUG("RunAnalysis::EndOfEvent: RunColllection {}",run_collection.first);
+        // // LOGSVC_DEBUG("RunAnalysis::EndOfEvent: RunColllection {}",run_collection.first);
         for(const auto& hc: run_collection.second){
             // Related SensitiveDetector collection ID (Geant4 architecture)
             auto collID = G4SDManager::GetSDMpointer()->GetCollectionID(hc);
             // collID==-1 the collection is not found
             // collID==-2 the collection name is ambiguous
             if(collID<0){
-                LOGSVC_INFO("ControlPoint::FillEventCollections: HC: {} / G4SDManager Err: {}", hc, collID);
+                // LOGSVC_INFO("ControlPoint::FillEventCollections: HC: {} / G4SDManager Err: {}", hc, collID);
             }
             else {
                 auto thisHitsCollPtr = evtHC->GetHC(collID);
@@ -590,7 +596,7 @@ void ControlPoint::FillEventCollection(const G4String& run_collection, VoxelHits
 void ControlPoint::RegisterRunHCollection(const G4String& run_collection_name, const G4String& hc_name){
     if(m_run_collections.find( run_collection_name ) == m_run_collections.end()){
         m_run_collections[run_collection_name] = std::vector<G4String>();
-        LOGSVC_INFO("Register new run collection:  {} ", run_collection_name);
+        // LOGSVC_INFO("Register new run collection:  {} ", run_collection_name);
     }
     m_run_collections.at(run_collection_name).emplace_back(hc_name);
 }
@@ -623,7 +629,7 @@ VMlc* ControlPoint::MLC() const {
     // G4cout << "ControlPoint::MLC:: #{} CP" << Id() << G4endl;
     auto mlc = Service<GeoSvc>()->MLC();
     if(!mlc->Initialized(this)){
-        LOGSVC_ERROR("ControlPoint::MLC:Initialization failed for #{} CP", Id());
+        // LOGSVC_ERROR("ControlPoint::MLC:Initialization failed for #{} CP", Id());
         std::exit(EXIT_FAILURE);
     }
     return mlc;
@@ -640,7 +646,7 @@ const std::vector<double>& ControlPoint::GetMlcPositioning(const std::string& si
         return m_mlc_b_positioning;
     }
     else{
-        LOGSVC_ERROR("ControlPoint::GetMlcPositioning: Unknown side: {}", side);
+        // LOGSVC_ERROR("ControlPoint::GetMlcPositioning: Unknown side: {}", side);
         std::exit(EXIT_FAILURE);
     }
     return m_mlc_a_positioning; // never reached, prevent warning
@@ -662,7 +668,7 @@ double ControlPoint::GetJawAperture(const std::string& side) const{
         return m_jaw_y_aperture.second;
     }
     else{
-        LOGSVC_ERROR("ControlPoint::GetJawAperture: Unknown side: {}", side);
+        // LOGSVC_ERROR("ControlPoint::GetJawAperture: Unknown side: {}", side);
         std::exit(EXIT_FAILURE);
     }
     return 0.; // never reached, prevent warning

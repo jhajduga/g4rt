@@ -38,13 +38,13 @@ D3DDetector::~D3DDetector() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void D3DDetector::WriteInfo() {
-  LOGSVC_INFO("The Dose3D module info: Implement me.");
+  // LOGSVC_INFO("The Dose3D module info: Implement me.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void D3DDetector::Destroy() {
-  LOGSVC_INFO("Destroing the {} volume. ",GetName());
+  // LOGSVC_INFO("Destroing the {} volume. ",GetName());
   auto phantomVolume = GetPhysicalVolume();
   if (phantomVolume) {
     delete phantomVolume;
@@ -58,11 +58,11 @@ void D3DDetector::ParseTomlConfig(){
   auto configFile = GetTomlConfigFile();
 
   if (!svc::checkIfFileExist(configFile)) {
-    LOGSVC_CRITICAL("File {} not fount.", configFile);
+    // LOGSVC_CRITICAL("File {} not fount.", configFile);
     exit(1);
   }
   auto configPrefix = GetTomlConfigPrefix();
-  LOGSVC_INFO("Importing configuration from:\n{}",configFile);
+  // LOGSVC_INFO("Importing configuration from:\n{}",configFile);
   std::string configObjDetector("Detector");
   std::string configObjLayer("Layer");
   std::string configObjCell("Cell");
@@ -73,7 +73,7 @@ void D3DDetector::ParseTomlConfig(){
   }
   else {
     G4String msg = "The configuration PREFIX is not defined";
-    LOGSVC_CRITICAL(msg.data());
+    // LOGSVC_CRITICAL(msg.data());
     G4Exception("D3DDetector", "ParseTomlConfig", FatalErrorInArgument, msg);
   }
 
@@ -115,7 +115,7 @@ void D3DDetector::ParseTomlConfig(){
   D3DCell::CellScorer(cell_scorer);
   G4bool voxcell_scorer = config[configObjCell]["CellVoxelisedScorer"].value_or(true);
   D3DCell::CellVoxelisedScorer(voxcell_scorer);
-  LOGSVC_INFO("Importing configuration - DONE!");
+  // LOGSVC_INFO("Importing configuration - DONE!");
   }
 
 
@@ -364,7 +364,7 @@ void D3DDetector::ExportPositioningToTFile(const std::string& path_to_out_dir) c
   tfile->Close();
 
   std::cout << "Writing Dose3D Scroing Positioning to file " <<file<< " - done!" << std::endl;
-  LOGSVC_INFO("Writing Dose3D Scroing Positioning to file {} - done!",file);
+  // LOGSVC_INFO("Writing Dose3D Scroing Positioning to file {} - done!",file);
 }
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -372,7 +372,7 @@ void D3DDetector::ExportVoxelPositioningToCsv(const std::string& path_to_out_dir
   auto run_collections = ControlPoint::GetRunCollectionNames();
   // G4cout << "DEBUG1 Writing Dose3D Voxel scroing positioning to csv..." << G4endl;
   if (run_collections.empty()) {
-    LOGSVC_WARN("D3DDetector::ExportVoxelPositioningToCsv:: Any RunCollection found.");
+    // LOGSVC_WARN("D3DDetector::ExportVoxelPositioningToCsv:: Any RunCollection found.");
     return;
   }
   //
@@ -383,7 +383,7 @@ void D3DDetector::ExportVoxelPositioningToCsv(const std::string& path_to_out_dir
     // G4cout << "DEBUG2:: Writing Dose3D Voxel scroing positioning for RunCollection: " << run_collection << G4endl;
     auto hashed_scoring_map = GetScoringHashedMap(run_collection,Scoring::Type::Voxel);
     if(hashed_scoring_map.empty()){
-      LOGSVC_DEBUG("D3DDetector::ExportVoxelPositioningToCsv:: No voxelisation found for {} run collection.",run_collection);
+      // LOGSVC_DEBUG("D3DDetector::ExportVoxelPositioningToCsv:: No voxelisation found for {} run collection.",run_collection);
       continue;
     }
     //Iterate over all cells in the detector to find any cell that is voxelised for given run collection
@@ -428,7 +428,7 @@ void D3DDetector::ExportVoxelPositioningToCsv(const std::string& path_to_out_dir
     }
     outFile.close();
     std::cout << "Writing Dose3D Voxel Scroing Positioning to file " <<file<< " - done!" << std::endl;
-    LOGSVC_INFO("Writing Dose3D Voxel Scroing Positioning to file {} - done!",file);
+    // LOGSVC_INFO("Writing Dose3D Voxel Scroing Positioning to file {} - done!",file);
   }
 }
 
@@ -437,7 +437,7 @@ void D3DDetector::ExportVoxelPositioningToCsv(const std::string& path_to_out_dir
 void D3DDetector::ExportCellPositioningToCsv(const std::string& path_to_out_dir) const {
   auto run_collections = ControlPoint::GetRunCollectionNames();
   if (run_collections.empty()) {
-    LOGSVC_WARN("D3DDetector::ExportCellPositioningToCsv:: Any RunCollection found.");
+    // LOGSVC_WARN("D3DDetector::ExportCellPositioningToCsv:: Any RunCollection found.");
     return;
   }
   // Since the cell positioning is the same for all runs, we can just take the first one
@@ -464,7 +464,7 @@ void D3DDetector::ExportCellPositioningToCsv(const std::string& path_to_out_dir)
       << std::endl;
   }
   outFile.close();
-  LOGSVC_INFO("Writing Dose3D Cell Scroing Positioning to file {} - done!",file);
+  // LOGSVC_INFO("Writing Dose3D Cell Scroing Positioning to file {} - done!",file);
 }
 
 
@@ -570,7 +570,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
 /// TODO https://jira.plgrid.pl/jira/browse/TNSIM-291
 void D3DDetector::ExportLayerPads(const std::string& path_to_output_dir) const {
   // TODO: Once this method is still valid it should iterate trough all Scoring::Types
-  LOGSVC_DEBUG("{} ExportLayerPads... \nOutput dir: {}", GetName(), path_to_output_dir);
+  // LOGSVC_DEBUG("{} ExportLayerPads... \nOutput dir: {}", GetName(), path_to_output_dir);
 
     auto global_cell_id = [&](int idX, int idY, int idZ) -> int {
         return (idX * m_config.m_nY_cells + idY) * m_config.m_nZ_cells + idZ;
@@ -715,7 +715,7 @@ std::string D3DDetector::SetGeometrySource(){
   }
 
   else if((m_config.m_stl_geometry_file_path.compare("None")!=0)&&(m_config.m_in_layer_positioning_module.compare("None")==0)){
-    LOGSVC_ERROR("You can't build STL detector geometry without providing cell positioning in \".csv\" file format.");
+    // LOGSVC_ERROR("You can't build STL detector geometry without providing cell positioning in \".csv\" file format.");
     return geo_type;
   }
 
@@ -761,7 +761,7 @@ void D3DDetector::ReadCellsInLayersPositioning(){
           cells_in_layer.emplace_back(xyz.at(0),xyz.at(1),xyz.at(2));
         }
         else if(!is_first_layer) {
-          LOGSVC_INFO("Adding new layer with No cells {}",cells_in_layer.size());
+          // LOGSVC_INFO("Adding new layer with No cells {}",cells_in_layer.size());
           m_d3d_cells_in_layers_positioning.push_back(cells_in_layer);
           cells_in_layer.clear();
         }
@@ -769,7 +769,7 @@ void D3DDetector::ReadCellsInLayersPositioning(){
       }
     } 
     // Add last read-in layer
-    LOGSVC_INFO("Adding new layer with No cells {}",cells_in_layer.size());
+    // LOGSVC_INFO("Adding new layer with No cells {}",cells_in_layer.size());
     m_d3d_cells_in_layers_positioning.push_back(cells_in_layer);
     cells_in_layer.clear();
   } else {

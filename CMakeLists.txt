@@ -3,19 +3,21 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(G4rt)
 
+#----------------------------------------------------------------------------
+# Ustawienia CMake
 set(CMAKE_VERBOSE_MAKEFILE ON)
-set(CMAKE_COLOR_MAKEFILE   ON)
+set(CMAKE_COLOR_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_DEFAULT 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 #----------------------------------------------------------------------------
-# prevent for in-source building
+# Zabronienie budowania w katalogu źródłowym
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
-set(CMAKE_DISABLE_SOURCE_CHANGES  ON)
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
-  message(SEND_ERROR "In-source builds are not allowed.")
-endif ()
+    message(SEND_ERROR "In-source builds are not allowed.")
+endif()
 
 #----------------------------------------------------------------------------
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -24,8 +26,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON) # This needs to be done universally to a
 
 #----------------------------------------------------------------------------
 if(NOT $ENV{CLHEP_INCLUDE_DIR} STREQUAL "")
-  set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES $ENV{CLHEP_INCLUDE_DIR})
-endif ()
+    set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES $ENV{CLHEP_INCLUDE_DIR})
+endif()
 #----------------------------------------------------------------------------
 SET(PROJECT_DATA_PATH "${PROJECT_SOURCE_DIR}/data")
 SET(PROJECT_INSTALL_DIR "/opt/g4rt")
@@ -66,9 +68,9 @@ set(RUN_SCRIPTS
 )
 
 foreach(_script ${RUN_SCRIPTS})
-  configure_file(
-    ${PROJECT_SOURCE_DIR}/scripts/${_script}
-    ${PROJECT_BINARY_DIR}/${_script}
-    COPYONLY
+    configure_file(
+        ${PROJECT_SOURCE_DIR}/scripts/${_script}
+        ${PROJECT_BINARY_DIR}/${_script}
+        COPYONLY
     )
 endforeach()

@@ -8,7 +8,7 @@
 #ifndef Dose3D_RUNSVC_H
 #define Dose3D_RUNSVC_H
 
-#include "Logable.hh"
+// #include "Logable.hh"
 #include "TomlConfigurable.hh"
 #include "Types.hh"
 #include "G4RunManager.hh"
@@ -35,7 +35,8 @@ enum class OperationalMode {
 ///\brief The application run management service.
 /// It is a singleton type the pointer of which can be asses trough the templated method:
 /// Service<RunSvc>()
-class RunSvc : public TomlConfigurable, Logable {
+// class RunSvc : public TomlConfigurable, Logable {
+class RunSvc : public TomlConfigurable {
   private:
   RunSvc();
 

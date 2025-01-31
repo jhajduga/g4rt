@@ -9,12 +9,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-VPatientSD::VPatientSD(const G4String& sdName):G4VSensitiveDetector(sdName),Logable("GeoAndScoring"){}
+VPatientSD::VPatientSD(const G4String& sdName):G4VSensitiveDetector(sdName){}
+// VPatientSD::VPatientSD(const G4String& sdName):G4VSensitiveDetector(sdName),Logable("GeoAndScoring"){}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 VPatientSD::VPatientSD(const G4String& sdName, const G4ThreeVector& centre)
-  :G4VSensitiveDetector(sdName),m_centre_in_global_coordinates(centre),Logable("GeoAndScoring"){}
+  :G4VSensitiveDetector(sdName),m_centre_in_global_coordinates(centre){}
+  // :G4VSensitiveDetector(sdName),m_centre_in_global_coordinates(centre),Logable("GeoAndScoring"){}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Note that a SD can declare more than one hits collection being groupped by runCollName!
@@ -33,7 +35,7 @@ void VPatientSD::AddHitsCollection(const G4String&runCollName, const G4String& h
   }
   else {
     G4String msg =  "AddHitsCollection::The '"+hitsCollName+"' already added!";
-    LOGSVC_CRITICAL("{} Verify the specified hits collection name",msg);
+    // LOGSVC_CRITICAL("{} Verify the specified hits collection name",msg);
     G4Exception("VPatientSD", msg, FatalException,"Verify the specified hits collection name");
   }
 }
@@ -92,7 +94,7 @@ void VPatientSD::AcknowledgeHitsCollection(const G4String&runCollName,const std:
     G4String msg =  "AcknowledgeHitsCollection::The '"+scoring_volume.first+"'";
     msg+=" being added to the run collection '"+runCollName+"' is not compatible with the previous added ones!";
     msg+=" Compatibility check performed by comparison to '"+compatibility_reference_obj+"'";
-    LOGSVC_CRITICAL("{} Verify the specified run collection name",msg);
+    // LOGSVC_CRITICAL("{} Verify the specified run collection name",msg);
     G4Exception("VPatientSD", msg, FatalException,"Verify the specified run collection name");
   }
 }
@@ -172,7 +174,7 @@ G4int VPatientSD::GetScoringHcId(const G4int scoringSdIdx) const{
     return m_scoring_volumes.at(scoringSdIdx).second->id;
   } else{
     G4String msg = "GetScoringHcId::The idx "+std::to_string(scoringSdIdx)+" doesn't exist! (max size = "+std::to_string(nElements)+")";
-    LOGSVC_CRITICAL("{}. Verify given scoringSdIdx value!",msg);
+    // LOGSVC_CRITICAL("{}. Verify given scoringSdIdx value!",msg);
     G4Exception("VPatientSD", msg, FatalException,"Verify given scoringSdIdx value");
   }
   return 0;
@@ -191,7 +193,7 @@ G4int VPatientSD::GetScoringVolumeIdx(const G4String& hitsCollName) const {
   }
   if (idx < 0 ){
     G4String msg =  "GetScoringVolumeIdx::The '"+hitsCollName+"' doesn't exist!";
-    LOGSVC_CRITICAL("{} Verify the AddHitsCollection(...) calls!",msg);
+    // LOGSVC_CRITICAL("{} Verify the AddHitsCollection(...) calls!",msg);
     G4Exception("VPatientSD", msg, FatalException,"Verify the AddHitsCollection(...) calls!");
   }
   return idx;
@@ -216,7 +218,7 @@ VPatientSD::ScoringVolume* VPatientSD::GetScoringVolumePtr(G4int scoringSdIdx){
     return m_scoring_volumes.at(scoringSdIdx).second.get();
   else {
     G4String msg =  "GetScoringVolumePtr::The scoring SD for given index doesn't exist! (max size="+std::to_string(nElements)+")";
-    LOGSVC_CRITICAL("{}. Verify the AddHitsCollection(...) calls!",msg);
+    // LOGSVC_CRITICAL("{}. Verify the AddHitsCollection(...) calls!",msg);
     G4Exception("VPatientSD", msg, FatalException,"Verify the AddHitsCollection(...) calls!");
     }
     return nullptr;
@@ -230,7 +232,7 @@ VPatientSD::ScoringVolume* VPatientSD::GetScoringVolumePtr(G4int scoringSdIdx) c
     return m_scoring_volumes.at(scoringSdIdx).second.get();
   else {
     G4String msg =  "GetScoringVolumePtr::The scoring SD for given index doesn't exist! (max size="+std::to_string(nElements)+")";
-    LOGSVC_CRITICAL("{}. Verify the AddHitsCollection(...) calls!", msg);
+    // LOGSVC_CRITICAL("{}. Verify the AddHitsCollection(...) calls!", msg);
     G4Exception("VPatientSD", msg, FatalException,"Verify the AddHitsCollection(...) calls!");
     }
     return nullptr;
@@ -299,7 +301,7 @@ void VPatientSD::SetScoringShape(const G4String& hitsCollName, const G4String& s
   auto scoringVolume = GetScoringVolumePtr(hitsCollName);
   if(shapeName!="Farmer30013" && shapeName!="Farmer30013ScanZBox" ){
     G4String msg = "SetScoringShape:: "+shapeName+" is not found. Available shape: Farmer30013";
-    LOGSVC_CRITICAL("{}. Verify your input!", msg);
+    // LOGSVC_CRITICAL("{}. Verify your input!", msg);
     G4Exception("VPatientSD", msg, FatalException,"Verify your input!");
   }
   scoringVolume->m_shape = shapeName;
@@ -333,10 +335,10 @@ void VPatientSD::SetScoringVolume(G4int scoringSdIdx, const G4Box& envelopBox, c
   minZ = svc::round_with_prec((m_centre_in_global_coordinates.z() + translation.z() - sdHColPtr->GetSizeZ() / 2.),8);
   maxZ = svc::round_with_prec((m_centre_in_global_coordinates.z() + translation.z() + sdHColPtr->GetSizeZ() / 2.),8);
 
-  LOGSVC_DEBUG("VPatientSD:: Defined Collection: {}", GetScoringHcName(scoringSdIdx));
-  LOGSVC_DEBUG("VPatientSD:: Voxelized SD range x {} - {}", sdHColPtr->m_rangeMinX, sdHColPtr->m_rangeMaxX);
-  LOGSVC_DEBUG("VPatientSD:: Voxelized SD range y {} - {}", sdHColPtr->m_rangeMinY, sdHColPtr->m_rangeMaxY);
-  LOGSVC_DEBUG("VPatientSD:: Voxelized SD range z {} - {}",sdHColPtr->m_rangeMinZ,sdHColPtr->m_rangeMaxZ);
+  // LOGSVC_DEBUG("VPatientSD:: Defined Collection: {}", GetScoringHcName(scoringSdIdx));
+  // LOGSVC_DEBUG("VPatientSD:: Voxelized SD range x {} - {}", sdHColPtr->m_rangeMinX, sdHColPtr->m_rangeMaxX);
+  // LOGSVC_DEBUG("VPatientSD:: Voxelized SD range y {} - {}", sdHColPtr->m_rangeMinY, sdHColPtr->m_rangeMaxY);
+  // LOGSVC_DEBUG("VPatientSD:: Voxelized SD range z {} - {}",sdHColPtr->m_rangeMinZ,sdHColPtr->m_rangeMaxZ);
 
 
   //G4cout << "[DEBUG]:: VPatientSD:: Defined Collection: " << hcName << G4endl;
@@ -352,7 +354,7 @@ void VPatientSD::SetScoringVolume(G4int scoringSdIdx, const G4Box& envelopBox, c
   auto nvZ = sdHColPtr->m_nVoxelsZ;
   if(nvX==0 || nvY==0 || nvZ==0){
     G4String msg = "SetScoringVolume:: Parameterization is empty! You should call SetScoringParameterization(...) before!";
-    LOGSVC_CRITICAL("{}. Verify your logic...", msg);
+    // LOGSVC_CRITICAL("{}. Verify your logic...", msg);
     G4Exception("VPatientSD", msg, FatalException,"Verify your logic...");
   }
   // Comppute and set voxel position
@@ -406,14 +408,14 @@ G4int VPatientSD::ScoringVolume::GetVoxelID(G4int axisId, const G4ThreeVector& h
   G4int voxelId = 0;
 
   if(!m_envelopeBoxPtr) {
-    LOGSVC_ERROR("Trying to extract channel ID but the envelope box is not being set!");
+    // LOGSVC_ERROR("Trying to extract channel ID but the envelope box is not being set!");
     return voxelId;
   }
 
   // Check for underflow and overflow is being performed below, however it shouldn't happen,
   // - we are inside sensitive volume boundaries. Nonetheless give warning in case...
   auto OutOfRangeWarning = [=](char axis, G4double val, G4double min, G4double max){
-    LOGSVC_WARN("Out of range hit {} | {}, value is {} => valid range: ({},{})", hitPosition,axis,val,min,max);
+    // LOGSVC_WARN("Out of range hit {} | {}, value is {} => valid range: ({},{})", hitPosition,axis,val,min,max);
   };
 
   // Make sure that we does not critically rely on the result of a comparison of very close values
@@ -571,8 +573,7 @@ void VPatientSD::ProcessHitsCollection(const G4String& hitsCollectionName, G4Ste
       }
     } else {
       auto maxId = scoringVolumePtr->m_channelHCollectionIndex.size()-1;
-      LOGSVC_DEBUG("Out of scope ChannelId: {}. Max voxel ID is: {}.\nPosition: {}\nIdX={}, IdY={}, IdZ={}",
-                  voxelId,maxId,position,voxelIdX,voxelIdY,voxelIdZ);
+      // LOGSVC_DEBUG("Out of scope ChannelId: {}. Max voxel ID is: {}.\nPosition: {}\nIdX={}, IdY={}, IdZ={}",voxelId,maxId,position,voxelIdX,voxelIdY,voxelIdZ);
     }
 }
 ////////////////////////////////////////////////////////////////////////////////

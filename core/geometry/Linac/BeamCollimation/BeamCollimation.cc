@@ -236,7 +236,7 @@ bool BeamCollimation::MLC() {
         m_mlc = new MlcHd120(m_parentPV);
         break;
       case EMlcModel::Simplified:
-        LOGSVC_INFO("Using Simplified type of MLC");
+        // LOGSVC_INFO("Using Simplified type of MLC");
         m_mlc = new MlcSimplified;
         break;
     }
@@ -254,7 +254,7 @@ bool BeamCollimation::MLC() {
         break;
       case EMlcModel::Simplified:
         delete m_mlc;
-        LOGSVC_INFO("Using Simplified type of MLC");
+        // LOGSVC_INFO("Using Simplified type of MLC");
         m_mlc = new MlcSimplified();
         break;
     }

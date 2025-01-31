@@ -67,13 +67,13 @@ void D3DCell::SetIDs(G4int x, G4int y, G4int z){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void D3DCell::WriteInfo() {
-  LOGSVC_INFO("The Dose3D cell {} info: Implement me.", GetName());
+  // LOGSVC_INFO("The Dose3D cell {} info: Implement me.", GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void D3DCell::Destroy() {
-  LOGSVC_INFO("Destroing the D3DCell volume.");
+  // LOGSVC_INFO("Destroing the D3DCell volume.");
   auto phantomVolume = GetPhysicalVolume();
   if (phantomVolume) {
     delete phantomVolume;
@@ -118,7 +118,7 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   auto dose3dCellLV = new G4LogicalVolume(dose3dCellBox, Medium.get(), label+"LV");
   // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
   // here we locate the phantom box in the center of envelope box created in PatientGeometry:
-  LOGSVC_DEBUG("centre {} {} {}",m_centre.getX(),m_centre.getY(),m_centre.getZ()," for cell construction... "); 
+  // LOGSVC_DEBUG("centre {} {} {}",m_centre.getX(),m_centre.getY(),m_centre.getZ()," for cell construction... "); 
   G4cout << "[DEBUG]:: D3DCell:: creating cell: " << label << " with position: " << m_centre << G4endl;
 
 
@@ -127,7 +127,7 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label+"PV", dose3dCellLV, m_parentPV, false, 0));
 
   SetGlobalCentre( m_centre + m_parentPV->GetTranslation()); 
-  LOGSVC_DEBUG("Construct() >> current cell translation {}", m_global_centre);
+  // LOGSVC_DEBUG("Construct() >> current cell translation {}", m_global_centre);
   // std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << std::endl;
     // Region for cuts
   //G4cout << "[DEBUG]:: D3DCell:: creating cuts " << label <<"_G4RegionCuts" << G4endl;
@@ -170,7 +170,7 @@ void D3DCell::DefineSensitiveDetector(){
     auto pv = GetPhysicalVolume();
     auto centre = m_global_centre; // wrap this to VPatient::GetGlobalTranslation
     
-    LOGSVC_DEBUG("Construct SD >> current centre {} {} {}", centre.x(),centre.y(),centre.z());
+    // LOGSVC_DEBUG("Construct SD >> current centre {} {} {}", centre.x(),centre.y(),centre.z());
 
     auto envBox = dynamic_cast<G4Box*>(pv->GetLogicalVolume()->GetSolid());
     auto label = GetName();

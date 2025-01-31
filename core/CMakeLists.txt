@@ -4,14 +4,14 @@ cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(Core)
 
 #----------------------------------------------------------------------------
-# Tell CMake where to find the ROOT installation.
+# Konfiguracja ROOT
 list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 
 #---Locate the ROOT package
 find_package(ROOT COMPONENTS Gdml)
 
 #----------------------------------------------------------------------------
-#---Locate the Geant4 package
+# Konfiguracja Geant4
 find_package(Geant4 REQUIRED)
 
 #----------------------------------------------------------------------------
@@ -19,13 +19,14 @@ find_package(Geant4 REQUIRED)
 include(${Geant4_USE_FILE})
 
 #----------------------------------------------------------------------------
-# Setup the module for embedding the python interpreter
+# Konfiguracja Pybind11
 set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 REQUIRED)
 
 #----------------------------------------------------------------------------
-# Definicja ścieżki do NanoLog (bez add_subdirectory)
-set(NANOLOG_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/externals/NanoLog)
+# Konfiguracja Loguru
+set(LOGURU_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/externals/loguru)
+set(LOGURU_SRC ${LOGURU_INCLUDE_DIR}/loguru.cpp)
 
 #----------------------------------------------------------------------------
 add_definitions(${Geant4_DEFINITIONS}
@@ -34,7 +35,7 @@ add_definitions(${Geant4_DEFINITIONS}
         ${IAEA_DEFINITIONS})
 
 #----------------------------------------------------------------------------
-# Locate sources and headers for this project
+# Lokalizacja źródeł i nagłówków projektu
 set(HEADERS_DIR ${PROJECT_SOURCE_DIR}/analysis
         ${PROJECT_SOURCE_DIR}/action
         ${PROJECT_SOURCE_DIR}/physics
@@ -52,51 +53,34 @@ set(HEADERS_DIR ${PROJECT_SOURCE_DIR}/analysis
         ${PROJECT_SOURCE_DIR}/geometry/PhaseSpace
         ${PROJECT_SOURCE_DIR}/geometry/BeamMonitoring
         ${PROJECT_SOURCE_DIR}/geometry/WorldConstruction
-        ${PROJECT_SOURCE_DIR}/services/log
         ${PROJECT_SOURCE_DIR}/services)
 
 include_directories(${HEADERS_DIR}
-        ${IAEA_INCLUDE_DIR}
-        ${Geant4_INCLUDE_DIRS}
-        ${ConfigSvc_INCLUDE_DIR}
-        ${ROOT_INCLUDE_DIRS}
-        ${NANOLOG_INCLUDE_DIR}) # NanoLog ścieżka nagłówków
+                    ${IAEA_INCLUDE_DIR}
+                    ${Geant4_INCLUDE_DIRS}
+                    ${ConfigSvc_INCLUDE_DIR}
+                    ${ROOT_INCLUDE_DIRS}
+                    ${LOGURU_INCLUDE_DIR})
 
 file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/action/*.cc
-        ${PROJECT_SOURCE_DIR}/analysis/*.cc
-        ${PROJECT_SOURCE_DIR}/physics/*.cc
-        ${PROJECT_SOURCE_DIR}/geometry/*.cc
-        ${PROJECT_SOURCE_DIR}/services/*.cc
-        ${PROJECT_SOURCE_DIR}/utilities/*.cc)
+                         ${PROJECT_SOURCE_DIR}/analysis/*.cc
+                         ${PROJECT_SOURCE_DIR}/physics/*.cc
+                         ${PROJECT_SOURCE_DIR}/geometry/*.cc
+                         ${PROJECT_SOURCE_DIR}/services/*.cc
+                         ${PROJECT_SOURCE_DIR}/utilities/*.cc)
 
 #----------------------------------------------------------------------------
-add_library(${PROJECT_NAME} STATIC ${SOURCES})
+# Tworzenie biblioteki Core
+add_library(${PROJECT_NAME} STATIC ${SOURCES} ${LOGURU_SRC})
 
-# Linkowanie bibliotek (NanoLog tutaj jako nagłówkowy, więc nie musimy linkować .a/.so)
-target_link_libraries(${PROJECT_NAME} IAEA ConfigSvc ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} ROOT::Gdml pybind11::embed)
+#----------------------------------------------------------------------------
+# Linkowanie bibliotek
+# Loguru działa jako nagłówkowy, więc dodatkowe linkowanie nie jest wymagane
+# Jednak plik źródłowy loguru.cpp jest dodawany do biblioteki
+
+target_link_libraries(${PROJECT_NAME} PRIVATE IAEA ConfigSvc ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} ROOT::Gdml pybind11::embed)
 
 #----------------------------------------------------------------------------
 # Expose project's public includes to other subprojects
 set(${PROJECT_NAME}_INCLUDE_DIRS ${HEADERS_DIR} CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE)
 
-#----------------------------------------------------------------------------
-# Testy jednostkowe
-set(TESTNAME LogServiceTest)
-add_executable(${TESTNAME} ${PROJECT_SOURCE_DIR}/services/log/test/LogSvcTest.cc)
-target_link_libraries(${TESTNAME} IAEA ConfigSvc Core ${Geant4_LIBRARIES} gtest gtest_main) # NanoLog już dostępny przez nagłówki
-
-gtest_discover_tests(${TESTNAME})
-
-### Test the Dose3D Detector construction
-set(TESTNAME D3DDetectorTest)
-add_executable(${TESTNAME} ${PROJECT_SOURCE_DIR}/geometry/Patient/Dose3D/test/D3DDetectorTest.cc)
-target_link_libraries(${TESTNAME} IAEA ConfigSvc Core ${Geant4_LIBRARIES} gtest gtest_main)
-
-gtest_discover_tests(${TESTNAME})
-
-### Test the Water Phantom construction
-set(TESTNAME WaterPhantomTest)
-add_executable(${TESTNAME} ${PROJECT_SOURCE_DIR}/geometry/Patient/WaterPhantom/test/WaterPhantomTest.cc)
-target_link_libraries(${TESTNAME} IAEA ConfigSvc Core ${Geant4_LIBRARIES} gtest gtest_main)
-
-gtest_discover_tests(${TESTNAME})

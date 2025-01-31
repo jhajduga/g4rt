@@ -13,8 +13,9 @@
 #include <pybind11/embed.h>
 #include "toml.hh"
 #include "colors.hh"
-#include "LogSvc.hh"
+// // #include "LogSvc.hh"
 #include "WorldConstruction.hh"
+#include "logger.hh"
 
 int main(int argc, const char *argv[]) {
 
@@ -23,12 +24,20 @@ int main(int argc, const char *argv[]) {
   pybind11::module sys = pybind11::module::import("sys");
   sys.attr("path").attr("append")(std::string(PROJECT_PY_PATH));
 
-  SPDLOG_DEBUG("Initialize services");
+  // SPDLOG_DEBUG("Initialize services");
   auto configSvc = Service<ConfigSvc>();  // initialize ConfigSvc for TOML parsing
   auto runSvc = Service<RunSvc>();        // get RunSvc for general App run configuration
-  SPDLOG_DEBUG("End of initialize services");
+  // SPDLOG_DEBUG("End of initialize services");
 
-  SPDLOG_INFO("Wellcome G4RT!");
+  // SPDLOG_INFO("Wellcome G4RT!");
+
+  Logger::Init(argc, argv, "logs/main.log", loguru::Verbosity_INFO);
+  Logger::LogInfo("Main application started");
+
+  Logger::AddModuleLog("RunSvc", "logs/runsvc.log");
+  Logger::LogToModule("RunSvc", loguru::Verbosity_INFO, "Starting module-specific logging.");
+
+  Logger::LogInfo("Main application finished");
 
   if (argc > 1) {
   cxxopts::Options options(argv[0], "Text UI mode - command line options");
@@ -69,7 +78,7 @@ int main(int argc, const char *argv[]) {
 
     if (cmdopts.count("d")) {
       auto logLevelStr = cmdopts["d"].as<std::string>();
-      LogSvc::DefaulLogLevel(logLevelStr);
+      // LogSvc::DefaulLogLevel(logLevelStr);
     }
 
       // OPERATION
@@ -129,6 +138,8 @@ int main(int argc, const char *argv[]) {
     runSvc->Initialize(world);
     runSvc->Run();
     runSvc->Finalize();
+    Logger::LogInfo("Main application finished.");
+    loguru::shutdown();  // Zamknięcie loggera
   } else {
     G4cout << "[ERROR]:: Command line options missing (use '" << argv[0] << " --help' if needed)" << G4endl;
   }
