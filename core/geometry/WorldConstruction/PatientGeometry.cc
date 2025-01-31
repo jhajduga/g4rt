@@ -752,20 +752,22 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   std::ofstream c_outFile_merged, v_outFile_merged;
   c_outFile_merged.open(c_file_merged.c_str(), std::ios::out);
   v_outFile_merged.open(v_file_merged.c_str(), std::ios::out);
-  std::string header_merged = "X [mm],Y [mm],Z [mm],Id,IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor";
+  std::string header_merged = "X [mm],Y [mm],Z [mm],Id,IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor,AngleScalingFactor";
   c_outFile_merged << header_merged << std::endl;
   v_outFile_merged << header_merged << std::endl;
   std::string csv_slices_path = path_to_output_dir+"/"+plan_file_name+"_ct_dose_voxel";
   IO::CreateDirIfNotExits(csv_slices_path);
-  std::string header = "X [mm],Y [mm],Z [mm],IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor";
+  std::string header = "X [mm],Y [mm],Z [mm],IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor,AngleScalingFactor";
   double dose = 0.;
   double fsf = 0.; // field scaling factor
+  double asf = 0.; // angle scaling factor
   int cellIdX = 0;
   int cellIdY = 0;
   int cellIdZ = 0;
   for( int x = 0; x < xResolution; x++ ){
     dose = 0.;
     fsf = 0.;
+    asf = 0.;
     cellIdX = -1;
     cellIdY = -1;
     cellIdZ = -1;
@@ -787,19 +789,21 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
         if(voxelHit){
           dose = voxelHit->GetDose();
           fsf = voxelHit->GetFieldScalingFactor();
+          asf = voxelHit->GetAngleScalingFactor();
           cellIdX = voxelHit->GetGlobalID(0);
           cellIdY = voxelHit->GetGlobalID(1);
           cellIdZ = voxelHit->GetGlobalID(2);
         } else {
           dose = 0.;
           fsf = 0.;
+          asf = 0.;
           cellIdX = -1;
           cellIdY = -1;
           cellIdZ = -1;
         }
-        v_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
+        v_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << "," << asf  << std::endl;
 
-        v_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
+        v_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << "," << asf << std::endl;
       }
     }
     v_outFile.close();
@@ -811,6 +815,7 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
     for( int x = 0; x < xResolution; x++ ){
     dose = 0.;
     fsf = 0.;
+    asf = 0.;
     cellIdX = -1;
     cellIdY = -1;
     cellIdZ = -1;
@@ -832,19 +837,21 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
         if(voxelHit){
           dose = voxelHit->GetDose();
           fsf = voxelHit->GetFieldScalingFactor();
+          asf = voxelHit->GetAngleScalingFactor();
           cellIdX = voxelHit->GetGlobalID(0);
           cellIdY = voxelHit->GetGlobalID(1);
           cellIdZ = voxelHit->GetGlobalID(2);
         } else {
           dose = 0.;
           fsf = 0.;
+          asf = 0.;
           cellIdX = -1;
           cellIdY = -1;
           cellIdZ = -1;
         }
-        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
+        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << "," << asf  << std::endl;
 
-        c_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
+        c_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << "," << asf << std::endl;
       }
     }
     c_outFile.close();

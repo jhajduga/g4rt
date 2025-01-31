@@ -27,12 +27,13 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
         auto vzId = hit.GetID(2);
         auto volume_centre = hit.GetCentre();
         auto dose = hit.GetDose();
-        auto inField = hit.GetFieldScalingFactor();
+        auto fsf = hit.GetFieldScalingFactor();
+        auto asf = hit.GetAngleScalingFactor();
         file <<cxId<<","<<cyId<<","<<czId;
         if(voxelised)
             file <<","<<vxId<<","<<vyId<<","<<vzId;
         file <<","<<volume_centre.getX()<<","<<volume_centre.getY()<<","<<volume_centre.getZ();
-        file <<","<<dose<<","<< inField << std::endl;
+        file <<","<<dose<<","<< fsf << ","<< asf << std::endl;
     };
 
     auto cp = Service<RunSvc>()->CurrentControlPoint();
@@ -47,10 +48,10 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
             auto type_str = svc::tolower(Scoring::to_string(scoring_type));
             auto coll_str = svc::tolower(scoring_map.first);
             auto file = cp->GetOutputFileName()+"_"+coll_str+"_"+type_str+".csv";
-            std::string header = "Cell IdX,Cell IdY,Cell IdZ,X [mm],Y [mm],Z [mm],Dose [Gy],FieldScalingFactor";
+            std::string header = "Cell IdX,Cell IdY,Cell IdZ,X [mm],Y [mm],Z [mm],Dose [Gy],FieldScalingFactor,AngleScalingFactor";
 
             if(scoring_type==Scoring::Type::Voxel)
-                header = "Cell IdX,Cell IdY,Cell IdZ,Voxel IdX,Voxel IdY,Voxel IdZ,X [mm],Y [mm],Z [mm],Dose [Gy],FieldScalingFactor";
+                header = "Cell IdX,Cell IdY,Cell IdZ,Voxel IdX,Voxel IdY,Voxel IdZ,X [mm],Y [mm],Z [mm],Dose [Gy],FieldScalingFactor,AngleScalingFactor";
 
             std::ofstream c_outFile;
             c_outFile.open(file.c_str(), std::ios::out);

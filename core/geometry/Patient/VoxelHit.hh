@@ -85,6 +85,8 @@ class VoxelHit final : public G4VHit {
   ///
   G4double m_field_scaling_factor{1.};
 
+  G4double m_angle_scaling_factor{1.};
+
   ///
   void FillTrack(G4Step* aStep);
 
@@ -234,6 +236,12 @@ class VoxelHit final : public G4VHit {
 
   ///
   G4double GetFieldScalingFactor() const { return m_field_scaling_factor; }
+
+  ///
+  void SetAngleScalingFactor(double sf) { m_angle_scaling_factor = sf; }
+
+  ///
+  G4double GetAngleScalingFactor() const { return m_angle_scaling_factor; }
 
   ///
   std::size_t GetGlobalHashedStrId() const;
