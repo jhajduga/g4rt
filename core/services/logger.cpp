@@ -81,7 +81,7 @@ void Logger::Init(int argc, const char* argv[],
     loguru::g_stderr_verbosity = verbosity;
 
     // Remove Loguru's default callback so that its preamble (date, time, etc.) isn’t printed.
-    loguru::remove_callback(0);
+    // loguru::remove_callback("preamble");
 
     // Add our maximum custom callback.
     // Here, we're sending output to stderr; you can send it to any FILE*.
@@ -191,7 +191,7 @@ void Logger::LogDetailed(loguru::Verbosity verbosity, const char* file, int line
     std::string formatted = format_global_message(verbosity, file, line, function, message);
     // Wywołujemy globalne logowanie – komunikat sformatowany będzie widoczny w app.log
     // LOGURU_FMT(s)
-    loguru::log(verbosity, file, line, function, formatted);
+    loguru::log(verbosity, file, line, function, formatted.c_str());
     loguru::flush();
 }
 
