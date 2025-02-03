@@ -14,6 +14,7 @@
 #include "G4RunManager.hh"
 #include "ControlPoint.hh"
 #include "VoxelHit.hh"
+#include "logger.hh"
 
 /// TODO 1: TpFractionCounter (double evtTotalEnergy); // return EvtFractionId
 /// TODO 2: DaqTimeCounter(); // based on the global timer, returns EvtTimeId
@@ -38,6 +39,15 @@ enum class OperationalMode {
 // class RunSvc : public TomlConfigurable, Logable {
 class RunSvc : public TomlConfigurable {
   private:
+  
+  // Nadpisanie (przedefiniowanie) globalnych makr logujących na modułowe w pliku RunSvc.
+
+  // #define RUNSVC_DEBUG(msg, ...) LOG_TO_MODULE("RunSvc", loguru::Verbosity_MAX, msg, ##__VA_ARGS__)
+  // #define RUNSVC_INFO(msg, ...)  LOG_TO_MODULE("RunSvc", loguru::Verbosity_INFO, msg, ##__VA_ARGS__)
+  // #define RUNSVC_WARNING(msg, ...)  LOG_TO_MODULE("RunSvc", loguru::Verbosity_WARNING, msg, ##__VA_ARGS__)
+  // #define RUNSVC_ERROR(msg, ...)  LOG_TO_MODULE("RunSvc", loguru::Verbosity_ERROR, msg, ##__VA_ARGS__)
+  // #define RUNSVC_FATAL(msg, ...)  LOG_TO_MODULE("RunSvc", loguru::Verbosity_FATAL, msg, ##__VA_ARGS__)
+
   RunSvc();
 
   ~RunSvc();

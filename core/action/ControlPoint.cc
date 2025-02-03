@@ -37,7 +37,7 @@ ControlPointConfig::ControlPointConfig(int id, int nevts, double rot)
 void ControlPointRun::InitializeScoringCollection(){
     std::string worker = G4Threading::IsWorkerThread() ? "worker" : "master";
     // if (G4Threading::IsWorkerThread() == false) {
-    Logger::LogInfo("Message from Worker thread.");
+    // Logger::LogInfo("Message from Worker thread.");
     auto scoring_types = Service<RunSvc>()->GetScoringTypes(); 
     auto run_collections = ControlPoint::m_run_collections; 
     // // LOGSVC_INFO("Run scoring initialization for #{} collections ({})",run_collections.size(),worker);

@@ -31,25 +31,16 @@ int main(int argc, const char *argv[]) {
 
   // SPDLOG_INFO("Wellcome G4RT!");
 
- Logger::Init(argc, argv, "logs/app.log", loguru::Verbosity_INFO, 100);
-
-    // Logowanie informacji z maina
-    LOGSVC_INFO("Main: Application started.");
-
-    // Logowanie z rozszerzonym makrem (dodatkowo dołączany jest identyfikator wątku)
-    LOGSVC_DEBUG_EXT("Main: Debug info - variable value = {}", 123);
-
-    // Przykład logowania przy użyciu niestandardowego typu:
-    std::vector<int> values = {1, 2, 3, 4, 5};
-    LOGSVC_INFO("Main: Logging vector: {}", values);
-
-    // Logowanie do modułowego pliku – tutaj nazwa modułu "MainModule"
-    Logger::LogToModule("MainModule", loguru::Verbosity_INFO, "Main module logging started.");
-
-    // Wywołanie funkcji z przykładowego modułu RunSvc
-
-    // Kolejne logi z maina
-    LOGSVC_INFO("Main: Application finished.");
+ Logger::Init(argc, argv, "logs/app.log", loguru::Verbosity_MAX, 100);
+  std::cout << "Start of logger" << std::endl;
+  LOGSVC_INFO("Main: Application started.");
+  LOGSVC_DEBUG_EXT("Main: Debug info - variable value = {}", 123);
+  std::vector<int> values = {1, 2, 3, 4, 5};
+  LOGSVC_INFO("Main: Logging vector: {}", values);
+  Logger::LogToModule("MainModule", loguru::Verbosity_INFO, "Main module logging started.");
+  Logger::LogToModule("MainModule", loguru::Verbosity_INFO, "Main module logging continued.");
+  Logger::LogToModule("MainModule", loguru::Verbosity_INFO, "Main module logging continued further.");
+  LOGSVC_INFO("Main: Application finished.");
 
 
   if (argc > 1) {
@@ -151,7 +142,7 @@ int main(int argc, const char *argv[]) {
     runSvc->Initialize(world);
     runSvc->Run();
     runSvc->Finalize();
-    Logger::LogInfo("Main application finished.");
+
     loguru::shutdown();  // Zamknięcie loggera
   } else {
     G4cout << "[ERROR]:: Command line options missing (use '" << argv[0] << " --help' if needed)" << G4endl;

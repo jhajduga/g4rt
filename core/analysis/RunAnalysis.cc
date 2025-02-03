@@ -42,7 +42,8 @@ RunAnalysis *RunAnalysis::GetInstance() {
 void RunAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
     m_current_cp = Service<RunSvc>()->CurrentControlPoint();
     std::string worker = G4Threading::IsWorkerThread() ? "*WORKER*" : " *MASTER* ";
-    LOGSVC_INFO("Message from {} thread.", worker);
+    // LOGSVC_INFO("Message from {} thread.", worker);
+    std::cout << "Message from " << worker << std::endl;
     // LOGSVC_DEBUG("RunAnalysis:: begin of run at {} thread.",worker);
     // Note: Everything is being care by ControlPointRun::InitializeScoringCollection
 }
