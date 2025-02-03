@@ -16,7 +16,7 @@
 PhysicsList::PhysicsList(){
 
   SetDefaultCutValue(0.1 * mm);
-  SetVerboseLevel(2);
+  SetVerboseLevel(0);
 
   /// Run actual physics constructor with the user-specified physics lists
   AddPhysicsList(G4String(Service<ConfigSvc>()->GetValue<std::string>("RunSvc", "Physics")));

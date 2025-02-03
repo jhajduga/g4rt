@@ -10,8 +10,8 @@ UIManager::UIManager()
     : UIG4Manager(G4UImanager::GetUIpointer()), m_isG4kernelInitialized(false) {
       // LogSession * LoggedSession = new LogSession();
       // UIG4Manager->SetCoutDestination(LoggedSession);
-      UIG4Manager->ApplyCommand("/control/verbose 2");
-      UIG4Manager->ApplyCommand("/run/verbose 2");
+      // UIG4Manager->ApplyCommand("/control/verbose 2");
+      // UIG4Manager->ApplyCommand("/run/verbose 2");
     }
 
 ////////////////////////////////////////////////////////////////////////////////

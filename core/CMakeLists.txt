@@ -18,6 +18,8 @@ find_package(Geant4 REQUIRED)
 # Setup Geant4 include directories and compile definitions
 include(${Geant4_USE_FILE})
 
+find_package(fmt REQUIRED)
+
 #----------------------------------------------------------------------------
 # Konfiguracja Pybind11 i Python
 find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
@@ -88,7 +90,7 @@ add_library(${PROJECT_NAME} STATIC ${SOURCES} ${LOGURU_SRC})
 # Loguru działa jako nagłówkowy, więc dodatkowe linkowanie nie jest wymagane
 # Jednak plik źródłowy loguru.cpp jest dodawany do biblioteki
 
-target_link_libraries(${PROJECT_NAME} PRIVATE IAEA ConfigSvc ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} ROOT::Gdml pybind11::embed)
+target_link_libraries(${PROJECT_NAME} PRIVATE IAEA ConfigSvc ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} ROOT::Gdml pybind11::embed fmt::fmt)
 
 #----------------------------------------------------------------------------
 # Expose project's public includes to other subprojects
@@ -97,13 +99,13 @@ set(${PROJECT_NAME}_INCLUDE_DIRS ${HEADERS_DIR} CACHE INTERNAL "${PROJECT_NAME}:
 ### Test the Dose3D Detector construction
 set(TESTNAME D3DDetectorTest)
 add_executable(${TESTNAME} ${PROJECT_SOURCE_DIR}/geometry/Patient/Dose3D/test/D3DDetectorTest.cc ${LOGURU_SRC})
-target_link_libraries(${TESTNAME} IAEA ConfigSvc Core ${Geant4_LIBRARIES} gtest gtest_main dl Python3::Python)
+target_link_libraries(${TESTNAME} IAEA ConfigSvc Core ${Geant4_LIBRARIES} gtest gtest_main dl Python3::Python fmt::fmt)
 target_include_directories(${TESTNAME} PRIVATE ${ROOT_INCLUDE_DIRS} ${LOGURU_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
 gtest_discover_tests(${TESTNAME})
 
 ### Test the Water Phantom construction
 set(TESTNAME WaterPhantomTest)
 add_executable(${TESTNAME} ${PROJECT_SOURCE_DIR}/geometry/Patient/WaterPhantom/test/WaterPhantomTest.cc ${LOGURU_SRC})
-target_link_libraries(${TESTNAME} IAEA ConfigSvc Core ${Geant4_LIBRARIES} gtest gtest_main dl Python3::Python)
+target_link_libraries(${TESTNAME} IAEA ConfigSvc Core ${Geant4_LIBRARIES} gtest gtest_main dl Python3::Python fmt::fmt)
 target_include_directories(${TESTNAME} PRIVATE ${ROOT_INCLUDE_DIRS} ${LOGURU_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
 gtest_discover_tests(${TESTNAME})

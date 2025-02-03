@@ -31,13 +31,26 @@ int main(int argc, const char *argv[]) {
 
   // SPDLOG_INFO("Wellcome G4RT!");
 
-  Logger::Init(argc, argv, "logs/main.log", loguru::Verbosity_INFO);
-  Logger::LogInfo("Main application started");
+ Logger::Init(argc, argv, "logs/app.log", loguru::Verbosity_INFO, 100);
 
-  Logger::AddModuleLog("RunSvc", "logs/runsvc.log");
-  Logger::LogToModule("RunSvc", loguru::Verbosity_INFO, "Starting module-specific logging.");
+    // Logowanie informacji z maina
+    LOGSVC_INFO("Main: Application started.");
 
-  Logger::LogInfo("Main application finished");
+    // Logowanie z rozszerzonym makrem (dodatkowo dołączany jest identyfikator wątku)
+    LOGSVC_DEBUG_EXT("Main: Debug info - variable value = {}", 123);
+
+    // Przykład logowania przy użyciu niestandardowego typu:
+    std::vector<int> values = {1, 2, 3, 4, 5};
+    LOGSVC_INFO("Main: Logging vector: {}", values);
+
+    // Logowanie do modułowego pliku – tutaj nazwa modułu "MainModule"
+    Logger::LogToModule("MainModule", loguru::Verbosity_INFO, "Main module logging started.");
+
+    // Wywołanie funkcji z przykładowego modułu RunSvc
+
+    // Kolejne logi z maina
+    LOGSVC_INFO("Main: Application finished.");
+
 
   if (argc > 1) {
   cxxopts::Options options(argv[0], "Text UI mode - command line options");

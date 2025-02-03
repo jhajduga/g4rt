@@ -491,16 +491,29 @@ void RunSvc::BuildGeometryMode() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunSvc::FullSimulationMode() {
-  // LOGSVC_INFO("FullSimulationMode");
-  Logger::LogInfo("Starting simulation in RunSvc");
+// Logowanie przy użyciu makr i standardowych funkcji loggera
+        LOGSVC_INFO("RunSvc: Starting run.");
+        
+        // Logowanie do modułowego pliku (domyślnie "logs/RunSvc.log")
+        Logger::LogToModule("RunSvc", loguru::Verbosity_INFO, "RunSvc module started processing.");
 
-  // Log to the RunSvc module-specific file
-  Logger::LogToModule("RunSvc", loguru::Verbosity_INFO, "Simulation in progress...");
+        // Przykład logowania rozszerzonego – dodatkowo z ID wątku
+        LOGSVC_DEBUG_EXT("RunSvc: Processing step {}", 1);
 
-  Logger::LogWarning("Simulation encountered a warning");
-  Logger::LogError("Simulation encountered an error");
+        // Symulacja pracy: kilka kroków
+        for (int i = 0; i < 3; ++i) {
+            LOGSVC_DEBUG("RunSvc: Processing iteration {}", i);
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
 
-  Logger::LogToModule("RunSvc", loguru::Verbosity_INFO, "Simulation completed in RunSvc");
+        // Logowanie ostrzeżenia oraz błędu
+        LOGSVC_WARNING("RunSvc: A non-critical warning occurred.");
+        LOGSVC_ERROR("RunSvc: An error occurred, error code: {}", 404);
+
+        // Logowanie zakończenia działania modułu – również do modułowego pliku
+        Logger::LogToModule("RunSvc", loguru::Verbosity_INFO, "RunSvc module completed processing.");
+        LOGSVC_INFO("RunSvc: Finished run.");
+        
 auto sourceName = m_configSvc->GetValue<std::string>("RunSvc", "BeamType");
   if (sourceName.compare("gps") == 0){
     auto macFile = m_configSvc->GetValue<std::string>("RunSvc", "GpsMacFileName");

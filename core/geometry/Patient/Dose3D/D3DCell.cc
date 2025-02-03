@@ -13,6 +13,7 @@
 #include "colors.hh"
 #include <vector>
 #include "Services.hh"
+#include "logger.hh"
 
 namespace {
     G4Mutex CellMutex = G4MUTEX_INITIALIZER;
@@ -120,7 +121,9 @@ void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   // here we locate the phantom box in the center of envelope box created in PatientGeometry:
   // LOGSVC_DEBUG("centre {} {} {}",m_centre.getX(),m_centre.getY(),m_centre.getZ()," for cell construction... "); 
   G4cout << "[DEBUG]:: D3DCell:: creating cell: " << label << " with position: " << m_centre << G4endl;
-
+  //   Logger::LogInfo("Starting simulation in RunSvc");
+  // Logger::LogToModule("RunSvc", loguru::Verbosity_INFO, "Simulation in progress...");
+  // Logger::LogError("Centre"+std::to_string(m_centre.getX())+" "+std::to_string(m_centre.getY())+" "+std::to_string(m_centre.getZ()) + " for cell construction... ");
 
   // For Painted
   // SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(), label+"PV", dose3dCellLV, pv, false, 0));
