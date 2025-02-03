@@ -81,11 +81,16 @@ void Logger::Init(int argc, const char* argv[],
     loguru::g_stderr_verbosity = verbosity;
 
     // Remove Loguru's default callback so that its preamble (date, time, etc.) isn’t printed.
-    loguru::remove_callback("default");
+    loguru::remove_callback(0);
 
     // Add our maximum custom callback.
     // Here, we're sending output to stderr; you can send it to any FILE*.
-    loguru::add_callback("max_custom", stderr, max_custom_log_callback);
+    loguru::add_callback("max_custom", 
+                     max_custom_log_callback,   // callback function
+                     stderr,                    // user_data: pointer to FILE* (e.g. stderr)
+                     loguru::Verbosity_MAX,     // set appropriate verbosity level
+                     nullptr,                   // no custom close handler
+                     nullptr);                  // no custom flush handler
 }
 
 
@@ -185,7 +190,8 @@ void Logger::LogDetailed(loguru::Verbosity verbosity, const char* file, int line
     // Tutaj formatujemy komunikat globalny przy użyciu naszej funkcji formattera
     std::string formatted = format_global_message(verbosity, file, line, function, message);
     // Wywołujemy globalne logowanie – komunikat sformatowany będzie widoczny w app.log
-    loguru::log(verbosity, file, line, function, "%s", formatted.c_str());
+    // LOGURU_FMT(s)
+    loguru::log(verbosity, file, line, function, formatted);
     loguru::flush();
 }
 

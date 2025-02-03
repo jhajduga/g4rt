@@ -1,6 +1,7 @@
 #ifndef LOGGER_HH
 #define LOGGER_HH
-
+// #define LOGURU_USE_FMTLIB 1
+// #include "loguru.hpp"
 #include <loguru.hpp>
 #include <string>
 #include <iostream>

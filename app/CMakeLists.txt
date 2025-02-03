@@ -61,6 +61,7 @@ file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/basic/*.cc)
 add_executable(g4rt ${SOURCES} basic/main.cc ${LOGURU_SRC} ${CMAKE_SOURCE_DIR}/core/services/logger.cpp)
 target_link_libraries(g4rt PRIVATE IAEA ConfigSvc Core ${Geant4_LIBRARIES} dl Python3::Python fmt::fmt)
 target_include_directories(g4rt PRIVATE ${ROOT_INCLUDE_DIRS} ${LOGURU_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
+target_compile_definitions(g4rt PRIVATE LOGURU_USE_FMTLIB=1)
 
 # ----------------------------------------------------------------------------
 # Aplikacja g4rt_bworld
