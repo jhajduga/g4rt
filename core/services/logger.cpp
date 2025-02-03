@@ -191,7 +191,8 @@ void Logger::LogDetailed(loguru::Verbosity verbosity, const char* file, int line
     std::string formatted = format_global_message(verbosity, file, line, function, message);
     // Wywołujemy globalne logowanie – komunikat sformatowany będzie widoczny w app.log
     // LOGURU_FMT(s)
-    loguru::log(verbosity, file, line, function, formatted.c_str());
+    loguru::log(verbosity, file, line, function, message.c_str(),"{:.{}f} s: {:s}");
+    LOG_F(MAX, "{}", formatted);
     loguru::flush();
 }
 
