@@ -15,7 +15,7 @@
 #include "colors.hh"
 // // #include "LogSvc.hh"
 #include "WorldConstruction.hh"
-#include "logger.hh"
+#include "LogSvc.hpp"
 
 int main(int argc, const char *argv[]) {
 
@@ -31,16 +31,17 @@ int main(int argc, const char *argv[]) {
 
   // SPDLOG_INFO("Wellcome G4RT!");
 
- Logger::Init(argc, argv, "logs/app.log", loguru::Verbosity_MAX, 100);
-  std::cout << "Start of logger" << std::endl;
-  LOGSVC_INFO("Main: Application started.");
-  LOGSVC_DEBUG_EXT("Main: Debug info - variable value = {}", 123);
-  std::vector<int> values = {1, 2, 3, 4, 5};
-  LOGSVC_INFO("Main: Logging vector: {}", values);
-  Logger::LogToModule("MainModule", loguru::Verbosity_INFO, "Main module logging started.");
-  Logger::LogToModule("MainModule", loguru::Verbosity_INFO, "Main module logging continued.");
-  Logger::LogToModule("MainModule", loguru::Verbosity_INFO, "Main module logging continued further.");
-  LOGSVC_INFO("Main: Application finished.");
+    // Inicjalizacja loggera
+    LogSvc::Init(argc, argv, "logs/app_main.log", loguru::Verbosity_MAX, 100);
+    LogSvc::SetTerminalLogLevel(loguru::Verbosity_MAX);
+    LogSvc::AddModuleLogFile("RunSvc", "logs/run_svc.log", loguru::Verbosity_MAX);
+    LogSvc::AddModuleLogFile("MainModule", "logs/main_svc.log", loguru::Verbosity_MAX);
+    // Logowanie w głównej funkcji
+    // LOG_TO_MODULE("RunSvc", loguru::Verbosity_INFO, "Starting run with ID: {}", run_id);
+    LOGSVC_INFO("MainModule", "Program startuje.");
+    LOGSVC_DEBUG("MainModule", "Debug log testowy.");
+    LOGSVC_INFO("RunSvc", "Nowa wiadomość z runSVC");
+    LOGSVC_INFO("MainModule", "Program kończy działanie.");
 
 
   if (argc > 1) {

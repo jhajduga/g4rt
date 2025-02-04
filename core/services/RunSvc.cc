@@ -23,7 +23,7 @@
 #include "TGeoVolume.h"
 #include "TFile.h"
 #include "TTree.h"
-// #include "logger.hh"
+// #include "LogSvc.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -237,6 +237,10 @@ void RunSvc::Initialize(WorldConstruction* world) {
   // LogSvc::Configure();
   // m_logger = LogSvc::RecreateLogger("RunSvc");
   // LOGSVC_INFO("Logger recreated.");
+    // RUNSVC_INFO("Rozpoczęto działanie funkcji someModuleFunction.");
+    // RUNSVC_DEBUG("Wykonuję operację wewnątrz funkcji.");
+    // RUNSVC_WARNING("Ostrzeżenie! Może wystąpić błąd.");
+    // RUNSVC_ERROR("Test komunikatu błędu.");
 
   if (m_application_mode == OperationalMode::BuildGeometry)
     return;

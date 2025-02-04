@@ -10,7 +10,7 @@ set(CMAKE_COLOR_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_DEFAULT 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
-add_compile_definitions(LOGURU_USE_FMTLIB=1)
+
 #----------------------------------------------------------------------------
 # Zabronienie budowania w katalogu źródłowym
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
@@ -57,7 +57,7 @@ add_subdirectory(app)
 
 #----------------------------------------------------------------------------
 message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
-
+add_definitions(-DLOGURU_USE_FMTLIB=1)
 #----------------------------------------------------------------------------
 # Copy all scripts to the build directory
 set(RUN_SCRIPTS

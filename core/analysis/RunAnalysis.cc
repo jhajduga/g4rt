@@ -11,7 +11,7 @@
 #include "CsvRunAnalysis.hh"
 #include "NTupleRunAnalysis.hh"
 #include "Services.hh"
-#include "logger.hh"
+#include "LogSvc.hpp"
 #ifdef G4MULTITHREADED
   #include "G4MTRunManager.hh"
 #endif

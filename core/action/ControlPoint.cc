@@ -15,7 +15,7 @@
 #include <random>
 #include "VMlc.hh"
 #include "Services.hh"
-#include "logger.hh"
+#include "LogSvc.hpp"
 #include <numeric> 
 
 double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.50 * mm;

@@ -13,7 +13,7 @@
 #include "colors.hh"
 #include <vector>
 #include "Services.hh"
-#include "logger.hh"
+#include "LogSvc.hpp"
 
 namespace {
     G4Mutex CellMutex = G4MUTEX_INITIALIZER;
