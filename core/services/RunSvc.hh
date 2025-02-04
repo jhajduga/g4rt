@@ -14,7 +14,7 @@
 #include "G4RunManager.hh"
 #include "ControlPoint.hh"
 #include "VoxelHit.hh"
-// #include "LogSvc.hpp"
+#include "LogSvc.hpp"
 
 /// TODO 1: TpFractionCounter (double evtTotalEnergy); // return EvtFractionId
 /// TODO 2: DaqTimeCounter(); // based on the global timer, returns EvtTimeId
@@ -40,18 +40,16 @@ enum class OperationalMode {
 class RunSvc : public TomlConfigurable {
   private:
   
-  // // Nadpisanie makr logujących dla modułu `RunSvc`
-  // #undef RUNSVC_DEBUG
-  // #undef RUNSVC_INFO
-  // #undef RUNSVC_WARNING
-  // #undef RUNSVC_ERROR
-  // #undef RUNSVC_FATAL
+  // Nadpisanie makr logujących dla modułu `RunSvc`
 
-  // #define RUNSVC_DEBUG(msg, ...)      LogSvc::LogDebug("RunSvc", msg, ##__VA_ARGS__)
-  // #define RUNSVC_INFO(msg, ...)       LogSvc::LogInfo("RunSvc", msg, ##__VA_ARGS__)
-  // #define RUNSVC_WARNING(msg, ...)    LogSvc::LogWarning("RunSvc", msg, ##__VA_ARGS__)
-  // #define RUNSVC_ERROR(msg, ...)      LogSvc::LogError("RunSvc", msg, ##__VA_ARGS__)
-  // #define RUNSVC_FATAL(msg, ...)      LogSvc::LogFatal("RunSvc", msg, ##__VA_ARGS__)
+
+#define DEFAULT_MODULE "RunSvc"
+
+#define RUNSVC_DEBUG(msg, ...)   LOGSVC_DEBUG(DEFAULT_MODULE, msg, ##__VA_ARGS__)
+#define RUNSVC_INFO(msg, ...)    LOGSVC_INFO(DEFAULT_MODULE, msg, ##__VA_ARGS__)
+#define RUNSVC_WARNING(msg, ...) LOGSVC_WARNING(DEFAULT_MODULE, msg, ##__VA_ARGS__)
+#define RUNSVC_ERROR(msg, ...)   LOGSVC_ERROR(DEFAULT_MODULE, msg, ##__VA_ARGS__)
+#define RUNSVC_FATAL(msg, ...)   LOGSVC_FATAL(DEFAULT_MODULE, msg, ##__VA_ARGS__)
 
   RunSvc();
 

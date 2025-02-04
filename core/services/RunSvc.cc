@@ -357,16 +357,16 @@ void RunSvc::UserG4Initialization() {
 ///
 void RunSvc::Run() {
 
-        // RUNSVC_INFO("RunSvc: Starting run.");
-        // RUNSVC_WARNING("RunSvc: Warning message with parameter {}", 42);
-        // RUNSVC_ERROR("RunSvc: Error occurred with code {}", -1);
+        RUNSVC_INFO("RunSvc: Starting run.");
+        RUNSVC_WARNING("RunSvc: Warning message with parameter {}", 42);
+        RUNSVC_ERROR("RunSvc: Error occurred with code {}", -1);
 
-        // for (int i = 0; i < 3; ++i) {
-        //     RUNSVC_DEBUG("RunSvc: Processing iteration {}", i);
-        //     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        // }
+        for (int i = 0; i < 3; ++i) {
+            RUNSVC_DEBUG("RunSvc: Processing iteration {}", i);
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
 
-        // RUNSVC_INFO("RunSvc: Finished run.");
+        RUNSVC_INFO("RunSvc: Finished run.");
 
   switch (m_application_mode) {
     case OperationalMode::BuildGeometry:
