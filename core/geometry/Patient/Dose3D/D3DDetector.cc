@@ -96,7 +96,7 @@ void D3DDetector::ParseTomlConfig(){
   m_config.m_nY_cells = config[configObjDetector]["Voxelization"][1].value_or(0);
   m_config.m_nZ_cells = config[configObjDetector]["Voxelization"][2].value_or(0);
   ///
-  m_config.m_stl_geometry_file_path = config[configObjDetector]["Geomertry"].value_or("None");
+  m_config.m_stl_geometry_file_path = config[configObjDetector]["Geometry"].value_or("None");
   m_config.m_in_layer_positioning_module = config[configObjLayer]["Positioning"].value_or("None");
 
   ///
