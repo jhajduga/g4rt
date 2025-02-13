@@ -111,8 +111,11 @@ namespace svc {
 
   G4ThreeVector getHalfSize(G4VPhysicalVolume* volume);
 
-  G4ThreeVector getPositionInGlobalFrame(const G4ThreeVector& localPosition, IPhysicalVolume* volumeOfLocalFrame, bool localToGlobal = true);
-  G4ThreeVector getPositionInLocalFrame(const G4ThreeVector& globalPosition, G4VPhysicalVolume* volumeOfLocalFrame);
+  enum class Transform {
+    LocalToGlobal,
+    GlobalToLocal
+  };
 
+  G4ThreeVector transformPosition(const G4ThreeVector& localPosition, IPhysicalVolume* volumeOfLocalFrame, Transform direction = Transform::LocalToGlobal);
 }
 #endif  // Dose3D_SERVICES_H

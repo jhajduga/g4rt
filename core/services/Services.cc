@@ -349,8 +349,8 @@ G4ThreeVector svc::getHalfSize(G4VPhysicalVolume* volume){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-G4ThreeVector svc::getPositionInGlobalFrame(const G4ThreeVector& localPosition, IPhysicalVolume* volumeOfLocalFrame, bool localToGlobal){
-  G4cout << "getPositionInGlobalFrame: " << localPosition << "..." << G4endl;
+G4ThreeVector svc::transformPosition(const G4ThreeVector& localPosition, IPhysicalVolume* volumeOfLocalFrame, Transform direction){
+  G4cout << "transformPosition: " << localPosition << "..." << G4endl;
   G4ThreeVector globalPosition = localPosition; // Start with local position
   // Traverse up the hierarchy
   auto currentVolume = volumeOfLocalFrame->GetParentPtr();
@@ -374,9 +374,9 @@ G4ThreeVector svc::getPositionInGlobalFrame(const G4ThreeVector& localPosition, 
       if(is_rotated){
         G4cout << " got frame rotation: " << *frameRotation << G4endl;
         G4cout << " performing inverse rotation... " << G4endl;
-        if (localToGlobal)
+        if (direction==Transform::LocalToGlobal)
           globalPosition = frameRotation->inverse() * globalPosition;
-        else
+        else if (direction==Transform::GlobalToLocal)
          globalPosition = *frameRotation * globalPosition;
       } else {
         G4cout << " no rotation. " << G4endl;
@@ -402,56 +402,6 @@ G4ThreeVector svc::getPositionInGlobalFrame(const G4ThreeVector& localPosition, 
     // currentVolume = motherLogical->GetDaughter(0); // Traverse upwards
   }
   return globalPosition;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-G4ThreeVector svc::getPositionInLocalFrame(const G4ThreeVector& globalPosition, G4VPhysicalVolume* volumeOfLocalFrame) {
-  G4cout << "getPositionInLocalFrame: " << globalPosition << "..." << G4endl;
-  G4ThreeVector localPosition = globalPosition; // Start with global position
-  // Traverse up the hierarchy
-  G4VPhysicalVolume* currentVolume = volumeOfLocalFrame;
-  while (currentVolume) {
-    G4cout << " current volume: " << currentVolume->GetName() << G4endl;
-    
-    // Get the frame rotation and translation of the current volume
-    auto frameRotation = currentVolume->GetFrameRotation();
-    auto frameTranslation = currentVolume->GetFrameTranslation();
-
-    auto is_rotated = frameRotation->norm2() > 1e-10 ? true : false;
-    auto is_translated = frameTranslation.mag2() > 1e-10 ? true : false;
-
-    if (is_translated) {
-      G4cout << " applying translation: " << frameTranslation << G4endl;
-      localPosition += frameTranslation; // Apply translation
-    } else {
-      G4cout << " no translation. " << G4endl;
-    }
-    
-    if (is_rotated) {
-      G4cout << " applying rotation: " << *frameRotation << G4endl;
-      localPosition = (*frameRotation) * localPosition; // Apply rotation
-    } else {
-      G4cout << " no rotation. " << G4endl;
-    }
-    // auto worldInstance = Service<GeoSvc>()->World();
-    // // g4Navigator->SetWorldVolume(worldInstance->GetPhysicalVolume());
-    // // Check if this is the world volume
-    // if (currentVolume == worldInstance->GetWorldPV()) {
-    //   G4cout << " reached world volume, stopping traversal... " << G4endl;
-    //   break;
-    // }
-    
-    // Move to the daughter volume
-    G4LogicalVolume* motherLogical = currentVolume->GetMotherLogical();
-    if (motherLogical) {
-      currentVolume = motherLogical->GetDaughter(0); // Traverse downwards
-    } else {
-      break; // This is the world volume, stop traversal
-    }
-  }
-  
-  return localPosition;
 }
 
 
