@@ -392,9 +392,6 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
   G4String materialName;
   G4ThreeVector currentPos;
 
-  // Get the patient position in the world environment
-  auto patientPositionInWorldEnv = patientInstance->GetPatientTopPositionInWolrdEnv();
-
   // Get the voxel size in the x, y, and z directions
   auto sizeX = thisConfig()->GetValue<double>("VoxelSizeXCT"); 
   auto sizeY = thisConfig()->GetValue<double>("VoxelSizeYCT"); 
@@ -440,7 +437,8 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
   metadata_file << "z_step," << sizeZ << std::endl;
 
   double source_to_isocentre = 1000;
-  metadata_file << "SSD," << svc::round_with_prec((source_to_isocentre + patientPositionInWorldEnv.getZ()),4) << std::endl;
+  double SSD = 1000;  // TODO: calc this to be generic from any patient!
+  metadata_file << "SSD," << svc::round_with_prec((SSD),4) << std::endl;
 
   // Iterate over each slice
   for( int y = 0; y < yResolution; y++ ){
@@ -498,8 +496,6 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   G4String materialName;
   G4ThreeVector currentPos;
 
-  auto patientPositionInWorldEnv = patientInstance->GetPatientTopPositionInWolrdEnv();
-
   auto sizeX = thisConfig()->GetValue<double>("VoxelSizeXCT"); 
   auto sizeY = thisConfig()->GetValue<double>("VoxelSizeYCT"); 
   auto sizeZ = thisConfig()->GetValue<double>("VoxelSizeZCT"); 
@@ -541,7 +537,8 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   metadata_file << "z_step," << sizeZ << std::endl;
 
   double source_to_isocentre = 1000;
-  metadata_file << "SSD," << svc::round_with_prec((source_to_isocentre + patientPositionInWorldEnv.getZ()),4) << std::endl;
+  double SSD = 1000;  // TODO: calc this to be generic from any patient!
+  metadata_file << "SSD," << svc::round_with_prec((SSD),4) << std::endl;
 
 
   const auto& scoring_maps = cp->GetRun()->GetScoringCollections();

@@ -69,8 +69,8 @@ void ControlPointRun::InitializeScoringCollection(){
                 scoring_collection.erase(scoring_type);
             }
             else
-                continue;
-                // LOGSVC_INFO("Scoring collection size for {}: {}",Scoring::to_string(scoring_type),scoring_collection.at(scoring_type).size());
+                // continue;
+                LOGSVC_INFO("Scoring collection size for {}: {}",Scoring::to_string(scoring_type),scoring_collection.at(scoring_type).size());
         }
         // G4cout << "Run scoring map size: " << m_hashed_scoring_map[run_collection_name].size() << G4endl;
     }

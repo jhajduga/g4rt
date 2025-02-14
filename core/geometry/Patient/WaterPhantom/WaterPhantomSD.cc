@@ -13,7 +13,11 @@ WaterPhantomSD::WaterPhantomSD(const G4String& sdName):VPatientSD(sdName){}
 ////////////////////////////////////////////////////////////////////////////////
 ///
 WaterPhantomSD::WaterPhantomSD(const G4String& sdName, const G4ThreeVector& centre)
-  : VPatientSD(sdName,centre){}
+  : VPatientSD(sdName,centre){
+    m_id_x = 0;
+    m_id_y = 0;
+    m_id_z = 0;
+  }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This method is being called for each G4Step in sensitive volume

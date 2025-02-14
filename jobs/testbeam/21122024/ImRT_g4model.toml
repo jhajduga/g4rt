@@ -32,14 +32,12 @@ EnviromentPatientEnvelop = "IbaImRT" # Simplified iba Im'RT model
 # SupplementaryGeometryPositionZ = 0.0
 
 [D3DDetector_Detector]
-# TopPositionInEnv = [-30.55,-59.45,-117.05] # In mm | 21.12.2024 testbeam
-TopPositionInEnv = [-59.45,-117.05,-30.55] # In mm | 21.12.2024 testbeam global
+TopPositionInEnv = [-59.45,-117.05,-30.55] # In mm | 21.12.2024 testbeam
 # TopPositionInEnv = [-10.55,-69.45,-117.05] # In mm | g4rt pub
-# TopPositionInEnv = [0,0,0] # In mm | test
 # Voxelization = [5,5,5] # Number of cels in every direction
 
 [D3DDetector_Layer]
-Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_TB21122024_global.csv"
+Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_TB21122024.csv"
 # Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_g4rt_pub.csv"
 # Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_t.csv"
 
@@ -48,6 +46,9 @@ Medium = "RMPS470" #G4_WATER, PMMA
 Voxelization = [5,5,5]
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
+nControlPoints = 1      # This will limit number of ctrl points defined below!
+BeamRotation = 0       # This will overwrite Rotation value for all below plan files!
+nParticles = 10000     # This will overwrite Rotation value for all below plan files!
 PlanInputFile = [
     # "plan/custom/cp5x5.dat"
     "plan/custom/cp10x10.dat"

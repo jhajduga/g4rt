@@ -156,6 +156,8 @@ class VoxelHit final : public G4VHit {
   ///
   G4ThreeVector GetCentre() const { return m_Voxel.m_Centre; }
 
+  // G4ThreeVector GetCentreInGlobal() const { return m_Voxel.m_Centre + m_Voxel.m_GlobalCentre; } // if d3d detector will be broken cause of fix then we will use this... 
+
   ///
   G4ThreeVector GetGlobalCentre() const { return m_Voxel.m_GlobalCentre; }
 

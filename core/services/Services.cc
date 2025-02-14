@@ -405,4 +405,18 @@ G4ThreeVector svc::transformPosition(const G4ThreeVector& localPosition, IPhysic
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+///
+std::size_t svc::getHashedStrFromIndexes(const std::vector<int>& indexes){
+  std::string hash_str;
+  for(const auto& idx : indexes)
+    hash_str+=std::to_string(idx)+"-";
+  if (!hash_str.empty())
+    hash_str.pop_back(); // Removes the last character
+  else
+    G4cout << "[WARNING]::Svc::getHashedStrFromIndexes:: Returning hashed key for empty string! " << G4endl;
+  return std::hash<std::string>{}(hash_str);
+}
+
+
 

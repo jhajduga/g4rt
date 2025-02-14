@@ -1,0 +1,49 @@
+[RunSvc]
+JobName = "water_phantom"
+BeamType = "IAEA"
+PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
+# PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location
+# PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
+# PhspInputFileName = "/mnt/e/phsp/TNSIM157_3x3s2-f0" # JH Home File
+PhspEvtVrtxMultiplicityTreshold = 20
+PrintProgressFrequency = 0.05
+GenerateCT = false
+PrimariesAnalysis = false
+NTupleAnalysis = true
+RunAnalysis = true
+
+[GeoSvc]
+BuildLinac = true
+BuildPatient = true
+
+[PatientGeometry]
+Type = "WaterPhantom"
+EnviromentPositionX = 0.0
+EnviromentPositionY = 0.0
+EnviromentPositionZ = 100.0
+EnviromentSizeX = 400.0
+EnviromentSizeY = 400.0
+EnviromentSizeZ = 400.0
+EnviromentMedium = "Usr_G4AIR20C"
+
+[WaterPhantom_Detector]
+Size = [400.0,400.0,400.0]
+Voxelization = [40,40,80] # Number of cells in every direction
+Medium = "G4_WATER" #G4_WATER, PMMA
+
+[WaterPhantom_Scoring]
+FullVolume = true
+FarmerDoseCalibration = false
+TracksAnalysis = false
+
+[RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
+# nParticles = [1e4] # Per Control Point
+nControlPoints = 1      # This will limit number of ctrl points defined below!
+BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
+nParticles = 10000      # This will overwrite Rotation value for all below plan files!
+PlanInputFile = [
+        "plan/custom/cp10x10.dat"
+        # "plan/custom/prostate/prostate_imrt_beam0_cp0.dat"
+]
