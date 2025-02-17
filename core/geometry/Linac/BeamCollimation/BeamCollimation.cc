@@ -126,6 +126,7 @@ void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
       p_vrtx.at(i) = nullptr;
       continue;
     } 
+    BeamCollimation::ShiftParticleToCollimationCentre(p_vrtx.at(i));
     if(model == EMlcModel::Simplified){
         if(!m_mlc->IsInField(vrtx)) {
           delete vrtx;
@@ -139,6 +140,24 @@ void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
   Service<RunSvc>()->CurrentControlPoint()->FillSimFieldMask(p_vrtx);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+///
+G4ThreeVector BeamCollimation::ShiftParticleToCollimationCentre(G4PrimaryVertex* vrtx){
+  G4ThreeVector position = vrtx->GetPosition();
+  G4double x = position.getX();
+  G4double y = position.getY();
+  G4double z = position.getZ();
+  static G4ThreeVector maskCentre;
+  static int currentCPointId{-1};
+  if ( currentCPointId != Service<RunSvc>()->CurrentControlPoint()->Id() ){
+    currentCPointId = Service<RunSvc>()->CurrentControlPoint()->Id();
+    maskCentre = m_mlc->GetMaskCentre();
+    G4cout << "[INFO]::BeamCollimation::ShiftParticleToCollimationCentre:: Got mask centre: " << maskCentre << G4endl;
+  }
+  vrtx->SetPosition(x+maskCentre.getX(), y+maskCentre.getY(), z);
+  return G4ThreeVector(x+maskCentre.getX(), y+maskCentre.getY(), z);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

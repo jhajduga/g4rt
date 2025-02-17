@@ -1,9 +1,9 @@
 [RunSvc]
 JobName = "static"
 BeamType = "IAEA"
-PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
 # PhspInputFileName = "/mnt/c/Users/Jakub/Desktop/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
-# PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH Dell-XPS location
+PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH Dell-XPS location
 PhspEvtVrtxMultiplicityTreshold = 20
 PrintProgressFrequency = 0.05
 GenerateCT = false
@@ -45,8 +45,8 @@ Voxelization = [5,5,5]
 PlanInputFile = [
     # "plan/custom/cp5x5.dat"
     # "plan/custom/cp10x10.dat"
-    "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam0_cp0.dat",
-    "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam1_cp0.dat",
-    "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam2_cp0.dat",
-    "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam3_cp0.dat",
+    # "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam0_cp0.dat",
+    "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam1_cp0.dat"
+    # "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam2_cp0.dat",
+    # "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam3_cp0.dat",
 ]

@@ -29,6 +29,7 @@ class VMlc: public RunComponet {
         virtual bool IsInField(const G4ThreeVector& position, bool transformToIsocentre=false) = 0;
         virtual bool IsInField(G4PrimaryVertex* vrtx) = 0;
         std::vector<G4ThreeVector> GetMlcPositioning(const std::string& side) const;
+        G4ThreeVector GetMaskCentre() const;
         bool Initialized(const ControlPoint* control_point) const;
         static G4ThreeVector GetPositionInMaskPlane(const G4ThreeVector& position);
         static G4ThreeVector GetPositionInMaskPlane(const G4PrimaryVertex* vrtx);
