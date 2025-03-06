@@ -137,10 +137,12 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
     /////////////////////////////////////////////////////////////////////////////
 
     G4LogicalVolume *leafLV;
-    G4ThreeVector leafOneCentre3Vec_a( 16.*cm, -11*cm, 0.051*cm);
-    G4ThreeVector leafOneCentre3Vec_b( 16.*cm, -10.493*cm, -0.051*cm);
-    G4ThreeVector leafTwoCentre3Vec_a( -16.*cm, -11*cm, 0.051*cm);
-    G4ThreeVector leafTwoCentre3Vec_b( -16.*cm, -10.493*cm, -0.051*cm);
+    auto temp_offset = -0.965*cm;
+
+    G4ThreeVector leafOneCentre3Vec_a( 16.*cm,  -11*cm      + temp_offset,  0.051*cm);
+    G4ThreeVector leafOneCentre3Vec_b( 16.*cm,  -10.493*cm  + temp_offset,  -0.051*cm);
+    G4ThreeVector leafTwoCentre3Vec_a( -16.*cm, -11*cm      + temp_offset,  0.051*cm);
+    G4ThreeVector leafTwoCentre3Vec_b( -16.*cm, -10.493*cm  + temp_offset,  -0.051*cm);
     leafOneCentre3Vec_a+=zTranslationInLinacWorld;
     leafTwoCentre3Vec_a+=zTranslationInLinacWorld;
     leafOneCentre3Vec_b+=zTranslationInLinacWorld;
@@ -351,6 +353,7 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
                 leafOneCentre3Vec_b.setY(leafOneCentre3Vec_b.getY() + shiftStep);
                 leafTwoCentre3Vec_b.setY(leafTwoCentre3Vec_b.getY() + shiftStep);
             }
+
             if (i == 13) {
             m_y1_leaves.push_back(
                     std::make_unique<G4PVPlacement>(leavesOrientation2, leafOneCentre3Vec_b, name+"A", leafLV, mlcWorldPV, false, i));

@@ -170,7 +170,7 @@ void RunSvc::DefaultConfig(const std::string &unit) {
 
   // default physics
   if (unit.compare("Physics") == 0) 
-    thisConfig()->SetTValue<std::string>(unit, std::string("emstandard_opt3")); //      LowE_Livermore   LowE_Penelope   emstandard_opt3
+    thisConfig()->SetTValue<std::string>(unit, std::string("LowE_Penelope")); //      LowE_Livermore   LowE_Penelope   emstandard_opt3
 
   // default ID energy
   if (unit.compare("idEnergy") == 0) 

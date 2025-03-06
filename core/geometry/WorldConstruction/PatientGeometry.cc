@@ -225,7 +225,7 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   // Region for cuts
   auto regVol = new G4Region("phantomEnviromentRegion");
   auto cuts = new G4ProductionCuts;
-  cuts->SetProductionCut(0.5 * mm);
+  cuts->SetProductionCut(5.0 * mm);
   regVol->SetProductionCuts(cuts);
   patientEnvLV->SetRegion(regVol);
   regVol->AddRootLogicalVolume(patientEnvLV);
@@ -290,11 +290,11 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
 
 // Creation of bed?
 
-//  auto tableMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_POLYACRYLONITRILE");
-//  auto tableHeight =  7.0*mm;
-//  auto tableBox = new G4Box("TableBox", 1100.0*mm, 225.0*mm, tableHeight);
-//  auto dcoverLV = new G4LogicalVolume(tableBox, tableMaterial.get(), "TableBoxLV");
-//  SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(900.0,0.0,((1.0*mm)+tableHeight+envPosZ+envSize.z())), "CoverBoxPV", dcoverLV, parentPV, false, 0));
+ auto tableMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_POLYACRYLONITRILE");
+ auto tableHeight =  7.0*mm;
+ auto tableBox = new G4Box("TableBox", 1100.0*mm, 225.0*mm, tableHeight);
+ auto dcoverLV = new G4LogicalVolume(tableBox, tableMaterial.get(), "TableBoxLV");
+ auto table = new G4PVPlacement(nullptr, G4ThreeVector(900.0,0.0,((1.0*mm)+tableHeight+envPosZ+envSize.z())), "CoverBoxPV", dcoverLV, parentPV, false, 0);
 if (thisConfig()->GetValue<std::string>("SupplementaryGeometry").compare("None")!=0) {
   auto supplementaryGeometryPath = thisConfig()->GetValue<std::string>("SupplementaryGeometry");
   if (supplementaryGeometryPath.at(0)!='/'){

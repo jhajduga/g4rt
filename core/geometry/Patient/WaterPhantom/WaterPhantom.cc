@@ -143,7 +143,7 @@ void WaterPhantom::Construct(G4VPhysicalVolume *parentWorld) {
   // Region for cuts
   auto regVol = new G4Region("waterPhantomR");
   auto cuts = new G4ProductionCuts;
-  cuts->SetProductionCut(0.1 * mm);
+  cuts->SetProductionCut(0.5 * mm);
   regVol->SetProductionCuts(cuts);
   waterPhantomLV->SetRegion(regVol);
   regVol->AddRootLogicalVolume(waterPhantomLV);

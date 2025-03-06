@@ -19,7 +19,7 @@ VMlc* BeamCollimation::m_mlc = nullptr;
 //       take into account that in PRIMO 0,0,0 is at the source position!
 G4double BeamCollimation::AfterMLC = -300.25;   
 G4double BeamCollimation::BeforeMLC  = -415.0;
-G4double BeamCollimation::BeforeJaws  = -745.3;
+G4double BeamCollimation::BeforeJaws  = -1000;
 G4double BeamCollimation::ParticleAngleTreshold = 50.0; // [deg]
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -126,8 +126,8 @@ void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
       p_vrtx.at(i) = nullptr;
       continue;
     } 
-    BeamCollimation::ShiftParticleToCollimationCentre(p_vrtx.at(i));
     if(model == EMlcModel::Simplified){
+      BeamCollimation::ShiftParticleToCollimationCentre(p_vrtx.at(i));
         if(!m_mlc->IsInField(vrtx)) {
           delete vrtx;
           p_vrtx.at(i) = nullptr;

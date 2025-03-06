@@ -15,7 +15,7 @@
 ///
 PhysicsList::PhysicsList(){
 
-  SetDefaultCutValue(0.1 * mm);
+  SetDefaultCutValue(0.5 * mm);
   SetVerboseLevel(0);
 
   /// Run actual physics constructor with the user-specified physics lists
@@ -41,7 +41,7 @@ void PhysicsList::AddStepMax()
 {
   // Step limitation seen as a process
   StepMax* stepMaxProcess = new StepMax();
-  stepMaxProcess->SetMaxStep(0.1 * mm);
+  stepMaxProcess->SetMaxStep(0.5 * mm);
 
   auto particleIterator=GetParticleIterator();
   particleIterator->reset();

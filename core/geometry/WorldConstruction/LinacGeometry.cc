@@ -113,7 +113,7 @@ void LinacGeometry::Construct(G4VPhysicalVolume *parentPV) {
   SetPhysicalVolume(new G4PVPlacement(0, G4ThreeVector(0,0,-1000), "acceleratorBox", accWorldLV, parentPV, false, 0));
 
   // create the actual accelerator
-  m_headInstance->Construct(GetPhysicalVolume());
+  m_headInstance->IPhysicalVolume::Construct(this);
   // m_headInstance->WriteInfo();
 }
 
