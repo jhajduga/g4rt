@@ -148,28 +148,6 @@ void ControlPointRun::EndOfRun(){
 ///
 void ControlPointRun::FillMlcFieldScalingFactor(){
     auto current_cp = Service<RunSvc>()->CurrentControlPoint();
-    // weights for each dimention
-    G4double wx = 1.;
-    G4double wy = 2.;
-    G4double wz = 3.;
-
-    // the patient parameterization
-    G4int nx = 1.;
-    G4int ny = 1.;
-    G4int nz = 1.;
-    auto patient = Service<GeoSvc>()->Patient();
-    if(patient){
-        auto d3d_det = dynamic_cast<const D3DDetector*>(patient);
-        if(d3d_det){
-            auto config = d3d_det->GetConfig();
-            nx = config.m_nX_cells;
-            ny = config.m_nY_cells;
-            nz = config.m_nZ_cells;
-        }
-    }
-    auto patientNormalizationFactor = wx*nx+wy*ny+wz*nz;
-    LOGSVC_INFO("ControlPointRun::Filling Field Scaling Factor with Patient Normalization Factor {},{},{}->{}",nx,ny,nz,patientNormalizationFactor);
-
 
     for(auto& scoring_map: m_hashed_scoring_map){
         LOGSVC_INFO("ControlPointRun::Filling Field Scaling Factor for \"{}\" run collection",scoring_map.first);
@@ -182,7 +160,6 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
             G4double min_asf = min_fsf;
             for(auto& hit : scoring.second){
                 auto fsf = current_cp->GetFieldScalingFactor(hit.second.GetCentre());
-                fsf = fsf/patientNormalizationFactor;
                 hit.second.SetFieldScalingFactor(fsf);
                 if (fsf > max_fsf) max_fsf = fsf;
                 if (fsf < min_fsf) min_fsf = fsf;
