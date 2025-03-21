@@ -33,8 +33,7 @@ int main(int argc, const char *argv[]) {
     LogSvc::SetTerminalLogLevel(loguru::Verbosity_MAX);
     LogSvc::AddModuleLogFile("RunSvc", "logs/run_svc.log", loguru::Verbosity_MAX);
     LogSvc::AddModuleLogFile("MainModule", "logs/main_svc.log", loguru::Verbosity_MAX);
-    // Logowanie w głównej funkcji
-    // LOG_TO_MODULE("RunSvc", loguru::Verbosity_INFO, "Starting run with ID: {}", run_id);
+
     LOGSVC_INFO("MainModule", "Program startuje.");
     LOGSVC_DEBUG("MainModule", "Debug log testowy.");
     LOGSVC_INFO("RunSvc", "Nowa wiadomość z runSVC");
