@@ -89,8 +89,8 @@ class ControlPoint {
     G4double GetDegreeRotation() const {return m_config.RotationInDeg;}
     void SetRotation(double rotationInDegree);
     void SetNEvts(int nevts) { m_config.NEvts = nevts; }
-    G4double GetMlcFieldScalingFactor(const G4ThreeVector& position) const;
-    G4double GetMlcWeightedInfluenceFactor(const G4ThreeVector& position) const;
+    G4double GetFieldScalingFactor(const G4ThreeVector& position) const;
+    G4double GetAngleScalingFactor(G4double angle, const G4ThreeVector& position) const;
 
     const std::vector<G4ThreeVector>& GetFieldMask(const std::string& type="Plan");
     

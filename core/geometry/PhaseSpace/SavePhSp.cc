@@ -52,9 +52,8 @@ void SavePhSp::Destroy() {
 ///
 void SavePhSp::Construct(G4VPhysicalVolume *parentWorld) {
   G4cout << "[INFO]:: SavePhSp construction... " << G4endl;
-  m_parentPV = parentWorld;
   auto Air = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C");
-  auto worldBox = dynamic_cast<G4Box*>(m_parentPV->GetLogicalVolume()->GetSolid());
+  auto worldBox = dynamic_cast<G4Box*>(parentWorld->GetLogicalVolume()->GetSolid());
   auto halfSizeX = worldBox->GetXHalfLength();
   auto halfSizeY = worldBox->GetYHalfLength();
   auto phspBox = new G4Box("PhSpBox", halfSizeX, halfSizeY, 1 * um);

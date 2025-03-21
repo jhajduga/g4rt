@@ -30,7 +30,7 @@ def add_voxel(ax, x_center, y_center, z_center, voxel_side_len, dose, min, max):
 
 if __name__ == "__main__":
     
-    path = '/home/geant4/workspace/github/g4rt/output/srunet3d_4x4x2_10x10x10_22/sim/ct_dose_0/voxel'
+    path = '/home/geant4/workspace/github/g4rt/output/srunet3d_4x4x2_64x64x64_2/sim/prostate_imrt_beam0_cp74/prostate_imrt_beam0_cp74_ct_dose_voxel'
     dtypes_polars = {
     'X [mm]': pl.Float64,
     'Y [mm]': pl.Float64,

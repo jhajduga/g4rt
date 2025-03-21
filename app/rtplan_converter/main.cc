@@ -59,6 +59,7 @@ int main(int argc, const char *argv[]) {
         ;
 
     auto results = options.parse(argc, argv);
+
     if (results.count("help")) {
       std::cout << options.help({"", "Application run mode"}) << std::endl;
       std::exit(EXIT_SUCCESS);
@@ -73,6 +74,7 @@ int main(int argc, const char *argv[]) {
       std::exit(EXIT_SUCCESS);
       }
 
+
       // USER OBLIGATORY PARAMETERS
       // --------------------------------------------------------------------
       auto rtplan_file = std::string();
@@ -82,7 +84,6 @@ int main(int argc, const char *argv[]) {
         svc::invalidArgumentError("main","Please specify RT-Plan file!");
       if(!svc::checkIfFileExist(rtplan_file))
         svc::invalidArgumentError("main","RT-Plan file not found!");
-
       auto output_dir = std::string();
       if (cmdopts.count("o")) 
         output_dir = cmdopts["o"].as<std::string>();
@@ -98,21 +99,23 @@ int main(int argc, const char *argv[]) {
       if (cmdopts.count("c")) 
         usr_nCtrlPts = cmdopts["c"].as<int>();
       
-      auto input = cmdopts["fieldConstrain"].as<std::string>();
       bool fieldConstrain = false;
       std::pair<float, float> field{-1,-1};
-      try {
-          field = parsePair(input);
-          std::cout << "Parsed pair: (" << field.first << ", " << field.second << ")\n";
-          fieldConstrain = true;
-      } catch (const std::invalid_argument& e) {
-          std::cerr << e.what() << '\n';
-          return 1;
+      if (cmdopts.count("fieldConstrain")){ 
+        auto input = cmdopts["fieldConstrain"].as<std::string>();
+        try {
+            field = parsePair(input);
+            std::cout << "Parsed pair: (" << field.first << ", " << field.second << ")\n";
+            fieldConstrain = true;
+        } catch (const std::invalid_argument& e) {
+            std::cerr << e.what() << '\n';
+            return 1;
+        }
       }
 
       // OPERATION
       // --------------------------------------------------------------------
-      bool fieldCentre = cmdopts["fieldCentre"].as<bool>();
+      auto fieldCentre = cmdopts["fieldCentre"].as<bool>();
       int nParticles = cmdopts["nParticles"].as<int>();
       auto centralize_ab = [&](std::vector<G4double>& mlc_a, std::vector<G4double>& mlc_b) {
         G4double min_a = 10000, min_b = 0;
@@ -246,10 +249,15 @@ int main(int argc, const char *argv[]) {
         // is defined in the first control point:
         auto jaw_x = dicomSvc->GetPlan()->ReadJawsAperture(rtplan_file,"X",i_beam,0);
         auto jaw_y = dicomSvc->GetPlan()->ReadJawsAperture(rtplan_file,"Y",i_beam,0);
+        std::cout << "Jaws: " << jaw_x.first << "," << jaw_x.second << "," << jaw_y.first << "," << jaw_y.second << std::endl;
         for(int i_cp=0; i_cp < nCtrlPts; i_cp++){
           ++cp_counter;
           auto mlc_a = dicomSvc->GetPlan()->ReadMlcPositioning(rtplan_file,"Y1",i_beam,i_cp);
+          std::cout << "MLC A: " << mlc_a.size() << std::endl;
+
           auto mlc_b = dicomSvc->GetPlan()->ReadMlcPositioning(rtplan_file,"Y2",i_beam,i_cp);
+          std::cout << "MLC B: " << mlc_b.size() << std::endl;
+
           std::string dat_plan_file = svc::getFileName(rtplan_file);
           dat_plan_file = output_dir + "/"+dat_plan_file+"_beam"+std::to_string(i_beam)+"_cp"+std::to_string(i_cp)+".dat";
           if (fieldCentre){

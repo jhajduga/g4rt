@@ -88,15 +88,13 @@ void D3DDetector::ParseTomlConfig(){
   auto env_pos_y = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionY");
   auto env_pos_z = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionZ");
 
-  m_patient_top_position_in_world_env = G4ThreeVector(env_pos_x,env_pos_y,env_pos_z) + m_config.m_top_position_in_env;
-
   // Converting the order of voxelization in the Dose-3D volume to X Y Z instead of X Z Y (order of voxelization due to the method of cell placement 
   // - separated production: cells, layers and the detector)
   m_config.m_nX_cells = config[configObjDetector]["Voxelization"][0].value_or(0);
   m_config.m_nY_cells = config[configObjDetector]["Voxelization"][1].value_or(0);
   m_config.m_nZ_cells = config[configObjDetector]["Voxelization"][2].value_or(0);
   ///
-  m_config.m_stl_geometry_file_path = config[configObjDetector]["Geomertry"].value_or("None");
+  m_config.m_stl_geometry_file_path = config[configObjDetector]["Geometry"].value_or("None");
   m_config.m_in_layer_positioning_module = config[configObjLayer]["Positioning"].value_or("None");
 
   ///
@@ -189,7 +187,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
     auto dose3dCellLV = new G4LogicalVolume(solid, Medium.get(), "LVStl");
     // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
     // here we locate the phantom box in the center of envelope box created in PatientGeometry:
-    SetPhysicalVolume(new G4PVPlacement(nullptr, m_config.m_top_position_in_env, "PVStl", dose3dCellLV, parentWorld, false, 0));
+    auto pv = new G4PVPlacement(nullptr, m_config.m_top_position_in_env, "PVStl", dose3dCellLV, parentWorld, false, 0);
     // auto pv = GetPhysicalVolume();
 
 
@@ -205,7 +203,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
       m_d3d_layers.back()->SetCellNVoxels('y',m_config.m_cell_nY_voxels);
       m_d3d_layers.back()->SetCellNVoxels('z',m_config.m_cell_nZ_voxels);
       m_d3d_layers.back()->SetTracksAnalysis(m_tracks_analysis);
-      m_d3d_layers.back()->Construct(parentWorld);
+      m_d3d_layers.back()->IPhysicalVolume::Construct(this);
       processLayerDimensionality(cells_in_layer_positioning);
     }
   }
@@ -223,7 +221,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
       m_d3d_layers.back()->SetCellNVoxels('y',m_config.m_cell_nY_voxels);
       m_d3d_layers.back()->SetCellNVoxels('z',m_config.m_cell_nZ_voxels);
       m_d3d_layers.back()->SetTracksAnalysis(m_tracks_analysis);
-      m_d3d_layers.back()->Construct(parentWorld);
+      m_d3d_layers.back()->IPhysicalVolume::Construct(this);
       processLayerDimensionality(cells_in_layer_positioning);
     }
   }
@@ -271,7 +269,7 @@ void D3DDetector::Construct(G4VPhysicalVolume *parentWorld) {
       ///
       m_d3d_layers.back()->SetTracksAnalysis(m_tracks_analysis);
       ///
-      m_d3d_layers.back()->Construct(parentWorld);
+      m_d3d_layers.back()->IPhysicalVolume::Construct(this);
     }
 
     // G4RotationMatrix * RotMat = new G4RotationMatrix();
@@ -512,9 +510,6 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
       auto cIdX = cell->GetIdX();
       auto cIdY = cell->GetIdY();
       auto cIdZ = cell->GetIdZ();
-      auto hashedCellString = std::to_string(cIdX);
-      hashedCellString+=std::to_string(cIdY);
-      hashedCellString+=std::to_string(cIdZ);
 
       if( type==Scoring::Type::Voxel ){ 
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -527,23 +522,12 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
         auto nvy = cell_sv->m_nVoxelsY;
         auto nvz = cell_sv->m_nVoxelsZ;
 
-        double pix_size_x = size / nvx;
-        double pix_size_y = size / nvy;
-        double pix_size_z = size / nvz;
-
         for(int ix=0; ix<nvx; ix++ ){
           for(int iy=0; iy<nvy; iy++ ){
             for(int iz=0; iz<nvz; iz++ ){
-              auto hashedVoxelString = hashedCellString;
-              hashedVoxelString+=std::to_string(ix);
-              hashedVoxelString+=std::to_string(iy);
-              hashedVoxelString+=std::to_string(iz);
-              auto voxelHash = std::hash<std::string>{}(hashedVoxelString);
+              auto voxelHash = svc::getHashedStrFromIndexes({cIdX,cIdY,cIdZ,ix,iy,iz});
               hashed_map_scoring[voxelHash] = VoxelHit();
-              auto x_centre = centre.getX() - size/2 + (ix) * pix_size_x + pix_size_x/2.;  
-              auto y_centre = centre.getY() - size/2 + (iy) * pix_size_y + pix_size_y/2.;  
-              auto z_centre = centre.getZ() - size/2 + (iz) * pix_size_z + pix_size_z/2.;
-              hashed_map_scoring[voxelHash].SetCentre(G4ThreeVector(x_centre,y_centre,z_centre));
+              hashed_map_scoring[voxelHash].SetCentre(cell_sv->GetVoxelCentre(ix,iy,iz));
               hashed_map_scoring[voxelHash].SetId(ix,iy,iz);
               hashed_map_scoring[voxelHash].SetGlobalId(cIdX,cIdY,cIdZ);
               hashed_map_scoring[voxelHash].SetVolume( cell_sv->GetVoxelVolume() );
@@ -552,7 +536,7 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
           }
         }
       } else if (type==Scoring::Type::Cell){
-        auto cellHash = std::hash<std::string>{}(hashedCellString);
+        auto cellHash = svc::getHashedStrFromIndexes({cIdX,cIdY,cIdZ});
         hashed_map_scoring[cellHash] = VoxelHit();
         hashed_map_scoring[cellHash].SetCentre(centre);
         hashed_map_scoring[cellHash].SetId(cIdX,cIdY,cIdZ);

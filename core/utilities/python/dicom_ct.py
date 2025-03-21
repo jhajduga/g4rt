@@ -212,7 +212,7 @@ class CtSvc():
             iterator +=1
             self.__write_Dicom_ct_slice((pd.read_csv(f"{images_path_string}/{element}")
                                         ["Material"]).map(self.__hounsfield_units_dictionary)
-                                        .values.reshape(int(self.__pixel_in_x),int(self.__pixel_in_z), order="F"), iterator)
+                                        .values.reshape(int(self.__pixel_in_z),int(self.__pixel_in_x), order="F"), iterator)
 
 
 

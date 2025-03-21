@@ -6,7 +6,7 @@
 void IPhysicalVolume::ParameterisationInstantiation(IParameterisation instanceType) {
   if (IsParameterised()) {
     G4cout << "[INFO]:: ParameterisationInstantiation ";
-    G4cout << " for " << GetParentG4PVPtr()->GetLogicalVolume()->GetName() << G4endl;
+    G4cout << " for " << GetParentPtr()->GetPhysicalVolume()->GetLogicalVolume()->GetName() << G4endl;
     if (instanceType == IParameterisation::SIMULATION)
       SimulationParameterisation(); // supposed to call overridden function!
     if (instanceType == IParameterisation::EXPORT)
@@ -142,4 +142,30 @@ G4LogicalVolume* IPhysicalVolume::GetLogicalVolume(const std::string& name ) con
   }
   G4cout << "[ERROR]:: IPhysicalVolume::GetLogicalVolume: not found asked LV with the name: "<< name << G4endl;
   return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void IPhysicalVolume::Construct(IPhysicalVolume* parent, const G4ThreeVector& position){
+  m_position = position;
+  m_parent = parent;                           // logical structure
+  auto thisPV = GetPhysicalVolume();
+  auto parentPV = parent->GetPhysicalVolume(); // physical structure
+  if(!parentPV){
+    G4cout << "[INFO]:: IPhysicalVolume::Construct: No direct pv to link..." << G4endl;
+    while (!parentPV){ // find nearest pv in hierarchy
+      auto next_parent = parent->GetParentPtr();
+      if(next_parent){
+        parentPV = next_parent->GetPhysicalVolume();
+      } else { // reached the top level
+        if(parent->GetName() != "WorldConstruction"){
+          G4cout << "[FATAL]:: IPhysicalVolume::Construct: not found any parent with physical volume!" << G4endl;
+          throw std::invalid_argument("Invalid IPhysicalVolume hierarchy");
+        }
+      }
+      parent = next_parent;
+    }
+    G4cout << "[INFO]:: Link logical "<< GetName() << " with G4PV: " << parentPV->GetName() << G4endl;
+  }
+  Construct(parentPV);
 }

@@ -4,10 +4,9 @@ import vtk
 from vtk.util import numpy_support
 import os
 
-# Function to create a vtkImageData object from the DataFrame
 
 def create_grid_actor(bounds, spacing):
-    # Create the grid points
+
     grid_points = vtk.vtkPoints()
     for x in np.arange(bounds[0], bounds[1] + spacing, spacing):
         for y in np.arange(bounds[2], bounds[3] + spacing, spacing):
@@ -74,25 +73,17 @@ def create_vtk_image_data(cell_df, voxel_side_len):
     }
 
     scalar_data = np.zeros((z_dim, y_dim, x_dim), dtype=np.float32)
+    observable = 'Dose [Gy]'
 
-    cell_df = cell_df[cell_df['Z [mm]'] < 5]
-    cell_df = cell_df[cell_df['Z [mm]'] > -5]
-
-    dose_min = cell_df['Dose'].min()
-    dose_max = cell_df['Dose'].max()
-    
-    # Normalize doses
-    if dose_min == dose_max:
-        cell_df['NormalizedDose'] = 0
-    else:
-        cell_df['NormalizedDose'] = (cell_df['Dose'] - dose_min) / (dose_max - dose_min)
     
     print("Filling vtkImageData with voxel values...")
-    for index, row in cell_df.iterrows():
-        x_idx = coord_to_index['x'][row['X [mm]']]
-        y_idx = coord_to_index['y'][row['Y [mm]']]
-        z_idx = coord_to_index['z'][row['Z [mm]']]
-        scalar_data[z_idx, y_idx, x_idx] = row['NormalizedDose']
+    # Convert coordinate mappings to NumPy arrays for fast lookup
+    x_indices = cell_df['X [mm]'].map(coord_to_index['x']).to_numpy()
+    y_indices = cell_df['Y [mm]'].map(coord_to_index['y']).to_numpy()
+    z_indices = cell_df['Z [mm]'].map(coord_to_index['z']).to_numpy()
+
+    # Assign values using NumPy advanced indexing
+    scalar_data[z_indices, y_indices, x_indices] = cell_df[observable].to_numpy()
 
     vtk_data_array = numpy_support.numpy_to_vtk(scalar_data.ravel(), deep=True, array_type=vtk.VTK_FLOAT)
     imageData.GetPointData().SetScalars(vtk_data_array)
@@ -101,7 +92,8 @@ def create_vtk_image_data(cell_df, voxel_side_len):
     return imageData
 
 def main():
-    csv_path = '/home/jackie/Pobrane/cp-0_d3ddetector_voxel.csv'
+    # csv_path = '/home/geant4/workspace/github/g4rt/output/test_srunet3d_4x4x2_64x64x64_7/sim/cp10x10/cp10x10_ct_dose_cell.csv'
+    csv_path = '/home/geant4/workspace/github/g4rt/output/imrt_test/sim/cp10x10/cp10x10_ct_dose_cell.csv'
     if not os.path.exists(csv_path):
         print(f"CSV file not found at {csv_path}")
         return
@@ -109,12 +101,14 @@ def main():
     print("Reading CSV file...")
     cell_df = pd.read_csv(csv_path)
     cell_df = cell_df.sort_values(by=['X [mm]', 'Y [mm]', 'Z [mm]'])
+    cell_df["Dose [Gy]"] = cell_df["Dose [Gy]"]/cell_df["Dose [Gy]"].max()
+    print(cell_df[cell_df["Dose [Gy]"] > 0])
 
     if cell_df.empty:
         print("DataFrame is empty. Exiting...")
         return
 
-    voxel_side_len = 0.985
+    voxel_side_len = 10
 
     print("Creating vtkImageData from DataFrame...")
     imageData = create_vtk_image_data(cell_df, voxel_side_len)
@@ -143,7 +137,7 @@ def main():
 
     actor.GetProperty().SetColor(colorFunc)
     actor.GetProperty().SetScalarOpacity(opacityFunc)
-    actor.GetProperty().SetInterpolationTypeToLinear()
+    actor.GetProperty().SetInterpolationTypeToNearest()
 
     print("Creating renderer and adding actor...")
     renderer = vtk.vtkRenderer()
@@ -153,10 +147,10 @@ def main():
     # Add axes
     print("Adding axes...")
     axes = vtk.vtkAxesActor()
-    axes.SetTotalLength(50, 50, 50)
+    axes.SetTotalLength(25, 25, 25)
     axes.SetShaftTypeToLine()
     axes.SetTipTypeToCone()
-    axes.SetConeRadius(0.5)
+    axes.SetConeRadius(0.2)
     axes.SetXAxisLabelText("X")
     axes.SetYAxisLabelText("Y")
     axes.SetZAxisLabelText("Z")
@@ -166,7 +160,7 @@ def main():
     print("Adding scalar bar...")
     scalar_bar = vtk.vtkScalarBarActor()
     scalar_bar.SetLookupTable(colorFunc)
-    scalar_bar.SetTitle("Dose")
+    scalar_bar.SetTitle("Dose [Gy]")
     scalar_bar.GetLabelTextProperty().SetColor(0, 0, 0)
     scalar_bar.GetTitleTextProperty().SetColor(0, 0, 0)
     renderer.AddActor2D(scalar_bar)
@@ -191,6 +185,8 @@ def main():
     else:
         print("Volume successfully added to renderer.")
 
+    interactor_style = vtk.vtkInteractorStyleTrackballCamera()
+    renderWindowInteractor.SetInteractorStyle(interactor_style)
     print("Starting visualization...")
     renderWindow.Render()
     renderWindowInteractor.Start()
