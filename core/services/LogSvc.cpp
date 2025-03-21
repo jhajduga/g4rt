@@ -1,37 +1,29 @@
 #include "LogSvc.hpp"
 #include <loguru.hpp>
-#include <filesystem>
 #include <fmt/format.h>
 
 // Definicja mapy dla plików modułów
 std::unordered_map<std::string, std::shared_ptr<FILE>> LogSvc::module_log_files;
 
-void LogSvc::Init(int argc, const char* argv[], const std::string& default_log_file, loguru::Verbosity verbosity, int flush_interval_ms, const std::string& log_folder = "logs") {
+void LogSvc::Init(int argc, const char* argv[], const std::string& default_log_file, loguru::Verbosity verbosity, int flush_interval_ms) {
     char** nonConstArgv = const_cast<char**>(argv);
     loguru::init(argc, nonConstArgv);
-
-    SetLogFolder(log_folder);
+    std::string project_path = PROJECT_LOCATION_PATH;
+    std::string full_log_path = project_path + "/" + default_log_file;
+    loguru::add_file(full_log_path.c_str(), loguru::Append, verbosity);
     loguru::g_flush_interval_ms = flush_interval_ms;
+    
 }
-
 
 void LogSvc::SetTerminalLogLevel(loguru::Verbosity verbosity) {
     loguru::g_stderr_verbosity = verbosity;
 }
 
 
-void LogSvc::SetLogFolder(const std::string& log_folder) {
-    if (!std::filesystem::exists(log_folder)) {
-        std::filesystem::create_directories(log_folder);
-    }
-
-    std::string default_log_file = log_folder + "/app.log";
-    loguru::add_file(default_log_file.c_str(), loguru::Append, loguru::Verbosity_MAX);
-}
-
-
 void LogSvc::AddModuleLogFile(const std::string& module, const std::string& log_file, loguru::Verbosity verbosity) {
-    FILE* file = fopen(log_file.c_str(), "a");
+    std::string project_path = PROJECT_LOCATION_PATH;
+    std::string full_log_path = project_path + "/" + log_file;
+    FILE* file = fopen(full_log_path.c_str(), "a");
     if (!file) {
         throw std::runtime_error("Failed to open log file for module: " + module);
     }
