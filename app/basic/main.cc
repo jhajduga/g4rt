@@ -29,15 +29,9 @@ int main(int argc, const char *argv[]) {
 
 
     // Inicjalizacja loggera
-    LogSvc::Init(argc, argv, "logs/app_main.log", loguru::Verbosity_MAX, 100);
+    LogSvc::Init(argc, argv, "build/tmp_logs/app_main.log", loguru::Verbosity_MAX, 100);
     LogSvc::SetTerminalLogLevel(loguru::Verbosity_MAX);
-    LogSvc::AddModuleLogFile("RunSvc", "logs/run_svc.log", loguru::Verbosity_MAX);
-    LogSvc::AddModuleLogFile("MainModule", "logs/main_svc.log", loguru::Verbosity_MAX);
 
-    LOGSVC_INFO("MainModule", "Program startuje.");
-    LOGSVC_DEBUG("MainModule", "Debug log testowy.");
-    LOGSVC_INFO("RunSvc", "Nowa wiadomość z runSVC");
-    LOGSVC_INFO("MainModule", "Program kończy działanie.");
 
 
   if (argc > 1) {
@@ -79,7 +73,6 @@ int main(int argc, const char *argv[]) {
 
     if (cmdopts.count("d")) {
       auto logLevelStr = cmdopts["d"].as<std::string>();
-      // LogSvc::DefaulLogLevel(logLevelStr);
     }
 
       // OPERATION
@@ -137,10 +130,18 @@ int main(int argc, const char *argv[]) {
     } 
     auto world = WorldConstruction::GetInstance();
     runSvc->Initialize(world);
+    LOGSVC_INFO("MainModule", "Program startuje.");
+    
     runSvc->Run();
+    
+    LOGSVC_DEBUG("MainModule", "Debug log testowy.");
+    
     runSvc->Finalize();
-
+    
+    LOGSVC_INFO("MainModule", "Program kończy działanie. Zwyciestwo!");
+    
     loguru::shutdown();  // Zamknięcie loggera
+  
   } else {
     G4cout << "[ERROR]:: Command line options missing (use '" << argv[0] << " --help' if needed)" << G4endl;
   }

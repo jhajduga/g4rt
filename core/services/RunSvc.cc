@@ -234,13 +234,16 @@ void RunSvc::Initialize(WorldConstruction* world) {
   world->Create();
   Service<GeoSvc>()->SetWorld(world);
   InitializeOutputDir();
-  // LogSvc::Configure();
-  // m_logger = LogSvc::RecreateLogger("RunSvc");
-  RUNSVC_INFO("Logger recreated.");
-    // RUNSVC_INFO("Rozpoczęto działanie funkcji someModuleFunction.");
-    // RUNSVC_DEBUG("Wykonuję operację wewnątrz funkcji.");
-    // RUNSVC_WARNING("Ostrzeżenie! Może wystąpić błąd.");
-    // RUNSVC_ERROR("Test komunikatu błędu.");
+
+  auto path = m_configSvc->GetValue<std::string>("RunSvc","OutputDir");
+
+
+  LogSvc::ReconfigureMainLog(path + "/logs/full_app.log");
+  LogSvc::AddModuleLogFile("RunSvc", path + "/logs/run_svc.log", loguru::Verbosity_MAX);
+  LogSvc::AddModuleLogFile("MainModule", path + "/logs/main_svc.log", loguru::Verbosity_MAX);
+
+  RUNSVC_INFO("Nowa wiadomość z runSVC");
+
 
   if (m_application_mode == OperationalMode::BuildGeometry)
     return;
