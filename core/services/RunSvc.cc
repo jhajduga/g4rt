@@ -172,7 +172,7 @@ void RunSvc::DefaultConfig(const std::string &unit) {
 
   // default physics
   if (unit.compare("Physics") == 0) 
-    thisConfig()->SetTValue<std::string>(unit, std::string("emstandard_opt3")); //      LowE_Livermore   LowE_Penelope   emstandard_opt3
+    thisConfig()->SetTValue<std::string>(unit, std::string("LowE_Penelope")); //      LowE_Livermore   LowE_Penelope   emstandard_opt3
 
   // default ID energy
   if (unit.compare("idEnergy") == 0) 
@@ -401,11 +401,16 @@ void RunSvc::ParseTomlConfig(){
 
   auto config = toml::parse_file(configFile);
   
+  auto _numberOfCP = config[configObj]["nControlPoints"].value_or(-1);
   // __________________________________________________________________________
-  // Reading the plan from files is defined with the highest priority
+  // Reading the plan from files is defined with the lowest priority
+  // - parameters can be overwritten by values explicitly put in TOML file, see below
   if (config[configObj].as_table()->find("PlanInputFile")!= config[configObj].as_table()->end()){
     // Each file is assumed to define single Control Point!
     auto numberOfCP = config[configObj]["PlanInputFile"].as_array()->size();
+    if (_numberOfCP>0){
+      numberOfCP = _numberOfCP;
+    }
     for( int i = 0; i < numberOfCP; i++ ){
       std::string planFile = config[configObj]["PlanInputFile"][i].value_or(std::string());
       if(!svc::checkIfFileExist(planFile)){
@@ -415,38 +420,52 @@ void RunSvc::ParseTomlConfig(){
       // LOGSVC_INFO("Importing control point from plan file: {}",planFile);
       m_control_points_config.push_back(DicomSvc::GetControlPointConfig(i,planFile));
     }
-    return;
   }
   // __________________________________________________________________________
   // Reading the plan from custom TOML inteface is defined with the next priority
   // LOGSVC_INFO("Importing control point configuration from file: {}",configFile);
   G4double rotationInDeg = 0.;
-  auto numberOfCP = config[configObj]["nControlPoints"].value_or(0);
-  if(numberOfCP>0){
-    auto n_fmask = config[configObj]["FieldMask"].as_array()->size();
-    if(n_fmask != numberOfCP)
-      criticalError("The number of field masks is not equal to the number of control points");
-    auto n_beam_rot = config[configObj]["BeamRotation"].as_array()->size();
-    if(n_beam_rot != numberOfCP)
-      criticalError("The number of beam rotations is not equal to the number of control points");
-    auto n_stat = config[configObj]["nParticles"].as_array()->size();
-    if(n_stat != numberOfCP)
-      criticalError("The number of particles statistics is not equal to the number of control points");
+  auto n_beam_rot = config[configObj]["BeamRotation"].value_or(-1);
+  if(n_beam_rot >= 0) {
+    if (m_control_points_config.size()>0){ // configs already exist from plan files
+      LOGSVC_INFO("Putting beam rotation to: {} degrees...",n_beam_rot); 
+      for(auto& config: m_control_points_config){
+        config.RotationInDeg = n_beam_rot;
+      }
+    }
+  }
 
-    for( int i = 0; i < numberOfCP; i++ ){
-      rotationInDeg = (config[configObj]["BeamRotation"][i].value_or(0.0));
-      int nEvents = config[configObj]["nParticles"][i].value_or(-1);
-      if(nEvents<0)
-        nEvents = thisConfig()->GetValue<int>("NumberOfEvents");
+  auto n_stat = config[configObj]["nParticles"].value_or(-1);
+  if(n_stat >= 0){
+    if (m_control_points_config.size()>0){ // configs already exist from plan files
+      LOGSVC_INFO("Putting simulation statistic to: {} particles...",n_stat); 
+      for(auto& config: m_control_points_config){
+        config.NEvts = n_stat;
+      }
+    }
+  }
+  if (m_control_points_config.size()>0)
+    return; // we relay on configs created based on the plan files
+
+  if (_numberOfCP>0){
+    if(n_beam_rot < 0){
+      n_beam_rot = 0;
+      LOGSVC_INFO("Putting beam rotation to: {} degrees...",n_beam_rot);
+    }
+    for( int i = 0; i < _numberOfCP; i++ ){
+      if(n_stat<0)
+        criticalError("RunSvc_Plan should include nParticles value");
       /// _______________________________________________________________________
       /// Define the new control point configuration
-      m_control_points_config.emplace_back(i,nEvents,rotationInDeg);
+      m_control_points_config.emplace_back(i,n_stat,n_beam_rot);
       m_control_points_config.back().FieldType = (config[configObj]["FieldMask"][i]["Type"].value_or(std::string()));
       m_control_points_config.back().FieldSizeA = (config[configObj]["FieldMask"][i]["SizeA"].value_or(G4double(0.0)));
       m_control_points_config.back().FieldSizeB = (config[configObj]["FieldMask"][i]["SizeB"].value_or(G4double(0.0)));
     }
   }
-  else criticalError("nControlPoints not found or set to zero!");
+  else{
+    criticalError("nControlPoints not found or set to zero!");
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -36,7 +36,6 @@ void SciSlicePhantom::Destroy() {
 ///
 void SciSlicePhantom::Construct(G4VPhysicalVolume *parentWorld) {
   G4cout << "[INFO]:: SciSlicePhantom construction... " << G4endl;
-  m_parentPV = parentWorld;
   auto medium = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "PMMA");
 
   auto size =G4ThreeVector(10. *mm, 2. * mm, 2. * mm);
@@ -46,7 +45,7 @@ void SciSlicePhantom::Construct(G4VPhysicalVolume *parentWorld) {
   // the placement of phantom center in global coordinate system is managed by PatientGeometry class
   // here we locate the phantom box in the center of envelope box created in PatientGeometry, 
   // hence centre set to (0,0,0):
-  SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(0.,0.,0.), "SciSlicePhantomPV", phantomLV, m_parentPV, false, 0));
+  SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(0.,0.,0.), "SciSlicePhantomPV", phantomLV, parentWorld, false, 0));
 
   // Region for cuts
   auto regVol = new G4Region("SciSlicePhantomR");

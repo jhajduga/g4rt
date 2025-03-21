@@ -156,8 +156,9 @@ bool WorldConstruction::Create() {
   auto worldLV = new G4LogicalVolume(worldB, Air.get(), "worldLV", 0, 0, 0);
   auto isocentre = thisConfig()->GetValue<G4ThreeVector>("Isocentre");
   SetPhysicalVolume(new G4PVPlacement(0, isocentre, "worldPV", worldLV, 0, false, 0));
+  m_worldPV = GetPhysicalVolume();
 
-  ConstructWorldModules(GetPhysicalVolume());
+  ConstructWorldModules(m_worldPV);
 
   // auto treeDepth = GetWorldVolumesTreeDepth();
   // G4cout << "[DEBUG]::  WorldConstruction the tree depth " << treeDepth << G4endl;
@@ -187,7 +188,7 @@ bool WorldConstruction::ConstructWorldModules(G4VPhysicalVolume *parentPV) {
   if (configSvc()->GetValue<G4bool>("GeoSvc", "BuildLinac")){
     m_gantryEnv = LinacGeometry::GetInstance();
     if (m_gantryEnv) {
-      m_gantryEnv->Construct(parentPV);
+      m_gantryEnv->IPhysicalVolume::Construct(this);
     }
   } else {
     // LOGSVC_DEBUG('WorldConstruction:: The gantry geometry is switched off...')
@@ -198,7 +199,7 @@ bool WorldConstruction::ConstructWorldModules(G4VPhysicalVolume *parentPV) {
   if (configSvc()->GetValue<G4bool>("GeoSvc", "BuildPatient")){
     m_phantomEnv = PatientGeometry::GetInstance();
     if (m_phantomEnv) {
-      m_phantomEnv->Construct(parentPV);
+      m_phantomEnv->IPhysicalVolume::Construct(this);
     }
   } else {
     // LOGSVC_DEBUG("[DEBUG]::WorldConstruction:: The patient geometry is switched off... ")
@@ -209,7 +210,7 @@ bool WorldConstruction::ConstructWorldModules(G4VPhysicalVolume *parentPV) {
   if (configSvc()->GetValue<bool>("RunSvc", "SavePhSp")) {
     m_savePhSpEnv = SavePhSpConstruction::GetInstance();
     if (m_savePhSpEnv) {
-      m_savePhSpEnv->Construct(parentPV);
+      m_savePhSpEnv->IPhysicalVolume::Construct(this);
     }
   }
 
@@ -217,7 +218,7 @@ bool WorldConstruction::ConstructWorldModules(G4VPhysicalVolume *parentPV) {
   // create beam monitoring planes
   if (configSvc()->GetValue<bool>("RunSvc", "BeamAnalysis")) {
     m_beamMonitoring = new BeamMonitoring();
-    m_beamMonitoring->Construct(parentPV);
+    m_beamMonitoring->IPhysicalVolume::Construct(this);
   }
   return true;
 }

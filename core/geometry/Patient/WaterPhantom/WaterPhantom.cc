@@ -43,27 +43,23 @@ void WaterPhantom::ParseTomlConfig(){
   }
   
   auto config = toml::parse_file(configFile);
-
-  m_centrePositionX = config[configObjDetector]["TranslationFromCentre"][0].value_or(0.0);
-  m_centrePositionY = config[configObjDetector]["TranslationFromCentre"][1].value_or(0.0);
-  m_centrePositionZ = config[configObjDetector]["TranslationFromCentre"][2].value_or(0.0);
-  m_detectorVoxelizationX = config[configObjDetector]["Voxelization"][0].value_or(0);
-  m_detectorVoxelizationY = config[configObjDetector]["Voxelization"][1].value_or(0);
-  m_detectorVoxelizationZ = config[configObjDetector]["Voxelization"][2].value_or(0);
+  
   ///
   m_sizeX = config[configObjDetector]["Size"][0].value_or(0.0);
   m_sizeY = config[configObjDetector]["Size"][1].value_or(0.0);
   m_sizeZ = config[configObjDetector]["Size"][2].value_or(0.0);
+  m_centrePositionX = config[configObjDetector]["Centre"][0].value_or(0.0);
+  m_centrePositionY = config[configObjDetector]["Centre"][1].value_or(0.0);
+  m_centrePositionZ = config[configObjDetector]["Centre"][2].value_or(0.0);
+  m_detectorVoxelizationX = config[configObjDetector]["Voxelization"][0].value_or(0);
+  m_detectorVoxelizationY = config[configObjDetector]["Voxelization"][1].value_or(0);
+  m_detectorVoxelizationZ = config[configObjDetector]["Voxelization"][2].value_or(0);
   /// 
-  detectorMediumName = config[configObjDetector]["Medium"].value_or("");
+  m_phantomMedium = config[configObjDetector]["Medium"].value_or("G4_WATER");
 
   auto env_pos_x = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionX");
   auto env_pos_y = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionY");
   auto env_pos_z = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionZ");
-
-  auto top_position_in_env = G4ThreeVector(m_centrePositionX,m_centrePositionY,m_centrePositionZ + m_sizeZ);
-  m_patient_top_position_in_world_env = G4ThreeVector(env_pos_x,env_pos_y,env_pos_z) + top_position_in_env;
-
   
   ///
   m_watertankScoring = config[configObjScoring]["FullVolume"].value_or(true);
@@ -133,8 +129,7 @@ void WaterPhantom::Construct(G4VPhysicalVolume *parentWorld) {
   
   LoadParameterization();
   
-  m_parentPV = parentWorld;
-  auto medium = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", detectorMediumName);
+  auto medium = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_phantomMedium);
 
   // create a phantom box filled with water, with given side dimensions
   auto waterPhantomBox = new G4Box("waterPhantomBox", m_sizeX / 2., m_sizeY / 2., m_sizeZ / 2.);
@@ -143,12 +138,12 @@ void WaterPhantom::Construct(G4VPhysicalVolume *parentWorld) {
 
   // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
   // here we locate the phantom box in the center of envelope box created in PatientGeometry:
-  SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(m_centrePositionX*mm , m_centrePositionY*mm  , m_centrePositionZ*mm), "WaterPhantomPV", waterPhantomLV, m_parentPV, false, 0));
+  SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(m_centrePositionX*mm , m_centrePositionY*mm  , m_centrePositionZ*mm), "WaterPhantomPV", waterPhantomLV, parentWorld, false, 0));
 
   // Region for cuts
   auto regVol = new G4Region("waterPhantomR");
   auto cuts = new G4ProductionCuts;
-  cuts->SetProductionCut(0.1 * mm);
+  cuts->SetProductionCut(0.5 * mm);
   regVol->SetProductionCuts(cuts);
   waterPhantomLV->SetRegion(regVol);
   regVol->AddRootLogicalVolume(waterPhantomLV);
@@ -169,7 +164,9 @@ G4bool WaterPhantom::Update() {
 ///
 void WaterPhantom::ConstructSensitiveDetector(){
   if(m_patientSD.Get()==0){
-    auto centre = GetPhysicalVolume()->GetTranslation() + m_parentPV->GetTranslation();
+    // TODO: To be veryfied
+    auto centre = GetPhysicalVolume()->GetTranslation();
+    centre += GetParentPtr()->GetPhysicalVolume()->GetTranslation();
     m_patientSD.Put(new WaterPhantomSD("PhantomSD",centre));
     m_patientSD.Get()->SetTracksAnalysis(m_tracks_analysis);
   }
@@ -209,6 +206,55 @@ void WaterPhantom::DefineSensitiveDetector(){
     //
     VPatient::SetSensitiveDetector("waterPhantomLV", m_patientSD.Get());
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+std::map<std::size_t, VoxelHit> WaterPhantom::GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const{
+
+  std::map<std::size_t, VoxelHit> hashed_map_scoring;
+
+  auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_phantomMedium);
+
+  std::string hashedPhantomString = "000";
+
+  if( type==Scoring::Type::Voxel ){
+    auto sv = GetSD()->GetRunCollectionReferenceScoringVolume(scoring_name,true);
+    if(sv==nullptr) return hashed_map_scoring; // no voxelisation for this volume, return empty map
+    auto centre = G4ThreeVector(m_centrePositionX*mm , m_centrePositionY*mm  , m_centrePositionZ*mm);
+      
+    for(int ix=0; ix < sv->m_nVoxelsX; ix++ ){
+      for(int iy=0; iy < sv->m_nVoxelsY; iy++ ){
+        for(int iz=0; iz < sv->m_nVoxelsZ; iz++ ){
+          auto voxelHash = svc::getHashedStrFromIndexes({0,0,0,ix,iy,iz});
+          hashed_map_scoring[voxelHash] = VoxelHit();
+          auto voxelCentre = sv->GetVoxelCentre(ix,iy,iz);
+          // std::cout << voxelCentre.getZ() << std::endl;
+          hashed_map_scoring[voxelHash].SetCentre(voxelCentre);
+          hashed_map_scoring[voxelHash].SetGlobalCentre(centre);
+          hashed_map_scoring[voxelHash].SetId(ix,iy,iz);
+          hashed_map_scoring[voxelHash].SetGlobalId(0,0,0);
+          hashed_map_scoring[voxelHash].SetVolume( sv->GetVoxelVolume() );
+          hashed_map_scoring[voxelHash].SetMass(Medium->GetDensity() * sv->GetVoxelVolume());
+        } // z
+      }   // y
+    }     // x
+  } 
+  else if (type==Scoring::Type::Cell){
+    // auto phantomHash = std::hash<std::string>{}(hashedPhantomString);
+    auto phantomHash = svc::getHashedStrFromIndexes({0,0,0});
+    hashed_map_scoring[phantomHash] = VoxelHit();
+    auto centre = G4ThreeVector(m_centrePositionX*mm , m_centrePositionY*mm  , m_centrePositionZ*mm);
+    hashed_map_scoring[phantomHash].SetCentre(centre);
+    hashed_map_scoring[phantomHash].SetGlobalCentre(centre);
+    hashed_map_scoring[phantomHash].SetId(0,0,0);
+    hashed_map_scoring[phantomHash].SetGlobalId(0,0,0); // Id == GlobalId
+    auto volume = m_sizeX*m_sizeY*m_sizeZ;
+    hashed_map_scoring[phantomHash].SetVolume( volume );
+    hashed_map_scoring[phantomHash].SetMass(Medium->GetDensity()*volume);
+  }
+
+  return hashed_map_scoring;
 }
 
 

@@ -40,11 +40,7 @@ class WaterPhantom : public VPatient {
   void DefineSensitiveDetector() override;
 
   ///
-  std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const override {
-    return std::map<std::size_t, VoxelHit>(); // TODO
-  }
-
-
+  std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const override;
 
   ///
   friend class PatientTest_WaterPhantomScoring_Test;
@@ -70,7 +66,7 @@ class WaterPhantom : public VPatient {
   void ConstructFarmerVolumeScoring(const G4String& name);
 
   ///
-  std::string detectorMediumName = "None";
+  std::string m_phantomMedium = "None";
 
   /// 
   G4double m_centrePositionX = 0.0;

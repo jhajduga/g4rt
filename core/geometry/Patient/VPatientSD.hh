@@ -126,8 +126,9 @@ class VPatientSD : public G4VSensitiveDetector {
       /// 
           
   protected:
-      ///
-      G4ThreeVector m_centre_in_global_coordinates;
+      /// Centre of SensitiveDetector
+      /// NOTE: In global frame!
+      G4ThreeVector m_sd_centre;
 
       ///
       G4int m_id_x = -1;

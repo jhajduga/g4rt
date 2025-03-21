@@ -21,9 +21,6 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule{
     bool m_tracks_analysis = false;
 
     ///
-    G4ThreeVector m_patient_top_position_in_world_env;
-
-    ///
     void SetSensitiveDetector(const G4String& logicalVName, VPatientSD* sensitiveDetectorPtr);
 
     ///
@@ -50,9 +47,6 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule{
 
     ///
     virtual G4bool IsInside(double x, double y, double z) { return false; }
-
-    ///
-    G4ThreeVector GetPatientTopPositionInWolrdEnv() {return m_patient_top_position_in_world_env; }
 
     /// TO BE DELETED
     virtual std::map<std::size_t, VoxelHit> GetScoringHashedMap(const std::string& name, bool voxelised) const {

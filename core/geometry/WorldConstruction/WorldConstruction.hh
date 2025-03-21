@@ -108,6 +108,8 @@ class WorldConstruction : public G4VUserDetectorConstruction,
   void Construct(G4VPhysicalVolume*) override {}  // <- IPhysicalVolume
   ///
 
+  G4VPhysicalVolume* GetWorldPV() { return m_worldPV; }
+
   ///
   PatientGeometry* m_phantomEnv = nullptr;
 
@@ -120,6 +122,8 @@ class WorldConstruction : public G4VUserDetectorConstruction,
   ///
   BeamMonitoring* m_beamMonitoring = nullptr;
 
+  ///
+  G4VPhysicalVolume* m_worldPV = nullptr;
 };
 
 #endif  // Dose3D_WORLDCONSTRUCTION_HH

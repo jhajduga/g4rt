@@ -12,6 +12,7 @@
 #include "WorldConstruction.hh"
 #include "IO.hh"
 #include "DicomSvc.hh"
+#include "IbaImRT.hh"
 #include "CADMesh.hh"
 
 namespace {
@@ -224,7 +225,7 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   // Region for cuts
   auto regVol = new G4Region("phantomEnviromentRegion");
   auto cuts = new G4ProductionCuts;
-  cuts->SetProductionCut(0.5 * mm);
+  cuts->SetProductionCut(5.0 * mm);
   regVol->SetProductionCuts(cuts);
   patientEnvLV->SetRegion(regVol);
   regVol->AddRootLogicalVolume(patientEnvLV);
@@ -232,42 +233,31 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   auto pv = GetPhysicalVolume();
 
   // create the actual phantom
-  auto boxMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "PMMA");
+  auto boxMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C"); // PMMA
   auto waterMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_WATER");
-  auto smallInterBox = new G4Box("smallInnerBox", 125.0*mm, 25.0*mm, 200.0*mm);
-  auto smallOuterBox = new G4Box("smallOuterBox", 135.0*mm, 35.0*mm, 200.0*mm);
-  auto smallAquariumBox =  new G4SubtractionSolid("smallAquaBox", smallOuterBox, smallInterBox, nullptr, G4ThreeVector(0.0*mm,0.0*mm,-10.0*mm));
-  auto smallWaterFillingBox = new G4Box("smallWaterFillingBox", 125.0*mm, 25.0*mm, 165.0*mm);
-
-  auto bigInterBox = new G4Box("bigInnerBox", 125.0*mm, 125.0*mm, 200.0*mm);
-  auto bigOuterBox = new G4Box("bigOuterBox", 135.0*mm, 135.0*mm, 200.0*mm);
-  auto bigAquariumBox =  new G4SubtractionSolid("bigAquaBox", bigOuterBox, bigInterBox, nullptr, G4ThreeVector(0.0*mm,0.0*mm,-10.0*mm));
-  auto bigWaterFillingBox = new G4Box("bigWaterFillingBox", 125.0*mm, 125.0*mm, 165.0*mm);
 
   if (envPatientEnvelop.compare("IbaImRT") == 0){
-    auto centreOFPhantomBox = new G4Box("smallCentreOFPhantomBox", 90.0*mm, 90.0*mm, 165.0*mm);
-    auto SideOfPhantomTube = new G4Tubs("SideOfPhantomTube", 0.0*mm, 90.0*mm, 165.0*mm, 0.0*deg, 360.0*deg);
-    auto FirstSideOfPhantom = new G4UnionSolid("SideOfPhantomBox", centreOFPhantomBox, SideOfPhantomTube, nullptr, G4ThreeVector(0.0*mm,-90.0*mm,0.0*mm));
-    auto FullPhantom = new G4UnionSolid("SideOfPhantomBox", FirstSideOfPhantom, SideOfPhantomTube, nullptr, G4ThreeVector(0.0*mm,90.0*mm,0.0*mm));
-
-    // auto FullPhantomLV = new G4LogicalVolume(FullPhantom, waterMaterial.get(), "phantomLV");
-    auto FullPhantomLV = new G4LogicalVolume(FullPhantom, boxMaterial.get(), "phantomLV");
-    auto my_rotation = new G4RotationMatrix;
-    my_rotation->rotateY(90.0*deg);
-    my_rotation->rotateX(90.0*deg);
-
-    auto FullPhantomPV = new G4PVPlacement(my_rotation, G4ThreeVector(envPosX, envPosY, envPosZ), "phantomPV", FullPhantomLV, pv, false, 0);
-
-    m_patient->Construct(FullPhantomPV);
+    auto ibaImRT = IbaImRT::GetInstance();
+    ibaImRT->IPhysicalVolume::Construct(this,G4ThreeVector(envPosX, envPosY, envPosZ));
+    m_patient->IPhysicalVolume::Construct(ibaImRT);
     m_patient->WriteInfo();
   }
   else{
-    m_patient->Construct(pv);
+    m_patient->IPhysicalVolume::Construct(this);
     m_patient->WriteInfo();
-
   }
 
   if(envPatientEnvelop.compare("ModularWaterPhantom") == 0){
+    auto smallInterBox = new G4Box("smallInnerBox", 125.0*mm, 25.0*mm, 200.0*mm);
+    auto smallOuterBox = new G4Box("smallOuterBox", 135.0*mm, 35.0*mm, 200.0*mm);
+    auto smallAquariumBox =  new G4SubtractionSolid("smallAquaBox", smallOuterBox, smallInterBox, nullptr, G4ThreeVector(0.0*mm,0.0*mm,-10.0*mm));
+    auto smallWaterFillingBox = new G4Box("smallWaterFillingBox", 125.0*mm, 25.0*mm, 165.0*mm);
+
+    auto bigInterBox = new G4Box("bigInnerBox", 125.0*mm, 125.0*mm, 200.0*mm);
+    auto bigOuterBox = new G4Box("bigOuterBox", 135.0*mm, 135.0*mm, 200.0*mm);
+    auto bigAquariumBox =  new G4SubtractionSolid("bigAquaBox", bigOuterBox, bigInterBox, nullptr, G4ThreeVector(0.0*mm,0.0*mm,-10.0*mm));
+    auto bigWaterFillingBox = new G4Box("bigWaterFillingBox", 125.0*mm, 125.0*mm, 165.0*mm);
+    
     auto smallAquaBoxLV =  new G4LogicalVolume(smallAquariumBox, boxMaterial.get(), "smallAquaBoxLV");
     auto bigAquaBoxLV =    new G4LogicalVolume(bigAquariumBox, boxMaterial.get(), "bigAquaBoxLV");
     auto smallWaterFillingBoxLV = new G4LogicalVolume(smallWaterFillingBox, waterMaterial.get(), "smallWaterFillingBoxLV");
@@ -300,11 +290,11 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
 
 // Creation of bed?
 
-//  auto tableMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_POLYACRYLONITRILE");
-//  auto tableHeight =  7.0*mm;
-//  auto tableBox = new G4Box("TableBox", 1100.0*mm, 225.0*mm, tableHeight);
-//  auto dcoverLV = new G4LogicalVolume(tableBox, tableMaterial.get(), "TableBoxLV");
-//  SetPhysicalVolume(new G4PVPlacement(nullptr, G4ThreeVector(900.0,0.0,((1.0*mm)+tableHeight+envPosZ+envSize.z())), "CoverBoxPV", dcoverLV, parentPV, false, 0));
+ auto tableMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_POLYACRYLONITRILE");
+ auto tableHeight =  7.0*mm;
+ auto tableBox = new G4Box("TableBox", 1100.0*mm, 225.0*mm, tableHeight);
+ auto dcoverLV = new G4LogicalVolume(tableBox, tableMaterial.get(), "TableBoxLV");
+ auto table = new G4PVPlacement(nullptr, G4ThreeVector(900.0,0.0,((1.0*mm)+tableHeight+envPosZ+envSize.z())), "CoverBoxPV", dcoverLV, parentPV, false, 0);
 if (thisConfig()->GetValue<std::string>("SupplementaryGeometry").compare("None")!=0) {
   auto supplementaryGeometryPath = thisConfig()->GetValue<std::string>("SupplementaryGeometry");
   if (supplementaryGeometryPath.at(0)!='/'){
@@ -402,9 +392,6 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
   G4String materialName;
   G4ThreeVector currentPos;
 
-  // Get the patient position in the world environment
-  auto patientPositionInWorldEnv = patientInstance->GetPatientTopPositionInWolrdEnv();
-
   // Get the voxel size in the x, y, and z directions
   auto sizeX = thisConfig()->GetValue<double>("VoxelSizeXCT"); 
   auto sizeY = thisConfig()->GetValue<double>("VoxelSizeYCT"); 
@@ -450,7 +437,8 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
   metadata_file << "z_step," << sizeZ << std::endl;
 
   double source_to_isocentre = 1000;
-  metadata_file << "SSD," << svc::round_with_prec((source_to_isocentre + patientPositionInWorldEnv.getZ()),4) << std::endl;
+  double SSD = 1000;  // TODO: calc this to be generic from any patient!
+  metadata_file << "SSD," << svc::round_with_prec((SSD),4) << std::endl;
 
   // Iterate over each slice
   for( int y = 0; y < yResolution; y++ ){
@@ -487,8 +475,6 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-///
 void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   auto patientEnv = Service<GeoSvc>()->World()->PatientEnvironment();
   if (!patientEnv) {
@@ -509,8 +495,6 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
 
   G4String materialName;
   G4ThreeVector currentPos;
-
-  auto patientPositionInWorldEnv = patientInstance->GetPatientTopPositionInWolrdEnv();
 
   auto sizeX = thisConfig()->GetValue<double>("VoxelSizeXCT"); 
   auto sizeY = thisConfig()->GetValue<double>("VoxelSizeYCT"); 
@@ -534,16 +518,15 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
 
   // DUMP METADATA TO FILE 
   auto meta =  path_to_output_dir+"/"+plan_file_name+"_ct_dose_series_metadata.csv";
-  std::ofstream metadata_file;
-  metadata_file.open(meta.c_str(), std::ios::out);
+  std::ofstream metadata_file(meta.c_str(), std::ios::out);
 
   metadata_file << "x_min," << ct_cube_init_x  << std::endl;
   metadata_file << "y_min," << ct_cube_init_y  << std::endl;
   metadata_file << "z_min," << ct_cube_init_z  << std::endl;
 
-  metadata_file << "x_max," << svc::round_with_prec((ct_cube_init_x+env_size_x),4) << std::endl;
-  metadata_file << "y_max," << svc::round_with_prec((ct_cube_init_y+env_size_y),4) << std::endl;
-  metadata_file << "z_max," << svc::round_with_prec((ct_cube_init_z+env_size_z),4) << std::endl;
+  metadata_file << "x_max," << svc::round_with_prec((ct_cube_init_x+(env_size_x)),4) << std::endl;
+  metadata_file << "y_max," << svc::round_with_prec((ct_cube_init_y+(env_size_y)),4) << std::endl;
+  metadata_file << "z_max," << svc::round_with_prec((ct_cube_init_z+(env_size_z)),4) << std::endl;
 
   metadata_file << "x_resolution," << xResolution << std::endl;
   metadata_file << "y_resolution," << yResolution << std::endl;
@@ -554,312 +537,201 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   metadata_file << "z_step," << sizeZ << std::endl;
 
   double source_to_isocentre = 1000;
-  metadata_file << "SSD," << svc::round_with_prec((source_to_isocentre + patientPositionInWorldEnv.getZ()),4) << std::endl;
+  double SSD = 1000;  // TODO: calc this to be generic from any patient!
+  metadata_file << "SSD," << svc::round_with_prec((SSD),4) << std::endl;
 
-  // std::vector<std::pair<double,size_t>> xMappedVoxels;
-  std::vector<std::pair<double,std::pair<size_t,size_t>>> xMappedVoxels;
-  std::vector<std::pair<double,std::pair<size_t,size_t>>> yMappedVoxels;
-  std::vector<std::pair<double,std::pair<size_t,size_t>>> zMappedVoxels;
-  std::unordered_set<std::pair<double, size_t>, pair_hash> addedVoxelsPairs;
 
-  std::vector<std::pair<double,std::pair<size_t,size_t>>> xMappedCells;
-  std::vector<std::pair<double,std::pair<size_t,size_t>>> yMappedCells;
-  std::vector<std::pair<double,std::pair<size_t,size_t>>> zMappedCells;
-  std::unordered_set<std::pair<double, size_t>, pair_hash> addedCellsPairs;
-
-  /**
-   * Iterate over all scoring collections and extract voxel data.
-   * Create vectors of pairs to store the centre coordinates and ids
-   * of voxels. Check if the pair already exists in the set and if not
-   * add it to the vector.
-   */
   const auto& scoring_maps = cp->GetRun()->GetScoringCollections();
-  
-  for(auto& scoring_map: scoring_maps){
-    for(auto& scoring: scoring_map.second){
-      auto scoring_type = scoring.first;
-      auto data = scoring.second;
-      // Check if the scoring type is voxel
-      if(scoring_type==Scoring::Type::Voxel){      
-        // Iterate over voxel data
-        for(auto& voxel: data){
-          auto& voxel_data = voxel.second;
-          // Create pairs to check if the pair already exists in the set
-          std::pair<double, size_t> pairToCheckX = std::make_pair(
-            voxel_data.GetCentre().getX(), 
-            std::hash<std::string>{}(
-            "XCell" + std::to_string(voxel_data.GetGlobalID(0)) + 
-            "Voxel" + std::to_string(voxel_data.GetID(0))
-            ));
-          std::pair<double, size_t> pairToCheckY = std::make_pair(
-            voxel_data.GetCentre().getY(), std::hash<std::string>{}(
-            "YCell" + std::to_string(voxel_data.GetGlobalID(1)) + 
-            "Voxel" + std::to_string(voxel_data.GetID(1))));
 
-          std::pair<double, size_t> pairToCheckZ = std::make_pair(
-            voxel_data.GetCentre().getZ(), std::hash<std::string>{}(
-            "ZCell" + std::to_string(voxel_data.GetGlobalID(2)) + 
-            "Voxel" + std::to_string(voxel_data.GetID(2))));
 
-          // Check if the pair already exists in the set and if not
-          // add it to the vector
-          if(addedVoxelsPairs.find(pairToCheckX) == addedVoxelsPairs.end()) {
-              auto idsx = std::make_pair(voxel_data.GetGlobalID(0),voxel_data.GetID(0));
-              xMappedVoxels.push_back(std::make_pair(voxel_data.GetCentre().getX(),idsx));
-              addedVoxelsPairs.insert(pairToCheckX);            
-          }
-          if(addedVoxelsPairs.find(pairToCheckY) == addedVoxelsPairs.end()) {
-            auto idsy = std::make_pair(voxel_data.GetGlobalID(1),voxel_data.GetID(1));
-            yMappedVoxels.push_back(std::make_pair(voxel_data.GetCentre().getY(),idsy));
-            addedVoxelsPairs.insert(pairToCheckY);
-          }
-          if(addedVoxelsPairs.find(pairToCheckZ) == addedVoxelsPairs.end()) {
-            auto idsz = std::make_pair(voxel_data.GetGlobalID(2),voxel_data.GetID(2));
-            zMappedVoxels.push_back(std::make_pair(voxel_data.GetCentre().getZ(),idsz));
-            addedVoxelsPairs.insert(pairToCheckZ);
-          }
-        }
-      }
-      else if(scoring_type==Scoring::Type::Cell){      
-        // Iterate over voxel data
-        for(auto& cell: data){
-          auto& cell_data = cell.second;
-          // Create pairs to check if the pair already exists in the set
-          std::pair<double, size_t> pairToCheckX = std::make_pair(
-            cell_data.GetCentre().getX(), std::hash<std::string>{}(
-            "XCell" + std::to_string(cell_data.GetGlobalID(0))));
-          std::pair<double, size_t> pairToCheckY = std::make_pair(
-            cell_data.GetCentre().getY(), std::hash<std::string>{}(
-            "YCell" + std::to_string(cell_data.GetGlobalID(1))));
-          std::pair<double, size_t> pairToCheckZ = std::make_pair(
-            cell_data.GetCentre().getZ(), std::hash<std::string>{}(
-            "ZCell" + std::to_string(cell_data.GetGlobalID(2))));
-          // Check if the pair already exists in the set and if not
-          // add it to the vector
-          if(addedCellsPairs.find(pairToCheckX) == addedCellsPairs.end()) {
-              auto idsx = std::make_pair(cell_data.GetGlobalID(0),cell_data.GetGlobalID(0));
-              xMappedCells.push_back(std::make_pair(cell_data.GetCentre().getX(),idsx));
-              addedCellsPairs.insert(pairToCheckX);            
-          }
-          if(addedCellsPairs.find(pairToCheckY) == addedCellsPairs.end()) {
-            auto idsy = std::make_pair(cell_data.GetGlobalID(1),cell_data.GetGlobalID(1));
-            yMappedCells.push_back(std::make_pair(cell_data.GetCentre().getY(),idsy));
-            addedCellsPairs.insert(pairToCheckY);
-          }
-          if(addedCellsPairs.find(pairToCheckZ) == addedCellsPairs.end()) {
-            auto idsz = std::make_pair(cell_data.GetGlobalID(2),cell_data.GetGlobalID(2));
-            zMappedCells.push_back(std::make_pair(cell_data.GetCentre().getZ(),idsz));
-            addedCellsPairs.insert(pairToCheckZ);
-          }
-        }
-      }
-    }
-  }
-
-    /**
-     * Custom comparator function to sort a vector of pairs by the first element of the pair.
-     *
-     * @param a First pair to compare
-     * @param b Second pair to compare
-     * @return True if the first element of a is less than the first element of b, false otherwise
-     */
-    auto compareByFirst = [](const std::pair<double,std::pair<size_t,size_t>>& a, const std::pair<double,std::pair<size_t,size_t>>& b) {
-        // Compare the first element of the pair a with the first element of the pair b
-        return a.first < b.first; // Return true if a is less than b, false otherwise
-    };
-
-  std::sort(xMappedVoxels.begin(), xMappedVoxels.end(), compareByFirst);
-  std::sort(yMappedVoxels.begin(), yMappedVoxels.end(), compareByFirst);
-  std::sort(zMappedVoxels.begin(), zMappedVoxels.end(), compareByFirst);
-
-  const std::map<size_t, VoxelHit>* voxelData = nullptr;
-  for(auto& scoring_map: scoring_maps){
-    for(auto& scoring: scoring_map.second){
-      auto scoring_type = scoring.first;
-      if(scoring_type==Scoring::Type::Voxel){   
-        voxelData = &scoring.second;
-      }
-    }
-  }
-
-  std::sort(xMappedCells.begin(), xMappedCells.end(), compareByFirst);
-  std::sort(yMappedCells.begin(), yMappedCells.end(), compareByFirst);
-  std::sort(zMappedCells.begin(), zMappedCells.end(), compareByFirst);
-
-  const std::map<size_t, VoxelHit>* cellData = nullptr;
-  for(auto& scoring_map: scoring_maps){
-    for(auto& scoring: scoring_map.second){
-      auto scoring_type = scoring.first;
-      if(scoring_type==Scoring::Type::Cell){   
-        cellData = &scoring.second;
-      }
-    }
-  }
-
-  auto getVoxelHitInPosition = [&voxelData, &cellData](const G4ThreeVector& position,
-                              const std::vector<std::pair<double, std::pair<size_t, size_t>>>& xVector,
-                              const std::vector<std::pair<double, std::pair<size_t, size_t>>>& yVector,
-                              const std::vector<std::pair<double, std::pair<size_t, size_t>>>& zVector,
-                              double halfSize, Scoring::Type type) -> const VoxelHit* {
-    std::pair<size_t, size_t> closestX{-1, -1};
-    std::pair<size_t, size_t> closestY{-1, -1};
-    std::pair<size_t, size_t> closestZ{-1, -1};
-    
-    double minX = xVector.front().first - halfSize;
-    double minY = yVector.front().first - halfSize;
-    double minZ = zVector.front().first - halfSize;
-    
-    double maxX = xVector.back().first + halfSize;
-    double maxY = yVector.back().first + halfSize;
-    double maxZ = zVector.back().first + halfSize;
-    
-    double minDistance = std::abs(halfSize);
-    
-    if (position.x() < minX || position.x() > maxX ||
-        position.y() < minY || position.y() > maxY ||
-        position.z() < minZ || position.z() > maxZ) {
-      return nullptr;
-    }
-    // std::cout << "I jesteśmy w lambdzie... " << std::endl;
-    for (const auto& point : xVector) {
-      double distance = std::abs(position.x() - point.first);
-      if (distance <= minDistance) {
-        closestX = point.second;
-      }
-    }
-    
-    for (const auto& point : yVector) {
-      double distance = std::abs(position.y() - point.first);
-      if (distance <= minDistance) {
-        closestY = point.second;
-      }
-    }
-    
-    for (const auto& point : zVector) {
-      double distance = std::abs(position.z() - point.first);
-      if (distance <= minDistance) {
-        closestZ = point.second;
-      }
-    }
-    
-    if (closestX.first == -1 || closestY.first == -1 || closestZ.first == -1) {
-      return nullptr;
-    }
-
-    if (type == Scoring::Type::Voxel) {
-      return &voxelData->find(std::hash<std::string>{}(std::to_string(closestX.first)+std::to_string(closestY.first)+
-                                    std::to_string(closestZ.first)+std::to_string(closestX.second)+
-                                    std::to_string(closestY.second)+std::to_string(closestZ.second)))->second;}
-    if (type == Scoring::Type::Cell) {
-      return &cellData->find(std::hash<std::string>{}(std::to_string(closestX.first)+std::to_string(closestY.first)+
-                                    std::to_string(closestZ.first)))->second;}
-    
+  struct MappingEntry {
+      G4ThreeVector centre;
+      std::array<std::pair<size_t, size_t>, 3> ids; 
+      const VoxelHit* hit;
   };
 
-  // std::cout << &voxelData <<std::endl; 
-  auto c_file_merged =  path_to_output_dir+"/"+plan_file_name+"_ct_dose_cell.csv";
-  auto v_file_merged =  path_to_output_dir+"/"+plan_file_name+"_ct_dose_voxel.csv";
-  std::ofstream c_outFile_merged, v_outFile_merged;
-  c_outFile_merged.open(c_file_merged.c_str(), std::ios::out);
-  v_outFile_merged.open(v_file_merged.c_str(), std::ios::out);
-  std::string header_merged = "X [mm],Y [mm],Z [mm],Id,IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor";
-  c_outFile_merged << header_merged << std::endl;
+  // Mapping for voxel
+  std::vector<MappingEntry> voxelMappings;
+  {
+      std::unordered_set<std::string> voxelKeys;
+      for (auto& scoring_map : scoring_maps) {
+          for (auto& scoring : scoring_map.second) {
+              if (scoring.first == Scoring::Type::Voxel) {
+                  for (auto& voxel : scoring.second) {
+                      auto& voxel_data = voxel.second;
+                      // Tworzymy unikalny klucz oparty na identyfikatorach
+                      std::string key = "X" + std::to_string(voxel_data.GetGlobalID(0)) + "V" + std::to_string(voxel_data.GetID(0)) +
+                                        "Y" + std::to_string(voxel_data.GetGlobalID(1)) + "V" + std::to_string(voxel_data.GetID(1)) +
+                                        "Z" + std::to_string(voxel_data.GetGlobalID(2)) + "V" + std::to_string(voxel_data.GetID(2));
+                      if (voxelKeys.find(key) == voxelKeys.end()) {
+                          voxelKeys.insert(key);
+                          MappingEntry entry;
+                          entry.centre = voxel_data.GetCentre();
+                          entry.ids[0] = {voxel_data.GetGlobalID(0), voxel_data.GetID(0)};
+                          entry.ids[1] = {voxel_data.GetGlobalID(1), voxel_data.GetID(1)};
+                          entry.ids[2] = {voxel_data.GetGlobalID(2), voxel_data.GetID(2)};
+                          entry.hit = &voxel_data;
+                          voxelMappings.push_back(entry);
+                      }
+                  }
+              }
+          }
+      }
+  }
+
+  // Mapping for cell
+  std::vector<MappingEntry> cellMappings;
+  {
+      std::unordered_set<std::string> cellKeys;
+      for (auto& scoring_map : scoring_maps) {
+          for (auto& scoring : scoring_map.second) {
+              if (scoring.first == Scoring::Type::Cell) {
+                  for (auto& cell : scoring.second) {
+                      auto& cell_data = cell.second;
+                      std::string key = "X" + std::to_string(cell_data.GetGlobalID(0)) +
+                                        "Y" + std::to_string(cell_data.GetGlobalID(1)) +
+                                        "Z" + std::to_string(cell_data.GetGlobalID(2));
+                      if (cellKeys.find(key) == cellKeys.end()) {
+                          cellKeys.insert(key);
+                          MappingEntry entry;
+                          entry.centre = cell_data.GetCentre();
+                          entry.ids[0] = {cell_data.GetGlobalID(0), cell_data.GetGlobalID(0)};
+                          entry.ids[1] = {cell_data.GetGlobalID(1), cell_data.GetGlobalID(1)};
+                          entry.ids[2] = {cell_data.GetGlobalID(2), cell_data.GetGlobalID(2)};
+                          entry.hit = &cell_data;
+                          cellMappings.push_back(entry);
+                      }
+                  }
+              }
+          }
+      }
+  }
+
+  // Lambda – wyszukuje wpis (mapping) dla danej pozycji,
+  // zwracając wskaźnik do VoxelHit lub nullptr, jeśli nie znaleziono pasującego obiektu.
+  // tolerance odpowiada zadanej tolerancji (np. 0.5 dla voxel, 5 dla cell). (prostrza, mniej złożona lambda niż poprzednio...)
+  auto getMappingHit = [&](const std::vector<MappingEntry>& mappings, const G4ThreeVector& pos, double tolerance) -> const VoxelHit* {
+      const VoxelHit* bestHit = nullptr;
+      double bestDist2 = std::numeric_limits<double>::max();
+      for (const auto& entry : mappings) {
+          double dx = entry.centre.x() - pos.x();
+          double dy = entry.centre.y() - pos.y();
+          double dz = entry.centre.z() - pos.z();
+          // Sprawdzamy, czy różnice dla każdej osi mieszczą się w tolerancji
+          if (std::abs(dx) <= tolerance && std::abs(dy) <= tolerance && std::abs(dz) <= tolerance) {
+              double dist2 = dx*dx + dy*dy + dz*dz;
+              if (dist2 < bestDist2) {
+                  bestDist2 = dist2;
+                  bestHit = entry.hit;
+              }
+          }
+      }
+      return bestHit;
+  };
+
+
+  auto v_file_merged = path_to_output_dir+"/"+plan_file_name+"_ct_dose_voxel.csv";
+  std::ofstream v_outFile_merged(v_file_merged.c_str(), std::ios::out);
+  std::string header_merged = "X [mm],Y [mm],Z [mm],Id,IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor,AngleScalingFactor";
   v_outFile_merged << header_merged << std::endl;
   std::string csv_slices_path = path_to_output_dir+"/"+plan_file_name+"_ct_dose_voxel";
   IO::CreateDirIfNotExits(csv_slices_path);
-  std::string header = "X [mm],Y [mm],Z [mm],IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor";
+  std::string header = "X [mm],Y [mm],Z [mm],IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor,AngleScalingFactor";
   double dose = 0.;
-  double fsf = 0.; // field scaling factor
+  double fsf = 0.; 
+  double asf = 0.; 
   int cellIdX = 0;
   int cellIdY = 0;
   int cellIdZ = 0;
-  for( int x = 0; x < xResolution; x++ ){
-    dose = 0.;
-    fsf = 0.;
-    cellIdX = -1;
-    cellIdY = -1;
-    cellIdZ = -1;
-    std::ostringstream ss;
-    ss << std::setw(4) << std::setfill('0') << x+1 ;
-    std::string s2(ss.str());
-    auto file =  csv_slices_path+"/img"+s2+".csv";
-    std::ofstream v_outFile;
-    v_outFile.open(file.c_str(), std::ios::out);
-    v_outFile << header << std::endl;
-    for( int y = 0; y < yResolution; y++ ){
-      for( int z = 0; z < zResolution; z++ ){
-        currentPos.setX((ct_cube_init_x+sizeX*x));
-        currentPos.setY((ct_cube_init_y+sizeY*y));
-        currentPos.setZ((ct_cube_init_z+sizeZ*z));
-        materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
-        auto materialHU = DicomSvc::GetHounsfieldScaleValue(materialName,true);
-        auto voxelHit = getVoxelHitInPosition(currentPos,xMappedVoxels,yMappedVoxels,zMappedVoxels, 0.5, Scoring::Type::Voxel);
-        if(voxelHit){
-          dose = voxelHit->GetDose();
-          fsf = voxelHit->GetFieldScalingFactor();
-          cellIdX = voxelHit->GetGlobalID(0);
-          cellIdY = voxelHit->GetGlobalID(1);
-          cellIdZ = voxelHit->GetGlobalID(2);
-        } else {
-          dose = 0.;
-          fsf = 0.;
-          cellIdX = -1;
-          cellIdY = -1;
-          cellIdZ = -1;
-        }
-        v_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
-
-        v_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
+  for (int x = 0; x < xResolution; x++) {
+      std::ostringstream ss;
+      ss << std::setw(4) << std::setfill('0') << x+1;
+      std::string s2(ss.str());
+      auto file = csv_slices_path + "/img" + s2 + ".csv";
+      std::ofstream v_outFile(file.c_str(), std::ios::out);
+      v_outFile << header << std::endl;
+      for (int y = 0; y < yResolution; y++) {
+          for (int z = 0; z < zResolution; z++) {
+              currentPos.setX(ct_cube_init_x + sizeX * x);
+              currentPos.setY(ct_cube_init_y + sizeY * y);
+              currentPos.setZ(ct_cube_init_z + sizeZ * z);
+              materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
+              auto materialHU = DicomSvc::GetHounsfieldScaleValue(materialName, true);
+              // Szukamy voxel hit – z tolerancją 0.5 (Bo rozmiar woksela)
+              const VoxelHit* voxelHit = getMappingHit(voxelMappings, currentPos, 0.5);
+              if (voxelHit) {
+                  dose = voxelHit->GetDose();
+                  fsf = voxelHit->GetFieldScalingFactor();
+                  asf = voxelHit->GetAngleScalingFactor();
+                  cellIdX = voxelHit->GetGlobalID(0);
+                  cellIdY = voxelHit->GetGlobalID(1);
+                  cellIdZ = voxelHit->GetGlobalID(2);
+              } else {
+                  dose = 0.;
+                  fsf = 0.;
+                  asf = 0.;
+                  cellIdX = -1;
+                  cellIdY = -1;
+                  cellIdZ = -1;
+              }
+              v_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ()
+                        << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU
+                        << "," << dose << "," << fsf << "," << asf << std::endl;
+              v_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ()
+                              << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << ","
+                              << materialHU << "," << dose << "," << fsf << "," << asf << std::endl;
+          }
       }
-    }
-    v_outFile.close();
+      v_outFile.close();
   }
   v_outFile_merged.close();
 
-    csv_slices_path = path_to_output_dir+"/"+plan_file_name+"_ct_dose_cell";
-    IO::CreateDirIfNotExits(csv_slices_path);
-    for( int x = 0; x < xResolution; x++ ){
-    dose = 0.;
-    fsf = 0.;
-    cellIdX = -1;
-    cellIdY = -1;
-    cellIdZ = -1;
-    std::ostringstream ss;
-    ss << std::setw(4) << std::setfill('0') << x+1 ;
-    std::string s2(ss.str());
-    auto file =  csv_slices_path+"/img"+s2+".csv";
-    std::ofstream c_outFile;
-    c_outFile.open(file.c_str(), std::ios::out);
-    c_outFile << header << std::endl;
-    for( int y = 0; y < yResolution; y++ ){
-      for( int z = 0; z < zResolution; z++ ){
-        currentPos.setX((ct_cube_init_x+sizeX*x));
-        currentPos.setY((ct_cube_init_y+sizeY*y));
-        currentPos.setZ((ct_cube_init_z+sizeZ*z));
-        materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
-        auto materialHU = DicomSvc::GetHounsfieldScaleValue(materialName,true);
-        auto voxelHit = getVoxelHitInPosition(currentPos,xMappedCells,yMappedCells,zMappedCells, 5, Scoring::Type::Cell);
-        if(voxelHit){
-          dose = voxelHit->GetDose();
-          fsf = voxelHit->GetFieldScalingFactor();
-          cellIdX = voxelHit->GetGlobalID(0);
-          cellIdY = voxelHit->GetGlobalID(1);
-          cellIdZ = voxelHit->GetGlobalID(2);
-        } else {
-          dose = 0.;
-          fsf = 0.;
-          cellIdX = -1;
-          cellIdY = -1;
-          cellIdZ = -1;
-        }
-        c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
 
-        c_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ() << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU  << "," << dose << "," << fsf << std::endl;
+  auto c_file_merged = path_to_output_dir+"/"+plan_file_name+"_ct_dose_cell.csv";
+  std::ofstream c_outFile_merged(c_file_merged.c_str(), std::ios::out);
+  c_outFile_merged << header_merged << std::endl;
+  csv_slices_path = path_to_output_dir+"/"+plan_file_name+"_ct_dose_cell";
+  IO::CreateDirIfNotExits(csv_slices_path);
+  for (int x = 0; x < xResolution; x++) {
+      std::ostringstream ss;
+      ss << std::setw(4) << std::setfill('0') << x+1;
+      std::string s2(ss.str());
+      auto file = csv_slices_path + "/img" + s2 + ".csv";
+      std::ofstream c_outFile(file.c_str(), std::ios::out);
+      c_outFile << header << std::endl;
+      for (int y = 0; y < yResolution; y++) {
+          for (int z = 0; z < zResolution; z++) {
+              currentPos.setX(ct_cube_init_x + sizeX * x);
+              currentPos.setY(ct_cube_init_y + sizeY * y);
+              currentPos.setZ(ct_cube_init_z + sizeZ * z);
+              materialName = g4Navigator->LocateGlobalPointAndSetup(currentPos)->GetLogicalVolume()->GetMaterial()->GetName();
+              auto materialHU = DicomSvc::GetHounsfieldScaleValue(materialName, true);
+              // Szukamy cell hit – z tolerancją 5
+              const VoxelHit* cellHit = getMappingHit(cellMappings, currentPos, 5);
+              if (cellHit) {
+                  dose = cellHit->GetDose();
+                  fsf = cellHit->GetFieldScalingFactor();
+                  asf = cellHit->GetAngleScalingFactor();
+                  cellIdX = cellHit->GetGlobalID(0);
+                  cellIdY = cellHit->GetGlobalID(1);
+                  cellIdZ = cellHit->GetGlobalID(2);
+              } else {
+                  dose = 0.;
+                  fsf = 0.;
+                  asf = 0.;
+                  cellIdX = -1;
+                  cellIdY = -1;
+                  cellIdZ = -1;
+              }
+              c_outFile << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ()
+                        << "," << cellIdX << "," << cellIdY << "," << cellIdZ << "," << materialHU
+                        << "," << dose << "," << fsf << "," << asf << std::endl;
+              c_outFile_merged << currentPos.getX() << "," << currentPos.getY() << "," << currentPos.getZ()
+                              << "," << x+1 << "," << cellIdX << "," << cellIdY << "," << cellIdZ << ","
+                              << materialHU << "," << dose << "," << fsf << "," << asf << std::endl;
+          }
       }
-    }
-    c_outFile.close();
+      c_outFile.close();
   }
   c_outFile_merged.close();
-
 }
-

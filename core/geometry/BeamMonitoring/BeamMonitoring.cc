@@ -66,10 +66,9 @@ void BeamMonitoring::Construct(G4VPhysicalVolume *parentWorld) {
   G4cout << "[INFO]:: BeamMonitoring construction... " << G4endl;
   const VecG4doubleWPtr& scoringZPositionWPtr = thisConfig()->GetValue<VecG4doubleSPtr>("ScoringZPositions");
   if(!scoringZPositionWPtr.expired()) {
-    m_parentPV = parentWorld;
     auto scoringZPositionSPtr = scoringZPositionWPtr.lock();
     auto Air = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C");
-    auto worldBox = dynamic_cast<G4Box*>(m_parentPV->GetLogicalVolume()->GetSolid());
+    auto worldBox = dynamic_cast<G4Box*>(parentWorld->GetLogicalVolume()->GetSolid());
     auto halfSizeX = worldBox->GetXHalfLength();
     auto halfSizeY = worldBox->GetYHalfLength();
     auto scoringPlane = new G4Box("BeamScoringPlane", halfSizeX, halfSizeY, 1 * um);
@@ -86,7 +85,7 @@ void BeamMonitoring::Construct(G4VPhysicalVolume *parentWorld) {
       name = "beamScoringPlane_" + svc::to_string(id++);
       // monitoring plane volume should be centered around the user requested plane (to set correctly preStepPoint)
       m_scoringPlanesPV.push_back(
-          new G4PVPlacement(0, G4ThreeVector(0., 0., iPlaneZPosition), name, scoringPlaneLV, m_parentPV, false, 0));
+          new G4PVPlacement(0, G4ThreeVector(0., 0., iPlaneZPosition), name, scoringPlaneLV, parentWorld, false, 0));
     }
   } else {
     G4cout << "[ERROR]:: BeamMonitoring construction:: \"ScoringZPositions\" config expired! " << G4endl;

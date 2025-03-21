@@ -73,6 +73,31 @@ bool VMlc::Initialized(const ControlPoint* control_point) const {
     return true; 
 }
 
+G4ThreeVector VMlc::GetMaskCentre() const{
+    auto mlc_y1 = GetMlcPositioning("Y1");
+    auto mlc_y2 = GetMlcPositioning("Y2");
+    std::vector<std::pair<double, double>> open_positions;
+    for (int i=0; i<mlc_y1.size();i++){
+        // G4cout << mlc_y1.at(i) << " | " << mlc_y2.at(i) << " >> " << mlc_y1.at(i) - mlc_y2.at(i) << G4endl;
+        if(mlc_y1.at(i) - mlc_y2.at(i) != G4ThreeVector()){
+            open_positions.emplace_back(std::make_pair(mlc_y1.at(i).getX(),mlc_y1.at(i).getY()));
+            open_positions.emplace_back(std::make_pair(mlc_y2.at(i).getX(),mlc_y2.at(i).getY()));
+        }
+    }
+
+    // calculate centroid position:
+    double sumX = 0.0, sumY = 0.0;
+    for (const auto& point : open_positions) {
+        sumX += point.first;  // x-coordinate
+        sumY += point.second; // y-coordinate
+    }
+
+    double centerX = sumX / open_positions.size();
+    double centerY = sumY / open_positions.size();
+
+    return G4ThreeVector(centerX,centerY,mlc_y1.at(0).getZ());
+}
+
 
 std::vector<G4ThreeVector> VMlc::GetMlcPositioning(const std::string& side) const{
     // std::cout << "VMlc::GetMlcPositioning for " << side << std::endl;

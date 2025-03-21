@@ -54,6 +54,7 @@ set(HEADERS_DIR ${PROJECT_SOURCE_DIR}/analysis
         ${PROJECT_SOURCE_DIR}/geometry/Patient/SciLab
         ${PROJECT_SOURCE_DIR}/geometry/Patient/DishCube
         ${PROJECT_SOURCE_DIR}/geometry/Patient/Dose3D
+        ${PROJECT_SOURCE_DIR}/geometry/Patient/IbaImRT
         ${PROJECT_SOURCE_DIR}/geometry/Linac
         ${PROJECT_SOURCE_DIR}/geometry/Linac/BeamCollimation
         ${PROJECT_SOURCE_DIR}/geometry/Linac/BeamCollimation/MLC

@@ -1,5 +1,5 @@
 [RunSvc]
-JobName = "srunet3d_4x4x2_64x64x64"
+JobName = "test_srunet3d_4x4x2_64x64x64"
 BeamType = "IAEA"
 # PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
 # PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
@@ -29,7 +29,7 @@ EnviromentSizeZ = 64.0
 EnviromentMedium = "Usr_G4AIR20C"
 
 [D3DDetector_Detector]
-TopPositionInEnv = [0.0,0.0,-30.0] # In mm
+TopPositionInEnv = [0.0,0.0,0.0] # In mm
 Voxelization = [4,4,2] # Number of cels in every direction
 
 [D3DDetector_Layer]
@@ -43,32 +43,10 @@ TracksAnalysis = false
 CellVoxelisedScorer = true
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
-# nParticles = [1e4] # Per Control Point
+nControlPoints = 1      # This will limit number of ctrl points defined below!
+BeamRotation = 0       # This will overwrite Rotation value for all below plan files!
+nParticles = 10000     # This will overwrite Rotation value for all below plan files!
 PlanInputFile = [
         # "plan/custom/prostate/prostate_imrt_beam0_cp0.dat"
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam4_cp0.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam4_cp55.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam4_cp73.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam4_cp91.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam3_cp4.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam3_cp44.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam3_cp57.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam3_cp66.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam3_cp93.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam2_cp1.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam2_cp11.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam2_cp22.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam2_cp33.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam2_cp45.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam2_cp57.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam2_cp99.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam0_cp42.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam0_cp43.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam0_cp44.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam0_cp45.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam0_cp46.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam0_cp47.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam0_cp48.dat",
-        # "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam0_cp49.dat",
-        "/home/geant4/workspace/github/g4rt/build/out_s/prostate_imrt_beam0_cp74.dat"
+        "plan/custom/cp10x10.dat"
 ]

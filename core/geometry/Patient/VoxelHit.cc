@@ -298,20 +298,20 @@ void VoxelHit::PrintEvtInfo() const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 std::size_t VoxelHit::GetGlobalHashedStrId() const {
-  return std::hash<std::string>{}(std::to_string(m_Voxel.m_global_idx_x)
-                                  +std::to_string(m_Voxel.m_global_idx_y)
-                                  +std::to_string(m_Voxel.m_global_idx_z) );
+  return svc::getHashedStrFromIndexes({ m_Voxel.m_global_idx_x,
+                                        m_Voxel.m_global_idx_y,
+                                        m_Voxel.m_global_idx_z});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 std::size_t VoxelHit::GetHashedStrId() const {
-  return std::hash<std::string>{}(std::to_string(m_Voxel.m_global_idx_x)
-                                  +std::to_string(m_Voxel.m_global_idx_y)
-                                  +std::to_string(m_Voxel.m_global_idx_z) 
-                                  +std::to_string(m_Voxel.m_idx_x) 
-                                  +std::to_string(m_Voxel.m_idx_y) 
-                                  +std::to_string(m_Voxel.m_idx_z));
+  return svc::getHashedStrFromIndexes({ m_Voxel.m_global_idx_x,
+                                        m_Voxel.m_global_idx_y,
+                                        m_Voxel.m_global_idx_z,
+                                        m_Voxel.m_idx_x,
+                                        m_Voxel.m_idx_y,
+                                        m_Voxel.m_idx_z});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
