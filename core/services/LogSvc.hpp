@@ -17,7 +17,7 @@ public:
      * @param flush_interval_ms Interval in milliseconds for flushing logs.
      */
     static void Init(int argc, const char* argv[], const std::string& default_log_file = "logs/app.log",
-                     loguru::Verbosity verbosity = loguru::Verbosity_INFO, int flush_interval_ms = 100);
+                     loguru::Verbosity verbosity = loguru::Verbosity_INFO, int flush_interval_ms = 100, const std::string& log_folder = "logs");
 
     /**
      * @brief Adds a new module-specific log file.
@@ -44,6 +44,8 @@ template<typename... Args>
 static void LogDebug(const std::string& module, const char* file, int line, const char* format, const Args&... args) {
     logToModule(module, loguru::Verbosity_MAX, file, line, format, args...);
 }
+
+static void SetLogFolder(const std::string& log_folder);
 
 template<typename... Args>
 static void LogInfo(const std::string& module, const char* file, int line, const char* format, const Args&... args) {
