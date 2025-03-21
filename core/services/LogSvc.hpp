@@ -73,7 +73,7 @@ private:
      */
 template<typename... Args>
 static void logToModule(const std::string& module, loguru::Verbosity verbosity, const char* file, int line, const char* format, const Args&... args) {
-    std::string formatted_message = fmt::format(format, args...);
+    std::string formatted_message = fmt::vformat(format, fmt::make_format_args(args...));
     loguru::log(verbosity, file, line, "[{}] {}", module, formatted_message);
 }
 

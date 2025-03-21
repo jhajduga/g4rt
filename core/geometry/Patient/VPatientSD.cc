@@ -15,7 +15,7 @@ VPatientSD::VPatientSD(const G4String& sdName):G4VSensitiveDetector(sdName){}
 ////////////////////////////////////////////////////////////////////////////////
 ///
 VPatientSD::VPatientSD(const G4String& sdName, const G4ThreeVector& centre)
-  :G4VSensitiveDetector(sdName),m_sd_centre(centre),Logable("GeoAndScoring"){}
+  :G4VSensitiveDetector(sdName),m_sd_centre(centre){}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Note that a SD can declare more than one hits collection being groupped by runCollName!

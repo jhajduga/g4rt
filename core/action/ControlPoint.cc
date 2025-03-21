@@ -157,7 +157,8 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
         // LOGSVC_INFO("ControlPointRun::Filling Field Scaling Factor for \"{}\" run collection",scoring_map.first);
         
         for(auto& scoring: scoring_map.second){
-            LOGSVC_INFO("ControlPointRun::Processing {} scoring... size: {}",Scoring::to_string(scoring.first),scoring.second.size()); 
+            // LOGSVC_INFO("ControlPointRun::Processing {} scoring... size: {}",Scoring::to_string(scoring.first),scoring.second.size()); 
+            std::cout << "ControlPointRun::Processing " << Scoring::to_string(scoring.first) << " scoring... size: " << scoring.second.size() << std::endl;
             G4double max_fsf = -10000.;
             G4double min_fsf =  10000.;
             G4double max_asf = max_fsf;

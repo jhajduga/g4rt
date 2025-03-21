@@ -1,7 +1,7 @@
 
 //#ifndef Dose3D_LOGSESSION_H
 //#define Dose3D_LOGSESSION_H
-
+#include "G4UImanager.hh"
 #include "G4UIsession.hh"
 
 /**
