@@ -16,7 +16,18 @@ D3DCellSD::D3DCellSD(const G4String& sdName, const G4ThreeVector& centre, G4int 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This method is being called for each G4Step in sensitive volume
+/**
+ * @brief Processes a simulation step within the sensitive detector.
+ *
+ * This method is called for each simulation step (G4Step) occurring inside the sensitive volume.
+ * It retrieves the physical volume from the pre-step point, and if track analysis is enabled,
+ * updates or initializes patient track information associated with the simulation step.
+ * Finally, it iterates over the defined hit collection names and processes those matching
+ * the sensitive detector's scoring volume names.
+ *
+ * @param aStep Pointer to the current simulation step.
+ * @return G4bool Always returns true to indicate successful hit processing.
+ */
 G4bool D3DCellSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   // The TouchableHistory is used to obtain the physical volume of the hit
   // i.e. get volume where G4Step is remember 

@@ -17,7 +17,12 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-// GeoSvc::GeoSvc() : TomlConfigurable("GeoSvc"), Logable("GeoAndScoring") {
+/**
+ * @brief Constructs a GeoSvc instance.
+ *
+ * Initializes the GeoSvc by invoking the default configuration setup.
+ * This ensures that the service is prepared with its standard configuration parameters.
+ */
 GeoSvc::GeoSvc() : TomlConfigurable("GeoSvc"){
   Configure();
 }
@@ -146,7 +151,14 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Initializes the GeoSvc if it has not been initialized already.
+ *
+ * If the service is not yet initialized, this function prints the current configuration,
+ * conditionally parses the particle history saving request based on the "RunSvc:SavePhSp"
+ * configuration flag, and verifies the specified head and MLC models. It then marks the service
+ * as initialized. Subsequent calls to this function will have no effect.
+ */
 void GeoSvc::Initialize() {
   if (!m_isInitialized) {
     // LOGSVC_INFO("Service initialization...");
@@ -414,7 +426,12 @@ void GeoSvc::ExportToGateGenericRepeater() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Exports CSV files with positioning data of scoring components.
+ *
+ * This function retrieves the output directory and iterates over all registered scoring components,
+ * exporting both generic cell positioning and voxelised positioning data as CSV files.
+ */
 void GeoSvc::WriteScoringComponentsPositioningToCsv() const {
   // LOGSVC_INFO("Writing Scroing Components to CSV...");
   std::string output_dir = GetOutputDir();
@@ -427,7 +444,14 @@ void GeoSvc::WriteScoringComponentsPositioningToCsv() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Exports positioning information of registered scoring components to a TFile.
+ *
+ * Retrieves the output directory and iterates over each registered scoring component.
+ * For each component, it is intended to export its positioning details to a TFile in the 
+ * output directory. Note that the export calls are currently disabled pending integration 
+ * with the new scoring maps scheme.
+ */
 void GeoSvc::WriteScoringComponentsPositioningToTFile() const {
   // LOGSVC_INFO("Writing Scroing Components to TFile...");
   std::string output_dir = GetOutputDir();
@@ -450,7 +474,17 @@ void GeoSvc::ExportDose3DLayerPads() const{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write geometry as TGeometry object in TFile
+/**
+ * @brief Exports the world geometry to a ROOT TFile.
+ *
+ * This function writes the simulation world geometry as a TGeometry object to a ROOT TFile. It first ensures that
+ * the GDML export has been performed by calling WriteWorldToGdml() if necessary. The geometry is then imported from
+ * the corresponding GDML file, its units are set to Geant4 defaults, and it is locked to prevent further modifications.
+ * The function subsequently adjusts the visual properties (color, transparency, visibility) of specific volumes based
+ * on their material or node name—for example, hiding volumes made of "G4_Galactic" and setting distinct colors for
+ * "G4_WATER", "BaritesConcrete", "PMMA", as well as volumes with names containing "D3D" or "Stl".
+ * Finally, the updated geometry is written into a "Geometry" directory in the TFile and the export is marked as complete.
+ */
 void GeoSvc::WriteWorldToTFile() {
   // LOGSVC_DEBUG("Writing World Geometry To TFile...");
   auto output_dir = GetOutputDir();
@@ -539,7 +573,14 @@ void GeoSvc::WritePatientToDicomCT(){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Exports the current world geometry to a GDML file.
+ *
+ * This function retrieves the current world geometry and exports it to a GDML
+ * file located in the output directory (as determined by GetOutputDir()). The
+ * file is named using the internal world file name with a ".gdml" extension.
+ * Upon successful export, the export status is updated.
+ */
 void GeoSvc::WriteWorldToGdml(){
   // LOGSVC_DEBUG("Writing World Geometry To GDML...");
   World()->ExportToGDML(GetOutputDir(),m_world_file_name+".gdml");

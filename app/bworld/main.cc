@@ -18,6 +18,19 @@
 // // #include "LogSvc.hpp"
 #include "BWorldConstruction.hh"
 
+/**
+ * @brief Entry point for the simulation application.
+ *
+ * This function initializes the Python interpreter and configures services for simulation configuration
+ * and execution. It processes command-line options to set operational modes, geometry export formats, thread
+ * count, event limits, and configuration through a TOML file. If the help or version options are provided,
+ * it prints the appropriate message and exits. In case of invalid or missing arguments, an error is reported
+ * and the application terminates.
+ *
+ * @param argc Number of command-line arguments.
+ * @param argv Array of command-line argument strings.
+ * @return int EXIT_SUCCESS if the application completes successfully.
+ */
 int main(int argc, const char *argv[]) {
 
 

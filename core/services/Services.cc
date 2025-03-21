@@ -34,7 +34,19 @@ std::string svc::currentDate() {
 
 
 ////////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Appends the current date to a base directory path and creates the directory if it doesn't exist.
+ *
+ * This function retrieves the current date (formatted as "YYYY-MM-DD") via `svc::currentDate()` and appends it
+ * to the specified base path. If the base path does not end with a '/', one is inserted before the date. It then
+ * checks for the existence of the resulting directory and creates it, along with any necessary intermediate directories,
+ * if needed.
+ *
+ * @param path The base directory where the date subdirectory is to be appended.
+ * @return std::string The full directory path including the appended current date.
+ *
+ * @note An informational message is printed to standard output when a new directory is created.
+ */
 std::string svc::createCurrentDateDirIfNotExits(const std::string& path){
   std::string dateDirPath = path;
 	auto date = svc::currentDate();
@@ -49,7 +61,16 @@ std::string svc::createCurrentDateDirIfNotExits(const std::string& path){
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Retrieves and validates the output directory from configuration.
+ *
+ * This function fetches the output directory path from the configuration service.
+ * If the output directory path is empty, the program terminates. If the specified
+ * directory does not exist, it creates the directory. The function then returns the
+ * validated output directory path.
+ *
+ * @return std::string The output directory path.
+ */
 std::string svc::getOutputDir(){ // const std::string& path
   auto configSvc = Service<ConfigSvc>();
   auto output_dir = configSvc->GetValue<std::string>("RunSvc", "OutputDir");
@@ -69,7 +90,15 @@ std::string svc::getOutputDir(){ // const std::string& path
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Ensures that the directory exists at the specified path.
+ *
+ * If the directory given by @p path does not exist, this function creates it (including
+ * any necessary intermediate directories) and returns the provided path.
+ *
+ * @param path The directory path to check and potentially create.
+ * @return The same directory path that was provided.
+ */
 std::string svc::createDirIfNotExits(const std::string& path) {
   fs::path dp (path);
   if(!fs::exists (dp)){
@@ -126,7 +155,18 @@ void svc::deleteFileIfExists(const std::string& file_full_path){
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Counts directories in a given location that match a specific naming pattern.
+ *
+ * This function inspects the provided directory for subdirectories whose names either exactly match the given
+ * substring or follow the format "<substring>_number" (where "number" is one or more digits). It identifies the
+ * highest numeric suffix among the matching directories and returns one greater than that value, effectively
+ * determining the next available index. If no matching directory is found, the function returns 0.
+ *
+ * @param path The directory path in which to search for matching subdirectories.
+ * @param substr The base substring used to construct the naming patterns for matching directories.
+ * @return size_t The next available numeric index based on the matching directories.
+ */
 size_t svc::countDirsInLocation(const std::string& path,const std::string& substr){
   auto dirIter = std::filesystem::directory_iterator(path);
   std::string patternNum = substr + std::string("_([0-9]+)");

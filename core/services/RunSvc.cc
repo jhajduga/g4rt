@@ -27,7 +27,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-// RunSvc::RunSvc() : TomlConfigurable("RunSvc"), Logable("RunSvc"){
+/**
+ * @brief Constructs a RunSvc instance.
+ *
+ * Initializes the simulation run by setting up configuration parameters and instantiating core services.
+ * The constructor triggers the configuration process (with console output indicating its start and end)
+ * and initializes the geometry service by instantiating GeoSvc.
+ */
 RunSvc::RunSvc() : TomlConfigurable("RunSvc"){
   std::cout << "Config start" << std::endl;
   Configure();
@@ -56,7 +62,15 @@ void RunSvc::RegisterRunComponent(RunComponet *element){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Registers simulation configuration parameters and initializes the materials service.
+ *
+ * This method defines a set of configuration units with associated keys and default types,
+ * covering aspects such as job details, run parameters (e.g., number of events, threads, RNG seed),
+ * primary generator settings, phase space options, analysis controls, and output directory.
+ * After setting up these parameters via default configuration, it initializes the materials service to
+ * ensure that necessary material definitions are available for the simulation run.
+ */
 void RunSvc::Configure() {
 
   // G4cout << "[INFO]:: RunSvc :: Service default configuration " << G4endl;
@@ -227,7 +241,19 @@ bool RunSvc::ValidateConfig() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Initializes the simulation environment and configures the world geometry.
+ *
+ * This function sets up the simulation by configuring and creating the world geometry using the
+ * provided WorldConstruction instance. It also establishes the output directory for simulation
+ * results. In full simulation mode, if the service has not been initialized yet, it validates the
+ * configuration, sets the simulation configuration (potentially from a TOML file), and creates the
+ * Geant4 run manager (multithreaded if enabled). Finally, it initializes the run manager's run ID counter.
+ *
+ * If the application mode is set to BuildGeometry, only geometry configuration and creation is performed.
+ *
+ * @param world Pointer to the WorldConstruction instance used for building and configuring the simulation geometry.
+ */
 void RunSvc::Initialize(WorldConstruction* world) {
   // build a geometry
   world->Configure();
@@ -316,7 +342,11 @@ std::string RunSvc::InitializeOutputDir() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Finalizes the simulation run.
+ *
+ * Exports geometry data, merges output files into a consolidated file, and cleans up the world geometry if it exists.
+ */
 void RunSvc::Finalize() {
 
   // Perform geometry exports
@@ -336,7 +366,12 @@ void RunSvc::Finalize() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Initializes user-defined components for the Geant4 simulation run.
+ *
+ * Configures the Geant4 run manager with the geometry, physics list, and action initialization components.
+ * This setup is performed only once; subsequent calls to this method have no effect.
+ */
 void RunSvc::UserG4Initialization() {
   if (!m_isUsrG4Initialized) {
     G4Timer timer;
@@ -354,7 +389,16 @@ void RunSvc::UserG4Initialization() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Executes the simulation run.
+ *
+ * Logs initialization, warning, error, and debug messages to indicate the start and progress of the run.
+ * The function simulates run progress by iterating through a fixed number of processing steps, then
+ * dispatches to the appropriate mode-specific routine based on the configured operational mode:
+ * - Calls the geometry building routine if in BuildGeometry mode.
+ * - Calls the full simulation routine if in FullSimulation mode.
+ * If the operational mode is unrecognized, an error message is displayed.
+ */
 void RunSvc::Run() {
 
         RUNSVC_INFO("RunSvc: Starting run.");
@@ -382,7 +426,17 @@ void RunSvc::Run() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Parses the simulation control point configuration from a TOML file.
+ *
+ * This method reads a TOML configuration file to extract control point settings for a simulation run.
+ * It first derives the configuration object key using a prefix and then attempts to load the control
+ * point definitions either from external plan files (specified under the "PlanInputFile" key) or from
+ * an inline configuration. In the external plan mode, each file is verified to exist before loading its
+ * control point data. In inline mode, the method validates that the number of control points and the sizes
+ * of the associated arrays (for field masks, beam rotations, and particle counts) are consistent.
+ * In case of missing or inconsistent configuration, a fatal error is raised.
+ */
 void RunSvc::ParseTomlConfig(){
 
   auto criticalError = [&](const G4String& msg){
@@ -461,7 +515,15 @@ void RunSvc::DefineSimConfiguration(){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// 
+/**
+ * @brief Initializes simulation control points from configuration.
+ *
+ * Iterates through the control point configuration, adding each entry to the internal control
+ * points list. If at least one control point is created, sets the current control point to the first
+ * entry; otherwise, it raises a fatal exception indicating a misconfigured job definition.
+ *
+ * @exception G4Exception Thrown when no control points are created.
+ */
 void RunSvc::DefineControlPoints() {
   for(const auto& icpc : m_control_points_config){
     m_control_points.emplace_back(icpc);
@@ -476,7 +538,14 @@ void RunSvc::DefineControlPoints() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Define simply single Control Point
+/**
+ * @brief Defines the default simulation control point configuration.
+ *
+ * This function sets up a single default control point for the simulation by using a
+ * fixed plan file ("plan/custom/rot00deg_stat1e3_3x3.dat"). It retrieves the corresponding
+ * control point configuration via DicomSvc::GetControlPointConfig with an index of 0, and
+ * appends it to the internal control points configuration list.
+ */
 void RunSvc::DefineSimDefaultConfig(){
   auto planFile = "plan/custom/rot00deg_stat1e3_3x3.dat";
   // LOGSVC_INFO(" *** SETTING THE G4RUN DEFAULT CONFIGURATION *** ");
@@ -485,7 +554,12 @@ void RunSvc::DefineSimDefaultConfig(){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Loads and applies the simulation plan.
+ *
+ * Iterates over each registered run component to set its configuration based on the current control point.
+ * After updating the run components, finalizes the simulation plan by filling the control point's field mask.
+ */
 void RunSvc::LoadSimulationPlan(){
   // LOGSVC_INFO(" *** LOADING THE SIMULATION PLAN FOR #{} CONTROL POINT *** ",m_current_control_point->GetId());
   for(auto& rcomponent : m_run_components){
@@ -497,7 +571,12 @@ void RunSvc::LoadSimulationPlan(){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// TODO: implement methods for exporting particular world volumes
+/**
+ * @brief Builds the simulation's world geometry.
+ *
+ * Invokes the Geometry Service to construct the world geometry volumes, thereby 
+ * setting up the necessary simulation environment.
+ */
 void RunSvc::BuildGeometryMode() {
   // LOGSVC_INFO("Building World Geometry...");
   // m_logger->flush();
@@ -505,7 +584,18 @@ void RunSvc::BuildGeometryMode() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Executes the full simulation mode.
+ *
+ * This method sets up and runs a full simulation by:
+ * - Configuring the simulation beam type and adjusting the associated macro file path when "gps" is used.
+ * - Initializing the random number generator by selecting a CLHEP::RanecuEngine and setting seeds based on configuration.
+ * - Configuring multi-threading settings if compiled with Geant4 multithreading support.
+ * - Invoking user-defined Geant4 initialization and setting the scoring manager verbosity.
+ * - Managing the simulation run lifecycle via UIManager callbacks for initialization and finalization.
+ *
+ * Note: Run manager clean-up is deferred due to a known issue with closing the phasespace file.
+ */
 void RunSvc::FullSimulationMode() {
 
         
@@ -557,7 +647,14 @@ auto sourceName = m_configSvc->GetValue<std::string>("RunSvc", "BeamType");
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Sets the number of threads for the simulation run.
+ *
+ * Updates the configuration with the specified thread count and checks it against the maximum allowed threads.
+ * If the provided value exceeds the maximum, a warning is (or would be) issued.
+ *
+ * @param val The desired number of threads.
+ */
 void RunSvc::SetNofThreads(int val) {
   auto MaxNThresds = thisConfig()->GetValue<int>("MaxNumberOfThreads");
   m_configSvc->SetValue("RunSvc", "NumberOfThreads", val);
@@ -578,7 +675,14 @@ std::string RunSvc::GetJobNameLabel() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Exports the simulation's geometry and scoring data to external files.
+ *
+ * This method retrieves the geometry service and uses it to export various aspects of the simulation's setup:
+ * - World geometry is written in GDML and ROOT formats.
+ * - Scoring components' positioning data is exported to CSV and ROOT files.
+ * - If the "GenerateCT" configuration flag is enabled, patient CT data is additionally written in CSV and DICOM CT formats.
+ */
 void RunSvc::WriteGeometryData() const {
   // LOGSVC_DEBUG("Writing Geometry Data");
   auto geoSvc = Service<GeoSvc>();
@@ -593,7 +697,16 @@ void RunSvc::WriteGeometryData() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Merges multiple ROOT output files into a single file.
+ *
+ * This method collects .root files from both the simulation and geometry output directories.
+ * If multi-threading is enabled, it also includes files from subjob directories. The collected files
+ * are then merged into a single ROOT file whose path is determined by the output directory and a job
+ * name label. Optionally, if the cleanUp flag is true, the original individual files are deleted after merging.
+ *
+ * @param cleanUp When true, removes the original .root files after the merge.
+ */
 void RunSvc::MergeOutput(bool cleanUp) const {
   auto output_dir = thisConfig()->GetValue<std::string>("OutputDir");
   // LOGSVC_INFO("Job output dir: {}",output_dir);

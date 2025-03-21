@@ -1,4 +1,3 @@
-
 #include "D3DTray.hh"
 #include "Services.hh"
 #include "G4Box.hh"
@@ -70,7 +69,13 @@ void D3DTray::LoadConfiguration(){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Parses a TOML configuration file and updates tray parameters.
+ *
+ * This method configures the tray by setting the configuration file path, verifying its
+ * existence, and parsing it to update the tray's global center position, cell voxelization
+ * dimensions, and rotation angles. The program will exit if the configuration file is not found.
+ */
 void D3DTray::ParseTomlConfig(){
     SetTomlConfigFile(); // it set the job main file for searching this configuration
     auto configFile = GetTomlConfigFile();

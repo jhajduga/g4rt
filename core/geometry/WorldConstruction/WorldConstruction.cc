@@ -10,7 +10,14 @@
 #include "BeamMonitoring.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs a WorldConstruction instance.
+ *
+ * Initializes the object by invoking the base class constructors for physical volume
+ * representation and configuration management using the identifier "WorldConstruction".
+ * Further initialization, including configuration and geometry setup, should be invoked
+ * explicitly as needed.
+ */
 WorldConstruction::WorldConstruction()
   // :IPhysicalVolume("WorldConstruction"), Configurable("WorldConstruction"),Logable("GeoAndScoring"){
   :IPhysicalVolume("WorldConstruction"), Configurable("WorldConstruction"){
@@ -123,7 +130,16 @@ void WorldConstruction::DefaultConfig(const std::string &unit) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Cleans up world volumes and unregisters the current configuration.
+ *
+ * This function checks if a valid physical world volume exists. If it does,
+ * the geometry is opened for modifications and the associated gantry and
+ * phantom environments are destroyed. Note that the parent physical volume
+ * is managed externally by the G4RunManager and is not manually deleted here.
+ * Finally, the function unregisters the configuration from the configuration
+ * service.
+ */
 void WorldConstruction::Destroy() {
   // LOGSVC_INFO("Destroing the World volumes... ");
   auto physicalWorldVolume = GetPhysicalVolume();
@@ -180,7 +196,19 @@ bool WorldConstruction::Create() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs additional geometry modules for the simulation world.
+ *
+ * This method conditionally attaches various supplementary components to the provided parent
+ * physical volume based on configuration flags:
+ * - Constructs the gantry geometry if the "BuildLinac" flag is enabled.
+ * - Constructs the patient geometry if the "BuildPatient" flag is enabled.
+ * - Constructs user-defined phase space planes if the "SavePhSp" flag is true.
+ * - Constructs beam monitoring planes if the "BeamAnalysis" flag is enabled.
+ *
+ * @param parentPV The parent physical volume to which the modules are attached.
+ * @return true Always returns true.
+ */
 bool WorldConstruction::ConstructWorldModules(G4VPhysicalVolume *parentPV) {
   // ___________________________________________________________________
   // create the gantry-world box
@@ -236,7 +264,16 @@ void WorldConstruction::ConstructSDandField() {
 G4bool WorldConstruction::Update() { return true; } // override
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Updates the world geometry components for the specified simulation run.
+ *
+ * This method updates the state of the world geometry by applying necessary modifications 
+ * to its components. In its current implementation, it updates the phantom environment if it exists.
+ * If the phantom environment update fails, the method immediately returns false.
+ *
+ * @param runId Simulation run identifier.
+ * @return G4bool Returns false if the phantom environment update fails; otherwise, returns true.
+ */
 G4bool WorldConstruction::Update(int runId) {
   // LOGSVC_INFO("Updating world geometry for run {}",runId);
   // if (thisConfig()->GetStatus()) {
@@ -318,7 +355,19 @@ bool WorldConstruction::newGeometry() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Exports a specified world geometry to a GDML file.
+ *
+ * Constructs a full file path using the provided directory and file name, deletes any existing file at that path,
+ * and writes the geometry of the world (identified by worldName) to the file using a GDML parser.
+ * If a non-empty worldName is provided but no matching physical volume is found, the function returns the file path
+ * without performing the export.
+ *
+ * @param path Directory path where the GDML file will be created.
+ * @param fileName File name for the exported GDML file.
+ * @param worldName Name of the physical volume representing the world to export.
+ * @return std::string The complete file path of the exported GDML file.
+ */
 std::string WorldConstruction::ExportToGDML(const std::string& path, const std::string& fileName, const std::string& worldName) {
   auto file = path+"/"+fileName;
   svc::deleteFileIfExists(file);

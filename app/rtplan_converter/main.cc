@@ -7,7 +7,18 @@
 #include <pybind11/embed.h>
 // #include "LogSvc.hpp"
 
-// Helper functions to parse a pair from a string
+/**
+ * @brief Converts a pair of string representations of numbers into a pair of floats.
+ *
+ * This function attempts to convert both elements of the provided string pair to floats.
+ * If either conversion fails due to an invalid argument or an out-of-range value, the
+ * corresponding exception is propagated.
+ *
+ * @param input A pair of strings, each representing a numeric value.
+ * @return std::pair<float, float> A pair of floats corresponding to the converted values.
+ * @throws std::invalid_argument If either string cannot be converted to a float.
+ * @throws std::out_of_range If either string represents a value outside the range of float.
+ */
 std::pair<float, float> convertPair(const std::pair<std::string, std::string>& input) {
     try {
         float first = std::stof(input.first);
@@ -28,6 +39,24 @@ std::pair<float, float> parsePair(const std::string& input) {
     throw std::invalid_argument("Invalid pair format. Expected 'value1,value2'.");
 }
 
+/**
+ * @brief Entry point for converting DICOM RT-Plan files to .dat plan files.
+ *
+ * This function initializes the Python interpreter and the DICOM service required to read
+ * RT-Plan files, parses command-line options using cxxopts, and configures parameters such
+ * as the RT-Plan file path, output directory, number of beams and control points, MLC field
+ * centralization, field constraints, and the number of particles. It then iterates over each
+ * beam and control point to extract jaw and MLC positions, optionally adjusts the MLC positions,
+ * validates them against provided field constraints, and writes the valid configurations to .dat files.
+ *
+ * If help or version information is requested, the function outputs the relevant details and exits.
+ * In case of missing or invalid required parameters, or if file operations fail, an error message
+ * is displayed and the application terminates.
+ *
+ * @param argc Number of command-line arguments.
+ * @param argv Array of command-line argument strings.
+ * @return int EXIT_SUCCESS upon successful completion, or EXIT_FAILURE if an error occurs.
+ */
 int main(int argc, const char *argv[]) {
 
   pybind11::scoped_interpreter guard{};

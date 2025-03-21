@@ -26,7 +26,19 @@ NTupleEventAnalisys *NTupleEventAnalisys::GetInstance() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Defines a TTree for event analysis.
+ *
+ * This function initializes or updates a TTree configuration used for event data analysis,
+ * provided the NTupleAnalysis service is enabled. If the hits collection name is empty, it registers
+ * a new TTree for a single scoring volume; otherwise, it either appends an additional hits collection
+ * to an existing TTree with the same name or creates a new TTree for multiple scoring volumes.
+ *
+ * @param treeName Name of the TTree.
+ * @param cellVoxelisation Enables the voxel tree structure when set to true.
+ * @param hcName Name of the hits collection. An empty string indicates the TTree is associated with a single scoring volume.
+ * @param treeDescription A textual description of the TTree.
+ */
 void NTupleEventAnalisys::DefineTTree(const G4String& treeName, bool cellVoxelisation, const G4String& hcName, const G4String& treeDescription){
   if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis") == false)
     return;
@@ -200,7 +212,20 @@ G4int NTupleEventAnalisys::GetNTupleId(const G4String& treeName){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Fills the event collection associated with a specified TTree using voxel hit data from a simulation event.
+ *
+ * This method validates that the event collection for the provided TTree name exists and, if so,
+ * populates it with data extracted from a voxel hits collection. It records the event identifier
+ * and, for each hit, extracts key attributes such as energy deposits (converted to keV), cell identifiers,
+ * positions, and dose values. When track analysis is enabled, track-related information (e.g., types,
+ * energies, positions, and lengths) is also recorded. If the TTree collection is not found or if no hits
+ * are present in the event, the function exits without modifying the event collection.
+ *
+ * @param treeName Name of the TTree collection to be filled.
+ * @param evt Pointer to the current simulation event.
+ * @param hitsColl Pointer to the collection of voxel hits associated with the event.
+ */
 void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4Event *evt, VoxelHitsCollection* hitsColl){
   auto isoToSim = Service<ConfigSvc>()->GetValue<G4ThreeVector>("WorldConstruction", "IsoToSimTransformation");
   auto analysisManager = G4AnalysisManager::Instance();

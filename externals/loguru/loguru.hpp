@@ -262,29 +262,86 @@ Website: www.ilikebigbits.com
 
 #include <stdarg.h>
 
-// --------------------------------------------------------------------
+/**
+ * @brief Formats a string and returns it as a managed Text object.
+ *
+ * This function leverages fmtlib's type-safe formatting to create a new C-style
+ * string based on the provided format and arguments. The resulting string is
+ * encapsulated in a loguru::Text object, which takes care of releasing the
+ * underlying memory.
+ *
+ * @param format The format string.
+ * @param args A fmt::format_args instance containing values to be formatted.
+ * @return loguru::Text A Text object that owns the formatted string.
+ */
 LOGURU_ANONYMOUS_NAMESPACE_BEGIN
 
 namespace loguru
 {
-	// Simple RAII ownership of a char*.
+	/**
+	 * @brief RAII wrapper for a dynamically allocated C-string.
+	 *
+	 * This class provides RAII (Resource Acquisition Is Initialization) management for a char*
+	 * pointer by taking ownership of the allocated memory and ensuring its proper release
+	 * upon destruction. It supports move semantics for transferring ownership and explicitly
+	 * disables all copy operations.
+	 *
+	 * The underlying C-string is accessible via c_str(), its state can be checked using empty(),
+	 * and ownership can be relinquished with release(), leaving the Text object empty.
+	 */
 	class LOGURU_EXPORT Text
 	{
 	public:
 		explicit Text(char* owned_str) : _str(owned_str) {}
 		~Text();
+		/**
+		 * @brief Move constructs a Text object.
+		 *
+		 * Transfers ownership of the internal string resource from the provided Text object,
+		 * leaving the source object empty.
+		 *
+		 * @param t The Text object to move from.
+		 */
 		Text(Text&& t)
 		{
 			_str = t._str;
 			t._str = nullptr;
 		}
-		Text(Text& t) = delete;
+		/**
+ * @brief Deleted copy constructor for Text.
+ *
+ * This function is explicitly deleted to prevent copying of Text objects,
+ * ensuring that each Text instance maintains unique ownership of its resources.
+ */
+Text(Text& t) = delete;
 		Text& operator=(Text& t) = delete;
 		void operator=(Text&& t) = delete;
 
-		const char* c_str() const { return _str; }
-		bool empty() const { return _str == nullptr || *_str == '\0'; }
+		/**
+ * @brief Returns the underlying C-style string.
+ *
+ * Provides access to the internal null-terminated character array representing the text.
+ *
+ * @return const char* A pointer to the null-terminated string.
+ */
+const char* c_str() const { return _str; }
+		/**
+ * @brief Determines if the string is empty.
+ *
+ * Checks whether the internal string pointer is null or points to an empty string (i.e., the first character is the null terminator).
+ *
+ * @return true if the string is empty, false otherwise.
+ */
+bool empty() const { return _str == nullptr || *_str == '\0'; }
 
+		/**
+		 * @brief Releases ownership of the managed string.
+		 *
+		 * Transfers the internal C-style string pointer to the caller and resets it to nullptr.
+		 * After this call, the caller is responsible for managing (e.g., freeing) the returned string.
+		 *
+		 * @return char* Pointer to the previously managed string, or nullptr if none was held.
+		 */
 		char* release()
 		{
 			auto result = _str;
@@ -302,6 +359,21 @@ namespace loguru
 	Text vtextprintf(const char* format, fmt::format_args args);
 
 	template<typename... Args>
+	/**
+	 * @brief Formats the given arguments into a text string.
+	 *
+	 * This function creates a formatted loguru::Text object by applying the specified 
+	 * format string to the provided variadic arguments. It is a convenience wrapper 
+	 * around the underlying vtextprintf function and leverages the fmt library to perform 
+	 * the formatting.
+	 *
+	 * @param format A format string following loguru's formatting conventions.
+	 * @param args Variadic arguments to be formatted into the string.
+	 * @return Text A loguru::Text object containing the formatted string.
+	 *
+	 * @example
+	 * loguru::Text message = loguru::textprintf("User {} logged in", username);
+	 */
 	LOGURU_EXPORT
 	Text textprintf(LOGURU_FORMAT_STRING_TYPE format, const Args&... args) {
 		return vtextprintf(format, fmt::make_format_args(args...));
@@ -438,6 +510,14 @@ namespace loguru
 		/// Should Loguru catch SIGTERM ?
 		bool sigterm = true;
 
+		/**
+		 * @brief Creates a SignalOptions object with all signal handlers disabled.
+		 *
+		 * This function returns a SignalOptions instance where all flags, including the unsafe signal
+		 * handler and common signals (SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGINT, SIGSEGV, SIGTERM), are set to false.
+		 *
+		 * @return A SignalOptions object with no signal handling enabled.
+		 */
 		static SignalOptions none()
 		{
 			SignalOptions options;
@@ -634,6 +714,19 @@ namespace loguru
 
 	// Actual logging function. Use the LOG macro instead of calling this directly.
 	template <typename... Args>
+	/**
+	 * @brief Logs a formatted message with the specified verbosity.
+	 *
+	 * This function formats a message using a printf-style format string and the provided variadic arguments,
+	 * then logs the resulting string at the given verbosity level. It also records the source file name and line
+	 * number where the log call is made.
+	 *
+	 * @param verbosity The severity level of the log message.
+	 * @param file The name of the source file from which the log is invoked.
+	 * @param line The line number in the source file where the log is invoked.
+	 * @param format The format string used to compose the log message.
+	 * @param args The arguments corresponding to the format specifiers in @c format.
+	 */
 	LOGURU_EXPORT
 	void log(Verbosity verbosity, const char* file, unsigned line, LOGURU_FORMAT_STRING_TYPE format, const Args &... args) {
 	    vlog(verbosity, file, line, format, fmt::make_format_args(args...));
@@ -641,6 +734,19 @@ namespace loguru
 
 	// Log without any preamble or indentation.
 	template <typename... Args>
+	/**
+	 * @brief Logs a formatted message without additional preamble or indentation.
+	 *
+	 * This function logs a message at the specified verbosity level using a printf-style format string
+	 * and corresponding arguments. The log output is produced without any extra metadata such as timestamps
+	 * or thread information.
+	 *
+	 * @param verbosity The verbosity level at which to log the message.
+	 * @param file The source file name where the log call originates.
+	 * @param line The line number in the source file at which the log call is made.
+	 * @param format A printf-style format string.
+	 * @param args Additional arguments matching the format string specifiers.
+	 */
 	LOGURU_EXPORT
 	void raw_log(Verbosity verbosity, const char* file, unsigned line, LOGURU_FORMAT_STRING_TYPE format, const Args &... args) {
 	    raw_vlog(verbosity, file, line, format, fmt::make_format_args(args...));
@@ -659,7 +765,18 @@ namespace loguru
 	void raw_log(Verbosity verbosity, const char* file, unsigned line, LOGURU_FORMAT_STRING_TYPE format, ...) LOGURU_PRINTF_LIKE(4, 5);
 #endif // !LOGURU_USE_FMTLIB
 
-	// Helper class for LOG_SCOPE_F
+	/**
+	 * @brief RAII helper for managing scoped logging.
+	 *
+	 * This class is used in conjunction with the LOG_SCOPE_F macro to automatically log the entry
+	 * and exit of a code block. On construction, it logs an entry message using the provided verbosity,
+	 * file, line, and a printf-style formatted message, and records the start time of the scope.
+	 * The destructor logs the exit of the scope, optionally including the elapsed duration.
+	 *
+	 * Use the Init() method to perform delayed initialization if needed. The move constructor is
+	 * specially implemented (on MSVC) to ensure that a moved-from object does not prematurely end
+	 * the logging scope.
+	 */
 	class LOGURU_EXPORT LogScopeRAII
 	{
 	public:
@@ -672,7 +789,15 @@ namespace loguru
 
 #if defined(_MSC_VER) && _MSC_VER > 1800
 		// older MSVC default move ctors close the scope on move. See
-		// issue #43
+		/**
+		 * @brief Move constructor for LogScopeRAII.
+		 *
+		 * Transfers ownership of logging scope resources from a temporary instance to the newly constructed object.
+		 * This constructor copies the verbosity level, file pointer, line number, indentation flag, start time, and scope name.
+		 * The source object's file pointer is then set to nullptr, ensuring that its destruction does not close the logging scope.
+		 *
+		 * @param other A temporary LogScopeRAII instance whose resources are transferred to the new object.
+		 */
 		LogScopeRAII(LogScopeRAII&& other)
 			: _verbosity(other._verbosity)
 			, _file(other._file)
@@ -688,7 +813,13 @@ namespace loguru
 			}
 		}
 #else
-		LogScopeRAII(LogScopeRAII&&) = default;
+		/**
+ * @brief Default move constructor.
+ *
+ * Transfers the logging scope ownership from another LogScopeRAII instance,
+ * leaving the source in a valid but unspecified state.
+ */
+LogScopeRAII(LogScopeRAII&&) = default;
 #endif
 
 	private:
@@ -710,6 +841,20 @@ namespace loguru
 	LOGURU_EXPORT
 	LOGURU_NORETURN void vlog_and_abort(int stack_trace_skip, const char* expr, const char* file, unsigned line, LOGURU_FORMAT_STRING_TYPE format, fmt::format_args);
 	template <typename... Args>
+	/**
+	 * @brief Logs a formatted error message with context and aborts the program.
+	 *
+	 * This function logs an error message that includes a custom formatted string, the source file,
+	 * the line number, and the failing condition expression. It captures a stack trace, omitting a
+	 * specified number of initial frames to exclude internal logging details, and then aborts the execution.
+	 *
+	 * @param stack_trace_skip Number of stack frames to skip when capturing the stack trace.
+	 * @param expr String representation of the failed condition.
+	 * @param file Name of the source file where the error occurred.
+	 * @param line Line number in the source file where the error occurred.
+	 * @param format Format string for the error message.
+	 * @param args Additional arguments used to format the error message.
+	 */
 	LOGURU_EXPORT
 	LOGURU_NORETURN void log_and_abort(int stack_trace_skip, const char* expr, const char* file, unsigned line, LOGURU_FORMAT_STRING_TYPE format, const Args&... args) {
 	    vlog_and_abort(stack_trace_skip, expr, file, line, format, fmt::make_format_args(args...));
@@ -727,24 +872,157 @@ namespace loguru
 	LOGURU_EXPORT
 	void flush();
 
-	template<class T> inline Text format_value(const T&)                    { return textprintf("N/A");     }
-	template<>        inline Text format_value(const char& v)               { return textprintf(LOGURU_FMT(c),   v); }
-	template<>        inline Text format_value(const int& v)                { return textprintf(LOGURU_FMT(d),   v); }
-	template<>        inline Text format_value(const float& v)              { return textprintf(LOGURU_FMT(f),   v); }
-	template<>        inline Text format_value(const double& v)             { return textprintf(LOGURU_FMT(f),   v); }
+	template<class T> /**
+ * @brief Returns a fallback text representation.
+ *
+ * This function provides a default textual representation by unconditionally returning "N/A".
+ * It serves as a fallback for types that do not have a specialized formatting function.
+ *
+ * @tparam T The type of the input value.
+ * @param value The input value (unused).
+ * @return loguru::Text A text object containing "N/A".
+ */
+inline Text format_value(const T&)                    { return textprintf("N/A");     }
+	template<>        /**
+ * @brief Converts a character to its formatted text representation.
+ *
+ * This function formats a character into a loguru::Text using a predefined format specified by the
+ * LOGURU_FMT(c) macro.
+ *
+ * @param v The character to format.
+ * @return loguru::Text The formatted text representation of the character.
+ */
+inline Text format_value(const char& v)               { return textprintf(LOGURU_FMT(c),   v); }
+	template<>        /**
+ * @brief Converts an integer to a formatted Text representation.
+ *
+ * Formats the given integer using a decimal format specifier and returns it as a Text object.
+ *
+ * @param v The integer value to format.
+ * @return Text The formatted text representation.
+ */
+inline Text format_value(const int& v)                { return textprintf(LOGURU_FMT(d),   v); }
+	template<>        /**
+ * @brief Converts a floating-point value to its formatted text representation.
+ *
+ * This inline helper formats the provided float using Loguru's formatting mechanism,
+ * returning the result as a Text object suitable for logging.
+ *
+ * @param v The float value to format.
+ * @return A Text object containing the formatted representation of the float.
+ */
+inline Text format_value(const float& v)              { return textprintf(LOGURU_FMT(f),   v); }
+	template<>        /**
+ * @brief Formats a double value into a loguru::Text object.
+ *
+ * Converts the provided double precision floating-point number into a Text instance
+ * by applying a predefined format specifier.
+ *
+ * @param v The double value to format.
+ * @return A Text object containing the formatted representation of the value.
+ */
+inline Text format_value(const double& v)             { return textprintf(LOGURU_FMT(f),   v); }
 
 #if LOGURU_USE_FMTLIB
-	template<>        inline Text format_value(const unsigned int& v)       { return textprintf(LOGURU_FMT(d), v); }
-	template<>        inline Text format_value(const long& v)               { return textprintf(LOGURU_FMT(d), v); }
-	template<>        inline Text format_value(const unsigned long& v)      { return textprintf(LOGURU_FMT(d), v); }
-	template<>        inline Text format_value(const long long& v)          { return textprintf(LOGURU_FMT(d), v); }
-	template<>        inline Text format_value(const unsigned long long& v) { return textprintf(LOGURU_FMT(d), v); }
+	template<>        /**
+ * @brief Formats an unsigned integer as a decimal string.
+ *
+ * Converts an unsigned integer into a Text object using a decimal format specifier.
+ *
+ * @param v The unsigned integer value to format.
+ * @return Text A Text object containing the formatted decimal representation.
+ */
+inline Text format_value(const unsigned int& v)       { return textprintf(LOGURU_FMT(d), v); }
+	template<>        /**
+ * @brief Formats a long integer value into a Text representation.
+ *
+ * Converts the provided long integer into a Text object using a decimal format specifier.
+ *
+ * @param v The long integer value to format.
+ * @return Text A formatted text representation of the provided value.
+ */
+inline Text format_value(const long& v)               { return textprintf(LOGURU_FMT(d), v); }
+	template<>        /**
+ * @brief Formats an unsigned long value as a text.
+ *
+ * Converts the given unsigned long value into a Loguru Text object using a decimal format.
+ *
+ * @param v The unsigned long value to format.
+ * @return loguru::Text The formatted text representation.
+ */
+inline Text format_value(const unsigned long& v)      { return textprintf(LOGURU_FMT(d), v); }
+	template<>        /**
+ * @brief Converts a long long integer into a formatted text string.
+ *
+ * This inline function formats the provided long long value into a loguru::Text
+ * using a decimal format specifier. The formatted output is useful for logging
+ * or error context purposes.
+ *
+ * @param v The long long integer to format.
+ * @return loguru::Text containing the formatted string representation of the value.
+ */
+inline Text format_value(const long long& v)          { return textprintf(LOGURU_FMT(d), v); }
+	template<>        /**
+ * @brief Formats an unsigned long long value as a decimal Text.
+ *
+ * This inline helper converts the provided unsigned long long value into a Text object
+ * representing its decimal form.
+ *
+ * @param v The unsigned long long value to format.
+ * @return Text The resulting formatted text.
+ */
+inline Text format_value(const unsigned long long& v) { return textprintf(LOGURU_FMT(d), v); }
 #else
-	template<>        inline Text format_value(const unsigned int& v)       { return textprintf(LOGURU_FMT(u),   v); }
-	template<>        inline Text format_value(const long& v)               { return textprintf(LOGURU_FMT(lu),  v); }
-	template<>        inline Text format_value(const unsigned long& v)      { return textprintf(LOGURU_FMT(ld),  v); }
-	template<>        inline Text format_value(const long long& v)          { return textprintf(LOGURU_FMT(llu), v); }
-	template<>        inline Text format_value(const unsigned long long& v) { return textprintf(LOGURU_FMT(lld), v); }
+	template<>        /**
+ * @brief Formats an unsigned integer into a Text object.
+ *
+ * Converts the given unsigned integer into its formatted text representation using a predefined
+ * format specifier suitable for unsigned values.
+ *
+ * @param v The unsigned integer value to format.
+ * @return Text The resulting formatted text.
+ */
+inline Text format_value(const unsigned int& v)       { return textprintf(LOGURU_FMT(u),   v); }
+	template<>        /**
+ * @brief Formats a long integer into a Text object.
+ *
+ * Converts the given long integer into its formatted textual representation
+ * using the library's dedicated formatting function.
+ *
+ * @param v The long integer value to format.
+ * @return A Text object containing the formatted representation of the input value.
+ */
+inline Text format_value(const long& v)               { return textprintf(LOGURU_FMT(lu),  v); }
+	template<>        /**
+ * @brief Formats an unsigned long value into a textual representation.
+ *
+ * Converts the given unsigned long value into a Text object using the loguru textprintf function 
+ * with the appropriate format specifier.
+ *
+ * @param v The unsigned long value to be formatted.
+ * @return Text A Text object containing the formatted representation of the number.
+ */
+inline Text format_value(const unsigned long& v)      { return textprintf(LOGURU_FMT(ld),  v); }
+	template<>        /**
+ * @brief Formats a long long integer into a Text object.
+ *
+ * This inline function converts the provided long long integer value into a formatted
+ * Text representation using the predefined format specifier defined by LOGURU_FMT(llu).
+ *
+ * @param v The long long integer to format.
+ * @return Text A Text object containing the formatted representation of the input value.
+ */
+inline Text format_value(const long long& v)          { return textprintf(LOGURU_FMT(llu), v); }
+	template<>        /**
+ * @brief Converts an unsigned long long value into a Text representation.
+ *
+ * This inline function formats the given unsigned long long value into a loguru::Text
+ * using loguru's textprintf with a format specifier tailored for long long integers.
+ *
+ * @param v The unsigned long long value to format.
+ * @return Text The formatted text representation of the input value.
+ */
+inline Text format_value(const unsigned long long& v) { return textprintf(LOGURU_FMT(lld), v); }
 #endif
 
 	/* Thread names can be set for the benefit of readable logs.
@@ -847,6 +1125,15 @@ namespace loguru
 	LOGURU_EXPORT
 	void stream_print(StringStream& out_string_stream, const char* text);
 
+	/**
+	 * @brief Base class for error context entries.
+	 *
+	 * This abstract class encapsulates metadata for an error context entry, including the
+	 * source file, line number, and a descriptive label. It forms a linked chain through the
+	 * _previous pointer, allowing traversal of nested error contexts.
+	 *
+	 * Derived classes must implement the print_value() method to output the stored value.
+	 */
 	class LOGURU_EXPORT EcEntryBase
 	{
 	public:
@@ -874,9 +1161,30 @@ namespace loguru
 	public:
 		using Printer = Text(*)(T data);
 
-		EcEntryData(const char* file, unsigned line, const char* descr, T data, Printer&& printer)
+		/**
+			 * @brief Constructs an error context data entry with associated data and a custom printer.
+			 *
+			 * This constructor initializes an error context entry by recording the source file, line number,
+			 * and a description, along with an arbitrary piece of contextual data. It also stores a callable
+			 * printer to generate a formatted representation of the data when needed, facilitating detailed
+			 * error context reporting.
+			 *
+			 * @param file Pointer to the source file name where the error occurred.
+			 * @param line The line number in the source file corresponding to the error.
+			 * @param descr A descriptive string for the error context entry.
+			 * @param data The contextual data associated with the entry.
+			 * @param printer A callable that formats the contextual data for output.
+			 */
+			EcEntryData(const char* file, unsigned line, const char* descr, T data, Printer&& printer)
 			: EcEntryBase(file, line, descr), _data(data), _printer(printer) {}
 
+		/**
+		 * @brief Prints the stored value as a string.
+		 *
+		 * Converts the internal data to its string representation using a configured printer function, then writes it to the provided string stream.
+		 *
+		 * @param out_string_stream The stream where the string representation is output.
+		 */
 		virtual void print_value(StringStream& out_string_stream) const override
 		{
 			const auto str = _printer(_data);
@@ -1222,6 +1530,62 @@ LOGURU_ANONYMOUS_NAMESPACE_END
 #include <sstream> // Adds about 38 kLoC on clang.
 #include <string>
 
+/**
+ * @brief Formats a string using printf-like syntax.
+ *
+ * This function creates a formatted string similar to sprintf, but returns the result as a std::string.
+ * It accepts a format string and a variable number of arguments.
+ *
+ * @param format The format string.
+ * @param ... Additional arguments for the format specifiers.
+ * @return std::string The formatted string.
+ */
+
+/**
+ * @brief Formats a string using a va_list.
+ *
+ * This function creates a formatted string similar to vsprintf, but returns the result as a std::string.
+ * It accepts a format string and a va_list containing the corresponding arguments.
+ *
+ * @param format The format string.
+ * @param args A va_list of arguments for the format string.
+ * @return std::string The formatted string.
+ */
+
+/**
+ * @brief Stream-style logger for accumulating and logging messages.
+ *
+ * This class provides a stream-like interface to accumulate log messages.
+ * On destruction, it logs the complete message using the specified verbosity,
+ * source file, and line number.
+ */
+
+/**
+ * @brief Logger for fatal errors that logs a message and aborts execution.
+ *
+ * This class accumulates log messages using a stream-like interface.
+ * Upon destruction, it logs the fatal error message along with the failed expression,
+ * source file, and line number, then terminates the program.
+ */
+
+/**
+ * @brief Utility for discarding log messages in conditional expressions.
+ *
+ * This class overloads the bitwise AND operator to enable proper suppression of
+ * logging output in ternary and conditional expressions.
+ */
+
+/**
+ * @brief Returns a referenceable version of the provided value.
+ *
+ * This helper function ensures that a value can be used in macro operations,
+ * particularly by enabling static const integrals and similar types to be addressable.
+ * Overloads are provided for primitive types to return a copy instead.
+ *
+ * @tparam T The type of the input value.
+ * @param t The value to be converted.
+ * @return const T& A reference to the original value, or a copy for primitive types.
+ */
 LOGURU_ANONYMOUS_NAMESPACE_BEGIN
 
 namespace loguru

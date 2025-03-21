@@ -19,7 +19,16 @@
 class Logger {
 public:
 
-// A maximum-custom callback with full control over output formatting.
+/**
+ * @brief Formats and outputs a log message with a custom timestamp and verbosity level.
+ *
+ * This callback generates the current local timestamp, retrieves the verbosity level from the
+ * log message (falling back on the numeric value if necessary), and writes the formatted output
+ * to the file stream provided via user_data.
+ *
+ * @param user_data Pointer to a FILE stream used for outputting the log message.
+ * @param message  Loguru message containing the log text and metadata.
+ */
 static void max_custom_log_callback(void* user_data, const loguru::Message& message) {
     FILE* out = static_cast<FILE*>(user_data);
 
@@ -61,6 +70,14 @@ static void RotateLogFile(const std::string& filepath, uintmax_t max_size);
                      loguru::Verbosity verbosity = loguru::Verbosity_INFO,
                      int flush_interval_ms = 100);
 
+    /**
+     * @brief Computes the elapsed time in seconds since the logger was initialized.
+     *
+     * Calculates the uptime by determining the difference between the current steady clock time and the logger's
+     * start time, converting the result from milliseconds to seconds.
+     *
+     * @return double The uptime in seconds.
+     */
     static double uptime() {
         auto now = std::chrono::steady_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time);
@@ -68,30 +85,78 @@ static void RotateLogFile(const std::string& filepath, uintmax_t max_size);
     }
 
     template<typename... Args>
+    /**
+     * @brief Logs a formatted debug message with source context.
+     *
+     * This templated function formats a debug message using a printf-style format string and
+     * the provided arguments, then logs the resulting message at the debug verbosity level.
+     * The log entry automatically includes the source file name, line number, and function name.
+     *
+     * @param format The printf-style format string.
+     * @param args Arguments to be formatted into the message.
+     */
     static void LogDebug(const char* format, const Args&... args) {
         loguru::log(loguru::Verbosity_MAX, __FILE__, __LINE__, __FUNCTION__,
                     fmt::format(fmt::runtime(format), args...).c_str());
     }
 
     template<typename... Args>
+    /**
+     * @brief Logs an informational message.
+     *
+     * Formats the provided message using a runtime format string and additional arguments,
+     * then logs it at the INFO verbosity level. The log entry automatically includes the source
+     * file, line, and function name for debugging purposes.
+     *
+     * @param format A dynamic format string following fmt::format syntax.
+     * @param args Values to be formatted into the message.
+     */
     static void LogInfo(const char* format, const Args&... args) {
         loguru::log(loguru::Verbosity_INFO, __FILE__, __LINE__, __FUNCTION__,
                     fmt::format(fmt::runtime(format), args...).c_str());
     }
 
     template<typename... Args>
+    /**
+     * @brief Logs a formatted warning message.
+     *
+     * This function formats a message using the provided format string and arguments, and logs it with warning-level severity.
+     * The log entry automatically includes the source file, line number, and function name.
+     *
+     * @param format The fmt-compatible format string for the log message.
+     * @param args Additional arguments to format the message.
+     */
     static void LogWarning(const char* format, const Args&... args) {
         loguru::log(loguru::Verbosity_WARNING, __FILE__, __LINE__, __FUNCTION__,
                     fmt::format(fmt::runtime(format), args...).c_str());
     }
 
     template<typename... Args>
+    /**
+     * @brief Logs an error message.
+     *
+     * Formats a message using the given format string and arguments, then logs it as an error. The log entry includes source file, line number, and function name for context.
+     *
+     * @param format The format string for the error message.
+     * @param args Arguments to be formatted into the message.
+     */
     static void LogError(const char* format, const Args&... args) {
         loguru::log(loguru::Verbosity_ERROR, __FILE__, __LINE__, __FUNCTION__,
                     fmt::format(fmt::runtime(format), args...).c_str());
     }
 
     template<typename... Args>
+    /**
+     * @brief Logs a fatal error message and immediately flushes the log.
+     *
+     * This function formats a log message using a printf-style format string and corresponding arguments,
+     * then logs it with fatal verbosity. It automatically attaches the source file, line number, and function
+     * name where the call is made. The log is flushed immediately after the message is logged to ensure that
+     * critical errors are recorded promptly.
+     *
+     * @param format A C-style format string specifying the fatal error message.
+     * @param args Variadic arguments that are formatted into the message.
+     */
     static void LogFatal(const char* format, const Args&... args) {
         loguru::log(loguru::Verbosity_FATAL, __FILE__, __LINE__, __FUNCTION__,
                     fmt::format(fmt::runtime(format), args...).c_str());
@@ -120,6 +185,16 @@ static void RotateLogFile(const std::string& filepath, uintmax_t max_size);
      * Szablonowa wersja LogToModule – formatuje wiadomość i automatycznie przekazuje __FILE__, __LINE__, __FUNCTION__.
      */
     template<typename... Args>
+    /**
+     * @brief Logs a formatted message to a specified module.
+     *
+     * This templated method formats the provided message using the fmt library and logs it to the module-specific log file. It automatically captures and records the source file, line number, and function name for precise debugging context.
+     *
+     * @param module_name Name of the module for which the log is intended.
+     * @param verbosity Log level indicating the severity of the message.
+     * @param format A printf-style format string.
+     * @param args Arguments to be formatted into the message.
+     */
     static void LogToModule(const std::string& module_name, loguru::Verbosity verbosity, const char* format, const Args&... args) {
         LogToModule(module_name, verbosity, fmt::format(fmt::runtime(format), args...), __FILE__, __LINE__, __FUNCTION__);
     }
@@ -163,8 +238,28 @@ private:
 namespace fmt {
     template <>
     struct formatter<std::thread::id> {
-        constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
+        /**
+ * @brief Parses the format specification for a custom formatter.
+ *
+ * This function performs minimal parsing by returning the iterator to the beginning of the
+ * provided format parse context, indicating that no custom format specifiers are processed.
+ *
+ * @param ctx The context that contains the format string to be parsed.
+ * @return An iterator pointing to the beginning of the format string.
+ */
+constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
         template <typename FormatContext>
+        /**
+         * @brief Formats a thread identifier using its hash representation.
+         *
+         * Computes the hash value of the provided thread identifier and writes the result to
+         * the output iterator from the given formatting context. This hash-based representation
+         * offers a concise and consistent view of thread identifiers.
+         *
+         * @param id The thread identifier to format.
+         * @param ctx The context providing the output iterator for formatting.
+         * @return An iterator pointing to the end of the formatted output.
+         */
         auto format(const std::thread::id& id, FormatContext& ctx) {
             auto hash = std::hash<std::thread::id>{}(id);
             return format_to(ctx.out(), "{}", hash);
@@ -174,8 +269,30 @@ namespace fmt {
     // Specjalizacja dla std::vector<T> – umożliwia formatowanie wektorów.
     template<typename T>
     struct formatter<std::vector<T>> {
-        constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
+        /**
+ * @brief Parses a format specifier for a custom formatter.
+ *
+ * This function satisfies the interface required by the formatting library for custom types.
+ * It performs no additional parsing and simply returns an iterator to the beginning of the format string,
+ * indicating that no custom format specifiers are supported.
+ *
+ * @param ctx The format parse context containing the format string.
+ * @return An iterator pointing to the beginning of the format string.
+ */
+constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
         template<typename FormatContext>
+        /**
+         * @brief Formats a vector as a comma-separated list enclosed in square brackets.
+         *
+         * This function converts each element of the vector to a string using fmt::to_string(),
+         * concatenating the results with a comma and a space, and enclosing the entire list in square brackets.
+         * The formatted string is then written to the provided format context.
+         *
+         * @tparam T The type of the elements in the vector.
+         * @param vec The vector whose elements will be formatted.
+         * @param ctx The format context used to output the resulting string.
+         * @return An iterator pointing to the end of the formatted output in the context.
+         */
         auto format(const std::vector<T>& vec, FormatContext& ctx) {
             std::string result = "[";
             bool first = true;

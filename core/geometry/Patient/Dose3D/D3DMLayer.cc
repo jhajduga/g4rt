@@ -38,7 +38,11 @@ void D3DMLayer::WriteInfo() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Deletes the layer's physical volume.
+ *
+ * If a physical volume is associated with the layer, it deletes the volume and resets the pointer to prevent dangling references.
+ */
 void D3DMLayer::Destroy() {
   // LOGSVC_INFO("Destroing the D3DMLayer {} volume", GetName());
   auto phantomVolume = GetPhysicalVolume();
@@ -117,7 +121,22 @@ void D3DMLayer::SetCellNVoxels(char axis, int nv){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs the D3DMLayer by creating and positioning its cells.
+ *
+ * This method builds the cell volumes of the layer and attaches them to the given parent world volume.
+ * It supports two positioning modes:
+ * - When no CSV-based cell positions are provided, the method uses a parameterization to generate a grid
+ *   of cells based on default initial positions and spacing. In this mode, if the initial translation (m_init_x,
+ *   m_init_y, m_init_z) is not properly set (i.e., retains an invalid default value), a fatal exception is thrown.
+ * - When CSV-based positions are available, these positions (offset by an initial translation) are used to define
+ *   each cell's location.
+ *
+ * For each valid cell, a D3DCell is created with an appropriate label, voxelization settings, and track analysis
+ * configuration, and then its Construct method is invoked with the parent volume.
+ *
+ * @param parentWorld The parent physical volume to which the layer's cell volumes will be attached.
+ */
 void D3DMLayer::Construct(G4VPhysicalVolume *parentWorld) {
   // G4cout << "[INFO]:: D3DMLayer construction... " << G4endl;
   if(m_cells_in_layer_positioning.size()==0){

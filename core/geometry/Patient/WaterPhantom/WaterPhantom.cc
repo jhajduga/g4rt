@@ -19,7 +19,16 @@ WaterPhantom::~WaterPhantom() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Parses the TOML configuration file to initialize water phantom parameters.
+ *
+ * Reads configuration entries from a TOML file to set the water phantom's translation, voxelization, size,
+ * medium, and scoring options. The function validates that the configuration file exists and that a valid
+ * configuration prefix is supplied; otherwise, it triggers a fatal error using G4Exception. It also retrieves
+ * the environment position from the configuration service to compute the phantom's top position in the world.
+ *
+ * @throws G4Exception if the configuration file is not found or the configuration prefix is undefined.
+ */
 void WaterPhantom::ParseTomlConfig(){
   auto configFile = GetTomlConfigFile();
   auto configPrefix = GetTomlConfigPrefix();
@@ -81,7 +90,14 @@ G4bool WaterPhantom::LoadDefaultParameterization(){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs and logs diagnostic information about the water phantom's geometry.
+ *
+ * This method computes the phantom's dimensions in centimeters based on its size members and
+ * retrieves the simulation environment's center position from the configuration service.
+ * It then prepares information strings detailing the water phantom's size and its placement
+ * within the environment. Note that all logging statements are currently commented out.
+ */
 void WaterPhantom::WriteInfo() {
   auto configSvc = Service<ConfigSvc>();
   G4String info;
@@ -104,7 +120,12 @@ void WaterPhantom::WriteInfo() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Destroys the physical volume associated with the water phantom.
+ *
+ * If the water phantom's physical volume exists, this method deletes it to free
+ * allocated resources and resets the corresponding pointer to prevent future access.
+ */
 void WaterPhantom::Destroy() {
   // LOGSVC_INFO("Destroing the WaterPhantom volume.");
   auto phantomVolume = GetPhysicalVolume();

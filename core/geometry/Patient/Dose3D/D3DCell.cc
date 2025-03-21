@@ -66,13 +66,24 @@ void D3DCell::SetIDs(G4int x, G4int y, G4int z){
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Outputs detailed information about the cell.
+ *
+ * This method is intended to log the cell's configuration and state. The logging
+ * functionality is currently inactive (commented out), serving as a placeholder for
+ * future implementation.
+ */
 void D3DCell::WriteInfo() {
   // LOGSVC_INFO("The Dose3D cell {} info: Implement me.", GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Destroys the cell's physical volume.
+ *
+ * If a physical volume is associated with the cell, this function deletes it and resets the pointer,
+ * ensuring that the cell no longer references a deallocated resource.
+ */
 void D3DCell::Destroy() {
   // LOGSVC_INFO("Destroing the D3DCell volume.");
   auto phantomVolume = GetPhysicalVolume();
@@ -99,7 +110,16 @@ void D3DCell::SetNVoxels(char axis, int nv){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+   * @brief Constructs the cell's geometry and sets up production cuts.
+   *
+   * This method initializes the cell's physical and logical volumes. It creates a box-shaped volume 
+   * based on a fixed cell size, assigns the appropriate material from the configuration service, and 
+   * places the cell at its designated center within the provided parent volume. The method also establishes 
+   * a region with production cuts for the cell, ensuring proper control over particle tracking.
+   *
+   * @param parentWorld The parent physical volume that will contain the constructed cell.
+   */
 void D3DCell::Construct(G4VPhysicalVolume *parentWorld) {
   // std::cout << "[INFO]:: D3DCell construction... " << std::endl;
   auto label = GetName();
@@ -166,7 +186,18 @@ bool D3DCell::IsRunCollectionScoringVolumeVoxelised(const G4String& run_collecti
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Initializes and registers the cell's sensitive detector if not already set.
+ *
+ * This method creates and assigns a new sensitive detector for the cell using its physical volume, global center,
+ * and identification parameters. It casts the cell's logical volume to a box to define the scoring geometry.
+ * The sensitive detector is instantiated with a unique label (cell name appended with "_SD"), and its tracking
+ * analysis is configured. It also defines a hit container (cell name appended with "_HC") and sets up the scoring
+ * volume, using voxelized resolution if enabled; otherwise, a single voxel per axis is used. Finally, the detector
+ * is registered with the simulation framework to ensure proper integration with the scoring system.
+ *
+ * Thread safety is maintained by locking the global cell mutex during the detector initialization.
+ */
 void D3DCell::DefineSensitiveDetector(){
   G4AutoLock lock(&CellMutex);
   if(m_patientSD.Get()==0){

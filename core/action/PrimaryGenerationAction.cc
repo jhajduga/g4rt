@@ -93,7 +93,18 @@ PrimaryGenerationAction::~PrimaryGenerationAction(void) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Generates primary vertices for the given simulation event.
+ *
+ * This function creates primary vertices for the event using the configured primary generator. When using an
+ * IAEA primary generator, it accumulates and filters vertex collections until a minimum threshold is reached or
+ * a maximum number of attempts is exceeded. For other generator types, it directly retrieves the primary vertices.
+ * It then applies an optional rotation transformation to adjust the positions and momenta of each vertex and
+ * ensures that every primary particle has updated user information. If primary analysis is enabled, the generated
+ * primaries are recorded for further analysis.
+ *
+ * @param anEvent Pointer to the event in which to generate primary vertices.
+ */
 void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
   auto runSvc = Service<RunSvc>();
   G4AutoLock lock(&PrimGenMutex);

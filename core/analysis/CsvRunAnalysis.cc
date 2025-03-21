@@ -16,7 +16,16 @@ CsvRunAnalysis *CsvRunAnalysis::GetInstance() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Writes simulation dose data to CSV files.
+ *
+ * This method retrieves the current run's scoring collections from the control point and writes each collection's dose data into corresponding CSV files.
+ * The output file name is constructed using the control point's base name, the collection type, and the scoring type.
+ * For voxel-based scoring, additional columns for voxel identifiers are included in the CSV header and data.
+ * Note that the provided run pointer is not used directly; the active run is obtained via the run service.
+ *
+ * @param runPtr Pointer to the simulation run (currently unused).
+ */
 void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
     auto writeVolumeHitDataRaw = [](std::ofstream& file, const VoxelHit& hit, bool voxelised){
         auto cxId = hit.GetGlobalID(0);
@@ -66,7 +75,15 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Exports field mask data to CSV files and generates PNG copies.
+ *
+ * This method retrieves the current control point and iterates through each available data type.
+ * For data types with a non-empty field mask, it creates a CSV file containing the 3D coordinates
+ * (X, Y, Z) for each point and then invokes a Python module to generate a corresponding PNG file.
+ *
+ * @param runPtr Pointer to the current simulation run (currently unused).
+ */
 void CsvRunAnalysis::WriteFieldMaskToCsv(const G4Run* runPtr){
     auto cp = Service<RunSvc>()->CurrentControlPoint();
     auto data_types = cp->DataTypes();

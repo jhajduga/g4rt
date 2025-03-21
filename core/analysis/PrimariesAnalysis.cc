@@ -23,7 +23,16 @@ PrimariesAnalysis *PrimariesAnalysis::GetInstance() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Initializes data collection for the current run.
+ *
+ * Sets up a new Ntuple to record primary particle data by creating columns for counts and energies of gamma,
+ * electron, positron, neutron, and proton particles, as well as additional properties like positions and momenta.
+ * All primary particle counters are reset to zero in preparation for event processing.
+ *
+ * @param runPtr Pointer to the current run (unused in this method).
+ * @param isMaster Indicates whether the call is made from the master thread (unused in this method).
+ */
 void PrimariesAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
 
   auto analysisManager =  G4AnalysisManager::Instance();

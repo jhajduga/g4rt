@@ -38,7 +38,16 @@ RunAnalysis *RunAnalysis::GetInstance() {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Initializes run analysis at the beginning of a run.
+ *
+ * Retrieves the current control point from the run service and prints a message indicating
+ * whether the current thread is a worker or a master thread. This helps in distinguishing
+ * thread-specific behavior during multi-threaded analysis runs.
+ *
+ * @param runPtr Pointer to the current run instance (unused in the current implementation).
+ * @param isMaster Boolean flag indicating if the current thread is the master (unused in the current implementation).
+ */
 void RunAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
     m_current_cp = Service<RunSvc>()->CurrentControlPoint();
     std::string worker = G4Threading::IsWorkerThread() ? "*WORKER*" : " *MASTER* ";
@@ -56,7 +65,16 @@ void RunAnalysis::EndOfEventAction(const G4Event *evt){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Finalizes analysis for the simulation run.
+ *
+ * Ends the current control point run and, depending on the active analysis instances,
+ * writes dose and field mask data to CSV or TFile formats. If CSV analysis is enabled,
+ * dose and field mask data are written to CSV files and, if configured, CT dose data is exported.
+ * Similarly, if NTuple analysis is active, dose and field mask data are written to TFile format.
+ *
+ * @param runPtr Pointer to the current Geant4 run instance.
+ */
 void RunAnalysis::EndOfRun(const G4Run* runPtr){
     // LOGSVC_INFO("RunAnalysis::EndOfRun:: CtrlPoint-{} / G4Run-{}", m_current_cp->GetId(), runPtr->GetRunID());
     // Note: Multithreading merging is being performed before...

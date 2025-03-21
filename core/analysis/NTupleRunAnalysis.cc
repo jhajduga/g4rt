@@ -12,7 +12,15 @@ NTupleRunAnalysis *NTupleRunAnalysis::GetInstance() {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Writes field mask data to a ROOT file.
+ *
+ * Retrieves the current control point from the run service and constructs an output ROOT file using the 
+ * control point's output file name and ID. For each data type with non-empty field mask data, the function 
+ * linearizes the field mask and writes it as an object into the file.
+ *
+ * @param runPtr Pointer to the current run (unused in this implementation).
+ */
 void NTupleRunAnalysis::WriteFieldMaskToTFile(const G4Run* runPtr){
     auto cp = Service<RunSvc>()->CurrentControlPoint();
     auto fname = cp->GetOutputFileName()+"_field_mask.root";
@@ -35,7 +43,17 @@ void NTupleRunAnalysis::WriteFieldMaskToTFile(const G4Run* runPtr){
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Writes dose data extracted from scoring collections to a ROOT file.
+ *
+ * Retrieves the current control point from the run service to generate a ROOT file with a name and directory
+ * based on the control point's properties. The method iterates over the run's scoring collections, extracting
+ * dose values, positions, and field scaling factors. These data are organized into vectors and written to the
+ * ROOT file under identifiers derived from the scoring types and collection names. The file is updated after
+ * each scoring entry and closed after processing all collections.
+ *
+ * @param runPtr Pointer to the run instance associated with the data (the current control point is obtained via RunSvc).
+ */
 void NTupleRunAnalysis::WriteDoseToTFile(const G4Run* runPtr){
     auto cp = Service<RunSvc>()->CurrentControlPoint();
     auto fname = cp->GetOutputFileName()+"_dose.root";

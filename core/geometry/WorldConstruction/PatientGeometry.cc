@@ -350,7 +350,15 @@ void PatientGeometry::WriteInfo() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// NOTE: This method is called from WorldConstruction::ConstructSDandField
-///       which is being called in workers in MT mode
+/**
+ * @brief Configures the patient sensitive detector for analysis in a multi-threaded environment.
+ *
+ * If the patient object exists and any analysis mode ("StepAnalysis", "RunAnalysis", or "NTupleAnalysis")
+ * is enabled via the configuration service, this method defines the sensitive detector for the patient
+ * geometry. The operation is thread-safe, using a mutex to guard the sensitive detector definition.
+ *
+ * @note This function is typically invoked in worker threads during multi-threaded simulations.
+ */
 void PatientGeometry::DefineSensitiveDetector() {
   if (m_patient){
     // check if there is any analysis switched on in patient:
@@ -370,15 +378,15 @@ void PatientGeometry::DefineSensitiveDetector() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /**
- * @brief Exports the patient geometry to CSV files.
- * 
- * This function exports the patient geometry to CSV files for CT imaging.
- * It creates a set of CSV files for each slice of the patient and saves
- * the position and material of each voxel in the CSV format. The CSV files
- * are saved in the specified output directory.
- * 
- * @param path_to_output_dir The path to the output directory where the CSV
- *                           files will be saved.
+ * @brief Exports CT imaging patient geometry to CSV files.
+ *
+ * Generates a metadata file and multiple CSV files—one per slice—capturing each voxel's
+ * position (in mm) and associated material for CT imaging. The metadata file records the
+ * CT volume's bounding parameters, voxel resolution and dimensions, and the source-to-isocentre
+ * distance. The function ensures the output directory exists before writing files and silently
+ * returns if the patient environment is unavailable.
+ *
+ * @param path_to_output_dir Directory where the CSV files and metadata file will be saved.
  */
 void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const {
   // Get the patient environment and check if it exists
@@ -488,7 +496,18 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Exports CT imaging dose data to CSV files.
+ *
+ * This method retrieves the patient environment and, using configuration parameters, computes the CT grid boundaries
+ * and resolution. It then extracts dose information from scoring collections for both voxel and cell types. The data
+ * is written into several CSV files: a metadata file containing grid and SSD details, individual slice files for both
+ * voxel and cell dose data, and merged CSV files that consolidate all slice data.
+ *
+ * If the patient environment is not available, the method exits without producing any output.
+ *
+ * @param runPtr Pointer to the current run containing scoring collections with dose information.
+ */
 void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   auto patientEnv = Service<GeoSvc>()->World()->PatientEnvironment();
   if (!patientEnv) {

@@ -17,6 +17,19 @@
 #include "WorldConstruction.hh"
 #include "LogSvc.hpp"
 
+/**
+ * @brief Application entry point.
+ *
+ * Initializes the embedded Python interpreter and configures core services, including configuration, runtime,
+ * and logging (via LogSvc). Parses command-line options to set the application's operational mode (e.g., build geometry or full simulation),
+ * export settings, thread count, event numbers, and output paths. If help or version information is requested or if a fatal option error
+ * occurs (such as an invalid TOML file path or exceeding maximum event count), the function displays an appropriate message and exits.
+ *
+ * Upon successful configuration, it retrieves the global world instance, initializes the runtime service, executes the simulation run,
+ * finalizes the service, and shuts down the logger before terminating.
+ *
+ * @return int EXIT_SUCCESS upon normal termination.
+ */
 int main(int argc, const char *argv[]) {
 
 

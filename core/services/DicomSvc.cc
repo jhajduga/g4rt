@@ -9,7 +9,16 @@ namespace py = pybind11;
 using namespace py::literals;
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Initializes the DICOM service based on the plan file type.
+ *
+ * This function selects and creates the appropriate plan configuration for processing a radiation therapy plan file.
+ * A custom plan is instantiated for ".dat" files, while a standard DICOM plan is used for ".dcm" files.
+ * If an unsupported file extension is provided, a fatal error is raised.
+ *
+ * @param planFileType The plan file's extension (e.g., "dat" or "dcm").
+ * @throws G4Exception if the file extension is not recognized.
+ */
 void DicomSvc::Initialize(const std::string& planFileType){
   // LOGSVC_INFO("DicomSvc initalization...");
   if(planFileType == "dat")
@@ -53,7 +62,19 @@ DicomSvc *DicomSvc::GetInstance() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Retrieves the position of a specified jaw from a DICOM plan.
+ *
+ * This function determines the position of a jaw (either "X1", "X2", "Y1", or "Y2") for a given beam and control point
+ * in the provided DICOM plan file. It validates the jaw name input and, if valid, employs a corresponding Python module to retrieve
+ * the position. An invalid jaw name triggers a fatal error via G4Exception.
+ *
+ * @param planFile The file path to the DICOM plan.
+ * @param jawName The name of the jaw ("X1", "X2", "Y1", or "Y2").
+ * @param beamIdx The index of the beam in the plan.
+ * @param controlpointIdx The index of the control point in the specified beam.
+ * @return double The retrieved jaw position value.
+ */
 double IDicomPlan::ReadJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const{
   //// LOGSVC_INFO("Reading the Jaws configuration from {}",planFile);
   //// LOGSVC_INFO("JawName: {}, beamIdx: {}, controlpointIdx: {}",jawName,beamIdx,controlpointIdx);
@@ -108,7 +129,23 @@ void IPlan::AcknowledgeMlcPositioning(const std::string& side, const std::vector
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Retrieves the MLC positioning configuration for the specified DICOM RT plan.
+ *
+ * This function extracts the multi-leaf collimator (MLC) positioning data for a given plan file.
+ * It verifies that the provided side is either "Y1" or "Y2", then uses a Python module to determine
+ * the number of leaves and obtain their positions for the specified beam and control point. The
+ * retrieved positions are acknowledged before being returned.
+ *
+ * @param planFile Path to the DICOM RT plan file.
+ * @param side The MLC side from which to retrieve positions; valid values are "Y1" and "Y2".
+ *             An invalid value triggers a fatal error.
+ * @param beamIdx Index of the beam in the plan.
+ * @param controlpointIdx Index of the control point corresponding to the beam.
+ * @return std::vector<G4double> A vector containing the extracted leaf positions.
+ *
+ * @exception G4Exception Thrown with FatalErrorInArgument if the side parameter is not "Y1" or "Y2".
+ */
 std::vector<G4double> IDicomPlan::ReadMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx){
   // // LOGSVC_INFO("Reading the MLC configuration from {}",planFile);
   // // LOGSVC_INFO("Side: {}, beamIdx: {}, controlpointIdx: {}",side,beamIdx,controlpointIdx);
@@ -135,7 +172,23 @@ std::vector<G4double> IDicomPlan::ReadMlcPositioning(const std::string& planFile
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Reads and extracts a specified jaw position from a custom plan file.
+ *
+ * This function opens the given plan file and searches for the line containing the "Jaws" header.
+ * After locating the header, it reads the next line expecting four comma-separated values corresponding
+ * to the jaw positions (X1, X2, Y1, Y2). It returns the double value of the jaw specified by @p jawName.
+ * If the file cannot be opened, the header is missing, or the line cannot be parsed, the function raises
+ * a fatal error via G4Exception.
+ *
+ * The parameters @p beamIdx and @p controlpointIdx are included for interface consistency and are not currently used.
+ *
+ * @param planFile Path to the custom plan file.
+ * @param jawName The jaw to retrieve ("X1", "X2", "Y1", or "Y2").
+ * @param beamIdx Index of the beam (unused).
+ * @param controlpointIdx Index of the control point (unused).
+ * @return double The value of the specified jaw position, or 0.0 if @p jawName is unrecognized.
+ */
 double ICustomPlan::ReadJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const{
   std::ifstream file(planFile);
   if (!file.is_open()) {
@@ -190,7 +243,18 @@ double ICustomPlan::ReadJawPossition(const std::string& planFile, const std::str
   return 0.;
 }
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Retrieves the jaw aperture positions from a custom plan file.
+ *
+ * Reads the pair of jaw positions (either X1/X2 for the "X" side or Y1/Y2 for the "Y" side) for the specified beam and control point
+ * from the provided plan file. If an invalid side is specified, the function terminates the application.
+ *
+ * @param planFile Path to the custom plan file.
+ * @param side The jaw side to read ("X" or "Y").
+ * @param beamIdx Index of the beam in the plan.
+ * @param controlpointIdx Index of the control point within the beam.
+ * @return std::pair<double,double> A pair containing the two jaw positions for the specified side.
+ */
 std::pair<double,double> ICustomPlan::ReadJawsAperture(const std::string& planFile,const std::string& side,int beamIdx, int controlpointIdx){
   std::pair<double,double> jawsSideAperture;
   if(side=="X"){
@@ -212,7 +276,27 @@ std::pair<double,double> ICustomPlan::ReadJawsAperture(const std::string& planFi
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Reads MLC positioning data from a custom plan file.
+ *
+ * This function opens the specified plan file and searches for the "MLC" header to locate
+ * comma-separated positioning values for both the Y1 and Y2 sides. It validates that the
+ * provided side is either "Y1" or "Y2" and throws a fatal error via G4Exception if this is
+ * not the case, if the file cannot be opened, or if the "MLC" header is not found.
+ *
+ * After locating the header, the function reads the remaining lines, parses two comma-separated
+ * values per line (one for each side), and converts them to doubles. It then acknowledges the
+ * positioning configuration for the specified side and returns the corresponding vector of values.
+ *
+ * Note: The beamIdx and controlpointIdx parameters are part of the interface but are currently unused.
+ *
+ * @param planFile The path to the custom plan file containing the MLC configuration.
+ * @param side The side to extract the MLC positioning from ("Y1" or "Y2").
+ * @param beamIdx Unused parameter for the beam index.
+ * @param controlpointIdx Unused parameter for the control point index.
+ * @return std::vector<G4double> A vector of MLC positioning values corresponding to the specified side.
+ * @throws G4Exception if the side is invalid, the file cannot be opened, or the "MLC" header is absent.
+ */
 std::vector<G4double> ICustomPlan::ReadMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx){
   // LOGSVC_INFO("Reading the MLC {} side configuration from {}",side,planFile);
   if(side!="Y1" && side!="Y2"){
@@ -400,7 +484,18 @@ double ICustomPlan::GetRotation(const std::string& planFile) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Retrieves the Hounsfield scale value for a specified material.
+ *
+ * The function loads a configuration from a TOML file (if it hasn't been loaded already) and retrieves the Hounsfield
+ * scale value for the given material from the "Hounsfield" section. If the value is found and normalization is requested,
+ * the raw value is linearly scaled to a range of [0.02, 0.98] using the vacuum and tungsten reference values. If the
+ * material is not present in the configuration, a default value of 0 is returned.
+ *
+ * @param materialName Name of the material to query.
+ * @param normalized   If true, returns the normalized Hounsfield scale value.
+ * @return The material's Hounsfield scale value, normalized if requested.
+ */
 double DicomSvc::GetHounsfieldScaleValue(const std::string& materialName, bool normalized){
   static std::unique_ptr<toml::table> tconfig;
   if(!tconfig){

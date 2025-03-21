@@ -200,7 +200,13 @@ void VoxelHit::Print() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Outputs a temporary placeholder message.
+ *
+ * This method currently writes "Temp" to G4cout as a temporary indicator of the print functionality.
+ * Detailed voxel hit information, including IDs, mass, and volume, is not printed as the original
+ * logging code has been commented out.
+ */
 void VoxelHit::Print(){
   // LOGSVC_INFO("Voxel ID ({},{},{})/({},{},{}) \n\tMass {}, Volume {}"
   // ,m_Voxel.m_global_idx_x,m_Voxel.m_global_idx_y,m_Voxel.m_global_idx_z
@@ -338,7 +344,20 @@ bool VoxelHit::IsAligned(const VoxelHit& other, bool global_and_local) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Accumulates data from another VoxelHit if the hits are aligned.
+ *
+ * Checks whether the current voxel hit is aligned with the provided hit using either a combined global
+ * and local check or only a global check, based on the flag. If aligned, the method cumulates the energy
+ * dose by scaling it according to the ratio of voxel volumes when the flag is false, or by directly adding
+ * the dose via the overloaded operator when the flag is true. In case of misalignment, diagnostic information
+ * is printed for both voxel hits.
+ *
+ * @param other The other VoxelHit to cumulate data from.
+ * @param global_and_local_allignemnt_check If true, both global and local indices are used for alignment checking;
+ *                                          if false, only the voxel cell mapping is considered.
+ * @return VoxelHit& Reference to this instance with updated cumulative data.
+ */
 VoxelHit& VoxelHit::Cumulate(const VoxelHit& other, bool global_and_local_allignemnt_check){
   // if(!global_and_local_allignemnt_check)
   //   Print(); // LOGSVC_INFO("+"); other.Print();

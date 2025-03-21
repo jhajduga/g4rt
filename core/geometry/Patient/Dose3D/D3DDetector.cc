@@ -36,13 +36,23 @@ D3DDetector::~D3DDetector() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Logs information about the Dose3D module.
+ *
+ * This function is a placeholder intended to output key details about the module's configuration
+ * and operational status. Its implementation is currently pending.
+ */
 void D3DDetector::WriteInfo() {
   // LOGSVC_INFO("The Dose3D module info: Implement me.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Releases the detector's physical volume.
+ *
+ * Deletes the physical volume if it exists and sets the pointer to nullptr,
+ * ensuring that the detector does not reference deallocated memory.
+ */
 void D3DDetector::Destroy() {
   // LOGSVC_INFO("Destroing the {} volume. ",GetName());
   auto phantomVolume = GetPhysicalVolume();
@@ -53,7 +63,20 @@ void D3DDetector::Destroy() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+   * @brief Parses the TOML configuration file to initialize detector parameters.
+   *
+   * This method reads the configuration from a TOML file whose path is obtained via GetTomlConfigFile().
+   * It verifies the existence of the file and terminates the program if the file is missing.
+   * Using a configuration prefix from GetTomlConfigPrefix(), it constructs the expected key names; if the prefix is 
+   * empty, the method throws a fatal error via G4Exception. The function then extracts various configuration values,
+   * including the detector's top position in the environment, voxelization details for the detector and its cells,
+   * STL geometry file path, cell positioning module, row and layer shift settings, and medium properties.
+   * It also calculates the patient's top position in the world environment by adding service-provided environment 
+   * positions to the detector's top position.
+   *
+   * @throws G4Exception if the configuration prefix is not defined.
+   */
 void D3DDetector::ParseTomlConfig(){
   auto configFile = GetTomlConfigFile();
 
@@ -326,7 +349,16 @@ void D3DDetector::AcceptGeoVisitor(GeoSvc *visitor) const {
   visitor->RegisterScoringComponent(this);
 }
 ////////////////////////////////////////////////////////////////////////////////
-/// TO BE REPAIRED
+/**
+ * @brief Exports the detector's scoring volume positioning to a ROOT file.
+ *
+ * This method collects and linearizes the center coordinates along with the local and global identifiers for
+ * both cell and voxel scoring volumes. It creates a ROOT file named "detector_scoring_volume_positioning.root"
+ * within the specified output directory and writes the arrays into the "Geometry" directory using the scoring type
+ * (either "Cell" or "Voxel") to name the objects.
+ *
+ * @param path_to_out_dir The directory in which the output ROOT file will be created.
+ */
 void D3DDetector::ExportPositioningToTFile(const std::string& path_to_out_dir) const {
   std::string size = std::to_string(m_config.m_nX_cells)+"x"+std::to_string(m_config.m_nY_cells)+"x"+std::to_string(m_config.m_nZ_cells);
   size += "_"+std::to_string(m_config.m_cell_nX_voxels)+"x"+std::to_string(m_config.m_cell_nY_voxels)+"x"+std::to_string(m_config.m_cell_nZ_voxels);
@@ -367,7 +399,16 @@ void D3DDetector::ExportPositioningToTFile(const std::string& path_to_out_dir) c
   // LOGSVC_INFO("Writing Dose3D Scroing Positioning to file {} - done!",file);
 }
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Exports voxel positioning information for voxel-scored cells to CSV files.
+ *
+ * Iterates over available run collections and, for each collection with voxel scoring data, generates a CSV file
+ * containing header information and rows of cell and voxel identifiers along with their positions (in millimeters).
+ * The file name is constructed using the run collection name and detector dimensions. If no run collections are found
+ * or if a specific run collection does not have voxelization data, export for that run collection is skipped.
+ *
+ * @param path_to_out_dir Directory path where the CSV files will be saved.
+ */
 void D3DDetector::ExportVoxelPositioningToCsv(const std::string& path_to_out_dir) const {
   auto run_collections = ControlPoint::GetRunCollectionNames();
   // G4cout << "DEBUG1 Writing Dose3D Voxel scroing positioning to csv..." << G4endl;
@@ -433,7 +474,16 @@ void D3DDetector::ExportVoxelPositioningToCsv(const std::string& path_to_out_dir
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Exports the detector cell positioning to a CSV file.
+ *
+ * This method writes a mapping of cell IDs and their center positions (in millimeters) to a CSV file.
+ * It uses the first available run collection (assuming that the cell positioning is identical for all runs)
+ * and constructs the output filename based on the detector's cell dimensions (m_nX_cells x m_nY_cells x m_nZ_cells).
+ * If no run collections are available, the function exits without creating a file.
+ *
+ * @param path_to_out_dir Directory where the CSV file will be written.
+ */
 void D3DDetector::ExportCellPositioningToCsv(const std::string& path_to_out_dir) const {
   auto run_collections = ControlPoint::GetRunCollectionNames();
   if (run_collections.empty()) {
@@ -567,7 +617,20 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TODO https://jira.plgrid.pl/jira/browse/TNSIM-291
+/**
+ * @brief Exports the geometry of detector layer pads to a ROOT file.
+ *
+ * This method generates ROOT histograms (TH2Poly) representing the spatial layout of each detector layer at
+ * both the cell and voxel levels. For every layer, a histogram is created with bins corresponding to cells,
+ * where each bin's content is set to the global cell identifier (offset by 1). If voxelization is enabled for
+ * any cell within a layer, additional histograms are produced to capture the layout of voxels within the cells,
+ * with each bin's content representing a unique voxel identifier (offset by 1). The histograms are stored in a
+ * ROOT file named "dose3d_alignment.root" within the specified output directory.
+ *
+ * @param path_to_output_dir Directory where the output ROOT file will be created.
+ *
+ * @note This function assumes that detector layers are oriented in the XZ plane.
+ */
 void D3DDetector::ExportLayerPads(const std::string& path_to_output_dir) const {
   // TODO: Once this method is still valid it should iterate trough all Scoring::Types
   // LOGSVC_DEBUG("{} ExportLayerPads... \nOutput dir: {}", GetName(), path_to_output_dir);
@@ -703,7 +766,17 @@ bool D3DDetector::IsAnyCellVoxelised(int idx, const G4String& run_collection) co
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Determines the detector's geometry source based on configuration settings.
+ *
+ * This method examines the configuration parameters to decide the geometry source type:
+ * - Returns "Standard" if both the STL file path and CSV cell positioning are unset ("None").
+ * - Returns an empty string if an STL file is provided without CSV cell positioning.
+ * - Calls ReadCellsInLayersPositioning() and returns "PositioningFromCsv" if only CSV cell positioning is provided.
+ * - Calls ReadCellsInLayersPositioning() and returns "StlDetectorWithPositioningFromCsv" if both an STL file and CSV positioning are provided.
+ *
+ * @return A string representing the determined geometry source type.
+ */
 std::string D3DDetector::SetGeometrySource(){
 
   auto geo_type = "";
@@ -733,7 +806,22 @@ std::string D3DDetector::SetGeometrySource(){
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Reads cell positioning data from a CSV file and organizes them into layers.
+ *
+ * This method reads a file specified by the detector configuration that contains cell coordinates
+ * for each detector layer. If the configured file path is relative (i.e., does not start with '/'),
+ * it is prefixed with PROJECT_DATA_PATH. The method processes each line in the file by ignoring comment lines
+ * (lines starting with '#') and splitting non-comment lines into comma-separated values.
+ *
+ * Valid data lines must contain exactly three numeric values representing the X, Y, and Z coordinates of a cell.
+ * If a line with coordinate data contains a different number of values, the method raises a fatal error via G4Exception.
+ * Lines containing the string "layer" (except for the first occurrence) indicate a separation between layers,
+ * prompting the method to store the previously read cells as one layer. After processing the entire file, the final
+ * layer of cells is added to the internal layer positioning structure.
+ *
+ * @throws G4Exception If the file cannot be opened or if a data line does not contain exactly three coordinate values.
+ */
 void D3DDetector::ReadCellsInLayersPositioning(){
   
   std::vector<G4ThreeVector> cells_in_layer;

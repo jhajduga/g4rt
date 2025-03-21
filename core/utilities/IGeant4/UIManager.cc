@@ -5,7 +5,11 @@
 #include "PrimaryGenerationAction.hh"
 // #include "LogSession.hh"
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+     * @brief Constructs the UIManager instance.
+     *
+     * Initializes internal members by retrieving the Geant4 UI manager pointer and setting the kernel initialization flag to false.
+     */
 UIManager::UIManager()
     : UIG4Manager(G4UImanager::GetUIpointer()), m_isG4kernelInitialized(false) {
       // LogSession * LoggedSession = new LogSession();
@@ -81,7 +85,17 @@ void UIManager::InitializeG4kernel() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Initializes the simulation run by executing pre-beam setup procedures, running beam events for each control point, and applying post-beam commands.
+ *
+ * This method orchestrates the initial configuration of a simulation run by:
+ * - Reading and applying macro file commands if they are provided.
+ * - Timing and reporting the pre-beam phase.
+ * - Iterating through control points: updating the current control point, loading the simulation plan, configuring run-specific parameters, setting the primary generation rotation, initializing the Geant4 kernel when needed, executing pre-beam commands, and invoking the simulation run via BeamOn.
+ * - Executing post-beam commands and reporting the elapsed time for this phase.
+ *
+ * Informational messages and performance timings are printed to the console using G4cout.
+ */
 void UIManager::UserRunInitialization() {
   auto runSvc = Service<RunSvc>();
   auto geoSvc = Service<GeoSvc>();

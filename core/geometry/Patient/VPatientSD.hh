@@ -31,7 +31,11 @@ class VPatientSD : public G4VSensitiveDetector {
           ///
 
         public:
-          // ScoringVolume():Logable("GeoAndScoring"){}
+          /**
+ * @brief Default constructor for the ScoringVolume class.
+ *
+ * Constructs a ScoringVolume object with default initialization.
+ */
           ScoringVolume(){}
           /// 
           G4int m_nVoxelsX = 0;

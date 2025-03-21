@@ -19,7 +19,19 @@ WaterPhantomSD::WaterPhantomSD(const G4String& sdName, const G4ThreeVector& cent
 /// This method is being called for each G4Step in sensitive volume
 /// Note: Handling the G4Step/Hits it's important that different logical volumes
 ///       cane share one SD object!
-///       In the WaterPhantomSD this is not the case!
+/**
+ * @brief Processes a simulation step in the water phantom sensitive volume.
+ *
+ * This method handles a simulation step by ensuring the hit occurs within the
+ * water phantom sensitive volume. When track analysis is enabled, it updates or
+ * creates user track information associated with the step. It also processes hit
+ * collections for each registered control point and collects step data when step
+ * analysis is active.
+ *
+ * @param aStep The simulation step containing hit and track information.
+ * @param [unused] Placeholder for touchable history; not used in this implementation.
+ * @return true indicating that the hit was successfully processed.
+ */
 G4bool WaterPhantomSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   
   // The TouchableHistory is used to obtain the physical volume of the hit

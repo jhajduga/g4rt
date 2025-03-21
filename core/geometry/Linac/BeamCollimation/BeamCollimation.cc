@@ -216,7 +216,18 @@ bool BeamCollimation::Jaws() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs or resets the multi-leaf collimator (MLC) model.
+ *
+ * This method retrieves the current MLC model configuration from the geometry service and,
+ * based on the model type, either creates a new MLC instance or resets the existing one.
+ * For the HD120 and Simplified models, it deletes any existing instance before instantiating a
+ * new one and updates the jaw configuration via the Jaws() method. For the Millennium model, 
+ * the jaw configuration is updated without creating a new instance (instantiation code is commented out).
+ * If the model is set to "None", no MLC instance is created.
+ *
+ * @return true if the operation completes successfully.
+ */
 bool BeamCollimation::MLC() {
 
   auto model = Service<GeoSvc>()->GetMlcModel();

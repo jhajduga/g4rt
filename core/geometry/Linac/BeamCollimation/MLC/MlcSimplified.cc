@@ -5,11 +5,30 @@
 #include "MlcSimplified.hh"
 #include "ControlPoint.hh"
 
+/**
+ * @brief Constructs a new MlcSimplified object.
+ *
+ * Initializes the MlcSimplified instance by calling the base class constructor
+ * with the identifier "Simplified", setting up the configuration context for a 
+ * simplified multi-leaf collimator (MLC) used in radiation therapy.
+ */
 MlcSimplified::MlcSimplified() : VMlc("Simplified"){
     //m_control_point = Service<RunSvc>()->CurrentControlPoint();
     //m_fieldShape = m_control_point->GetFieldType();
 };
 
+/**
+ * @brief Configures the simplified MLC based on control point parameters.
+ *
+ * This method updates the MLC configuration using the data from the given control point.
+ * It sets the control point identifier and determines the field shape to apply the appropriate
+ * configuration. For "Rectangular" and "Elipsoidal" fields, it updates the field dimensions.
+ * For "RTPlan" and "CustomPlan" fields, it clears previous leaf configurations, computes new
+ * leaf positions for both jaws, constructs the corresponding MLC corners, and transforms these
+ * to the isocentre plane if a DICOM RTPlan input is detected.
+ *
+ * @param control_point The control point containing configuration parameters for the MLC.
+ */
 void MlcSimplified::SetRunConfiguration(const ControlPoint* control_point){
     // LOGSVC_INFO("Initializing MLC Simplified for position {} and control point {}", m_isocentre, control_point->Id());
     // Update the control point
@@ -63,6 +82,23 @@ void MlcSimplified::SetRunConfiguration(const ControlPoint* control_point){
     m_isInitialized = true;
 }
 
+/**
+ * @brief Checks if a given position lies within the configured MLC field.
+ *
+ * Determines whether the provided 3D position is inside the multi-leaf collimator (MLC) field based on its current
+ * configuration (Rectangular, Elipsoidal, RTPlan, or CustomPlan). If the position's z-coordinate does not match the isocentre
+ * and no transformation is requested, the method returns false. When transformation is enabled, the position is converted
+ * to the mask plane before performing the appropriate in-field check:
+ * - For a Rectangular field, it verifies that the absolute x and y coordinates are within preset bounds.
+ * - For an Elipsoidal field, it applies the ellipse equation.
+ * - For RTPlan or CustomPlan fields, it performs a point-in-polygon test.
+ *
+ * A critical exception is thrown if the MLC has not been initialized for the current control point.
+ *
+ * @param position The 3D position to evaluate.
+ * @param transformToIsocentre If true, transforms the position to the isocentre (mask) plane before evaluation.
+ * @return true if the position is within the MLC field; false otherwise.
+ */
 bool MlcSimplified::IsInField(const G4ThreeVector& position, bool transformToIsocentre) {
     auto maskLevelPosition = position;
     if((maskLevelPosition.z()!=m_isocentre.z()) && !transformToIsocentre){

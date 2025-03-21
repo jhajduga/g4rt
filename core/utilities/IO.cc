@@ -121,7 +121,14 @@ void IO::ExtendAndWriteHdf5(const std::string &file_path, const std::vector<std:
     H5Fclose(file_id);
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Ensures the specified directory exists.
+ *
+ * Checks if the directory at the given path exists. If it does not, the function creates
+ * the directory (including all necessary parent directories) and logs an informational message.
+ *
+ * @param path The directory path to verify and create if absent.
+ */
 void IO::CreateDirIfNotExits(const std::string &path) {
   fs::path dp(path);
   if (!fs::exists(dp)) {
