@@ -73,7 +73,8 @@ void ControlPointRun::InitializeScoringCollection(){
             }
             else
                 // continue;
-                LOGSVC_INFO("Scoring collection size for {}: {}",Scoring::to_string(scoring_type),scoring_collection.at(scoring_type).size());
+                std::cout << "Scoring collection size for " << Scoring::to_string(scoring_type) << ": " << scoring_collection.at(scoring_type).size() << std::endl;
+                // LOGSVC_INFO("Scoring collection size for {}: {}",Scoring::to_string(scoring_type),scoring_collection.at(scoring_type).size());
         }
         // G4cout << "Run scoring map size: " << m_hashed_scoring_map[run_collection_name].size() << G4endl;
     }
