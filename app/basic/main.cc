@@ -24,12 +24,9 @@ int main(int argc, const char *argv[]) {
   pybind11::module sys = pybind11::module::import("sys");
   sys.attr("path").attr("append")(std::string(PROJECT_PY_PATH));
 
-  // SPDLOG_DEBUG("Initialize services");
   auto configSvc = Service<ConfigSvc>();  // initialize ConfigSvc for TOML parsing
   auto runSvc = Service<RunSvc>();        // get RunSvc for general App run configuration
-  // SPDLOG_DEBUG("End of initialize services");
 
-  // SPDLOG_INFO("Wellcome G4RT!");
 
     // Inicjalizacja loggera
     LogSvc::Init(argc, argv, "logs/app_main.log", loguru::Verbosity_MAX, 100);
