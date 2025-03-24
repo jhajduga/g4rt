@@ -1,16 +1,25 @@
 # LogSvc Logging Service
 
-## ✨ **Introduction to LogSvc**
+## ✨ Introduction
 
-LogSvc is an advanced, dedicated logging service designed specifically for integration within large-scale simulation projects, including applications built on frameworks like Geant4. Utilizing the powerful [Loguru](https://github.com/emilk/loguru) library, LogSvc provides a flexible and efficient mechanism for managing logs across different modules, supports multiple logging levels, and automates the process of log flushing to ensure timely persistence.
+**LogSvc** is a dedicated, high-performance logging service designed for large-scale simulation projects and scientific computing applications, including those based on Geant4. Leveraging the powerful [Loguru](https://github.com/emilk/loguru) library, LogSvc offers structured, modular logging, thread safety, dynamic verbosity adjustments, and easy integration with external logging streams like Geant4’s output streams (`G4cout`, `G4cerr`).
 
 ---
 
-## 📁 **Integration and Configuration in Simulation Projects**
+## 🚀 Features
 
-### **1. Initialization of Logging Service**
+- **Thread-Safe Logging:** Ensures thread safety using mutex locks, eliminating race conditions and ensuring log integrity.
+- **Module-Specific Logs:** Allows creation of separate log files per module, enhancing clarity and simplifying debugging.
+- **Dynamic Verbosity:** Adjust log verbosity at runtime without recompilation.
+- **Integration with Geant4:** Seamlessly captures `G4cout` and `G4cerr` streams through a custom `G4UIsession` implementation.
+- **Customizable Callbacks:** Supports adding user-defined callbacks for advanced logging scenarios (e.g., external monitoring systems, notifications).
 
-In the main simulation project, LogSvc is initialized at the application's startup, ensuring consistent and centralized logging throughout the runtime:
+---
+
+## 🔧 Integration and Configuration
+
+### Initialization
+Initialize `LogSvc` at application startup to establish a centralized logging system:
 
 ```cpp
 #include "LogSvc.hpp"
@@ -21,17 +30,14 @@ int main(int argc, char* argv[]) {
 }
 ```
 
-- **Initialization Parameters:**
-  - `argc, argv` – standard command-line arguments passed to the application.
-  - `default_log_file` – default log file for the entire simulation.
-  - `verbosity` – sets the logging verbosity (detail level).
-  - `flush_interval_ms` – frequency of log flushing (writing logs to disk).
+Parameters:
+- `argc`, `argv`: Command-line arguments.
+- `default_log_file`: Default log file path.
+- `verbosity`: Logging detail level (`loguru::Verbosity_INFO`, `loguru::Verbosity_ERROR`, etc.).
+- `flush_interval_ms`: Interval for flushing logs to disk.
 
----
-
-### **2. Module-specific Logging Configuration**
-
-Each module within the simulation environment (such as physics, detector, and data analysis modules) can have its own dedicated log file. This modular approach significantly enhances clarity and simplifies troubleshooting:
+### Module-Specific Logging
+To create individual log files for specific simulation modules:
 
 ```cpp
 LogSvc::AddModuleLogFile("Physics", "logs/physics.log", loguru::Verbosity_ERROR);
@@ -39,57 +45,104 @@ LogSvc::AddModuleLogFile("Detector", "logs/detector.log", loguru::Verbosity_WARN
 LogSvc::AddModuleLogFile("Analysis", "logs/analysis.log", loguru::Verbosity_INFO);
 ```
 
-- **AddModuleLogFile()** – enables separate logs for each module, each with individually customizable verbosity levels.
+This modular logging simplifies log analysis and debugging.
 
 ---
 
-## 🔧 **Logging Functions**
+## 🔄 Integration with Geant4 (G4cout and G4cerr)
 
-LogSvc provides a convenient set of macros for quickly generating structured log messages within the simulation project:
+To capture Geant4's `G4cout` and `G4cerr` streams into LogSvc, implement a custom session class deriving from `G4UIsession`:
+
+```cpp
+// LogSession.hh
+#include "G4UIsession.hh"
+
+class LogSession : public G4UIsession {
+public:
+    LogSession();
+    virtual G4int ReceiveG4cout(const G4String& coutString);
+    virtual G4int ReceiveG4cerr(const G4String& cerrString);
+};
+```
+
+```cpp
+// LogSession.cpp
+#include "LogSession.hh"
+#include "LogSvc.hpp"
+
+LogSession::LogSession() : G4UIsession() {
+    auto UI = G4UImanager::GetUIpointer();
+    UI->SetCoutDestination(this);
+}
+
+G4int LogSession::ReceiveG4cout(const G4String& coutString) {
+    std::string msg = coutString;
+    if (!msg.empty() && msg.back() == '\n') msg.pop_back();
+
+    if (msg.find("[DEBUG]") != std::string::npos) {
+        LOGSVC_DEBUG("G4Cout", "{}", msg);
+    } else {
+        LOGSVC_INFO("G4Cout", "{}", msg);
+    }
+    return 0;
+}
+
+G4int LogSession::ReceiveG4cerr(const G4String& cerrString) {
+    std::string msg = cerrString;
+    if (!msg.empty() && msg.back() == '\n') msg.pop_back();
+
+    LOGSVC_ERROR("G4Cerr", "{}", msg);
+    return 0;
+}
+```
+
+Instantiate this session at application initialization to ensure all Geant4 outputs are logged:
+
+```cpp
+// main.cpp
+#include "LogSession.hh"
+
+int main(int argc, char* argv[]) {
+    LogSvc::Init(argc, argv);
+
+    // Setup LogSession for Geant4
+    LogSession logSession;
+
+    // Rest of Geant4 initialization...
+}
+```
+
+---
+
+## 📌 Usage Examples
+
+Using convenient macros provided by LogSvc:
 
 ```cpp
 LOGSVC_INFO("Physics", "Particle simulation started.");
-LOGSVC_WARNING("Detector", "Anomaly detected at energy level: {} MeV", 13.37);
-LOGSVC_ERROR("Analysis", "Data input analysis failed.");
+LOGSVC_WARNING("Detector", "Detector anomaly at energy: {} MeV", 13.37);
+LOGSVC_ERROR("Analysis", "Data analysis failed due to missing inputs.");
 ```
 
-These macros simplify logging and maintain consistency across the codebase.
-
----
-
-## 🚀 **Defining Local Logging Macros for Modules**
-
-To further streamline and simplify logging within specific modules, you can define local macros. These improve readability and allow quick adjustment of the target module for logs:
+Define custom macros for readability and module-specific logging:
 
 ```cpp
-#define DEFAULT_MODULE "Physics"
+#define PHYSIC_INFO(msg, ...)    LOGSVC_INFO("PhysicsModule", msg, ##__VA_ARGS__)
+#define DETECTOR_WARN(msg, ...)  LOGSVC_WARNING("DetectorModule", msg, ##__VA_ARGS__)
+#define ANALYSIS_ERROR(msg, ...) LOGSVC_ERROR("AnalysisModule", msg, ##__VA_ARGS__)
 
-#define LOG_INFO(msg, ...)    LOGSVC_INFO(DEFAULT_MODULE, msg, ##__VA_ARGS__)
-#define LOG_WARN(msg, ...)    LOGSVC_WARNING(DEFAULT_MODULE, msg, ##__VA_ARGS__)
-#define LOG_ERROR(msg, ...)   LOGSVC_ERROR(DEFAULT_MODULE, msg, ##__VA_ARGS__)
+// Example Usage:
+PHYSIC_INFO("Initialized particle beam with energy {} GeV.", 120.0);
+DETECTOR_WARN("Sensor {} is reporting unusual values.", sensor_id);
+ANALYSIS_ERROR("Failed to process input file '{}'.", input_file);
 ```
 
-Such definitions ensure module-specific logs remain concise and highly readable.
+These macros enhance clarity and simplify logging calls.
 
 ---
 
-## 📌 **Example Logs from a Simulation Run**
-
-**File: logs/physics.log:**
-```
-2025-03-21 09:00:01.123 (  0.001s) [main thread] physics.cpp:24      ERROR| Quantum chaos formula exceeded stability threshold!
-```
-
-**File: logs/detector.log:**
-```
-2025-03-21 09:01:15.567 ( 14.444s) [worker-thread] detector.cpp:87 WARN| Detector registered anomaly at energy level: 13.37 MeV
-```
-
----
-
-## 🔒 **Dynamic Adjustment of Logging Levels**
-
-During runtime, LogSvc supports dynamic changes to the console log verbosity, enabling adjustments to the level of detail displayed:
+## 🚦 Dynamic Verbosity
+Adjust console logging verbosity dynamically at runtime:
 
 ```cpp
 LogSvc::SetTerminalLogLevel(loguru::Verbosity_ERROR);
@@ -97,34 +150,74 @@ LogSvc::SetTerminalLogLevel(loguru::Verbosity_ERROR);
 
 ---
 
-## 🔄 **Custom Event Handling via Callbacks**
+## ⚙️ Custom Callbacks
+Custom callbacks allow developers to define special actions triggered by specific log events, enabling integration with external systems, such as monitoring dashboards, alerts, or event-driven frameworks.
 
-LogSvc also allows the addition of custom callback functions for special-purpose log handling, such as external monitoring systems:
+Example of a custom callback to send critical errors to an external alerting service:
 
 ```cpp
 loguru::add_callback(
-    "external_monitor",
-    [](void* user_data, const loguru::Message& message) {
-        sendAlertToMonitoringSystem(message.message);
+    "external_alerts",
+    [](void*, const loguru::Message& msg) {
+        if (msg.verbosity <= loguru::Verbosity_ERROR) {
+            sendCriticalAlert(msg.message);
+        }
     },
     nullptr,
-    loguru::Verbosity_WARNING
+    loguru::Verbosity_ERROR
 );
+```
+
+Another example is a callback triggered upon simulation completion to notify via email or a messaging service:
+
+```cpp
+loguru::add_callback(
+    "simulation_complete_notifier",
+    [](void*, const loguru::Message& msg) {
+        if (msg.message.find("Simulation completed") != std::string::npos) {
+            notifySimulationComplete(); // Can call for egample python script and send email about end of simulation to user. 
+        }
+    },
+    nullptr,
+    loguru::Verbosity_INFO
+);
+```
+
+Callbacks can filter messages based on verbosity and perform custom logic beyond simple log writing.
+
+---
+
+## 📂 Example Log Outputs
+
+**logs/physics.log:**
+```
+2025-03-21 09:00:01.123 (  0.001s) [main thread] physics.cpp:24      ERROR| Quantum chaos formula exceeded stability threshold!
+```
+
+**logs/G4Cout.log:**
+```
+2025-03-21 09:05:45.789 (345.667s) [main thread] G4Cout.cpp:12 INFO| Geant4: Simulation completed successfully.
+```
+
+**logs/G4Cerr.log:**
+```
+2025-03-21 09:07:21.543 (441.421s) [worker-thread] G4Cerr.cpp:30 ERROR| Geant4: Critical geometry overlap detected!
 ```
 
 ---
 
-## 📈 **Summary of Key Functions**
+## 📑 Summary of Key Functions
 
-| Function                     | Role in Simulation Project          |
-|------------------------------|-------------------------------------|
-| `Init()`                     | Initialize global logging service   |
-| `AddModuleLogFile()`         | Assign separate log files per module|
-| `SetTerminalLogLevel()`      | Adjust terminal logging verbosity   |
-| `LOGSVC_DEBUG/INFO/ERROR...` | User-friendly logging macros        |
-| `add_callback()`             | Customizable log handling via callback|
+| Function | Description |
+|----------|-------------|
+| `Init()` | Initializes the global logging service. |
+| `AddModuleLogFile()` | Creates dedicated log files for individual modules. |
+| `SetTerminalLogLevel()` | Dynamically adjusts the verbosity level of logs shown in the terminal. |
+| `LOGSVC_INFO/WARNING/ERROR...` | Provides convenient macros for logging at different verbosity levels. |
+| `loguru::add_callback()` | Registers custom callbacks for advanced logging scenarios (alerts, monitoring, etc.). |
 
 ---
 
-✨ **LogSvc** seamlessly integrates a robust, structured logging system into large-scale simulation projects, significantly enhancing maintainability, debugging capability, and overall project clarity, particularly in sophisticated scientific computing environments.
+## 🔑 Summary
+LogSvc provides a robust, structured, and thread-safe logging mechanism specifically tailored for complex scientific applications. Its modular approach, dynamic verbosity adjustment, and seamless integration capabilities, including with external streams like Geant4’s `G4cout` and `G4cerr`, make LogSvc indispensable for simulation projects. Additionally, its extensible callback system empowers users to integrate logging seamlessly into broader monitoring, alerting, and event-driven architectures, significantly benefiting developers and researchers.
 
