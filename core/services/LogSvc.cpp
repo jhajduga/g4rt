@@ -61,19 +61,14 @@ void LogSvc::AddModuleLogFile(const std::string& module, const std::string& full
             std::string message_text(message.message);
 
             if (message_text.find(prefix) == 0) {
-                FILE* file = nullptr;
-
-                {
-                    std::lock_guard<std::mutex> guard(module_log_files_mutex);
-                    auto it = LogSvc::module_log_files.find(*target_module);
-                    if (it != LogSvc::module_log_files.end()) {
-                        file = it->second.get();
+                std::lock_guard<std::mutex> guard(module_log_files_mutex);
+                auto it = LogSvc::module_log_files.find(*target_module);
+                if (it != LogSvc::module_log_files.end()) {
+                    FILE* file = it->second.get();
+                    if (file) {
+                        fprintf(file, "%s%s%s\n", message.preamble, message.indentation, message.message);
+                        fflush(file);
                     }
-                }
-
-                if (file) {
-                    fprintf(file, "%s%s%s\n", message.preamble, message.indentation, message.message);
-                    fflush(file);
                 }
             }
         },
@@ -81,6 +76,8 @@ void LogSvc::AddModuleLogFile(const std::string& module, const std::string& full
         verbosity,
         [](void* user_data) { delete static_cast<std::string*>(user_data); }
     );
+    
+    
 }
 
 
