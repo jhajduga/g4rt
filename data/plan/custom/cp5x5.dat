@@ -1,5 +1,5 @@
 # Rotation:0.0
-# Particles:1e3
+# Particles:1e2
 # Jaws: X1[mm],X2[mm],Y1[mm],Y2[mm]
 -25.0,25.0,-25.0,25.0
 # MLC: Y1[mm],Y2[mm]

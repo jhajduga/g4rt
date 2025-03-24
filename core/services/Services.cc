@@ -4,7 +4,7 @@
 #include "Services.hh"
 #include <algorithm>
 #include "colors.hh"
-#include "LogSvc.hh"
+// #include "LogSvc.hpp"
 #include "G4Box.hh"
 #include "IPhysicalVolume.hh"
 
@@ -43,7 +43,7 @@ std::string svc::createCurrentDateDirIfNotExits(const std::string& path){
 	dateDirPath+=path.at(path.length()-1)=='/' ? date : "/"+date;
 	fs::path dp (dateDirPath);
 	if(!fs::exists (dp)){
-		std::cout << "[INFO]:: Created directory: "<< dateDirPath <<std::endl;
+		std::cout << "[INFO]:: Created directory1: "<< dateDirPath <<std::endl;
 		fs::create_directories(dp);
 	}
 	return dateDirPath;
@@ -56,7 +56,7 @@ std::string svc::getOutputDir(){ // const std::string& path
   auto configSvc = Service<ConfigSvc>();
   auto output_dir = configSvc->GetValue<std::string>("RunSvc", "OutputDir");
     if(output_dir.empty()){
-      LOGSVC_CRITICAL("OutputDir must be not empty!");
+      // LOGSVC_CRITICAL("OutputDir must be not empty!");
       std::exit(EXIT_FAILURE);
       
       // configSvc->SetValue("RunSvc", "OutputDir", output_dir);
@@ -75,7 +75,7 @@ std::string svc::getOutputDir(){ // const std::string& path
 std::string svc::createDirIfNotExits(const std::string& path) {
   fs::path dp (path);
   if(!fs::exists (dp)){
-		std::cout << "[INFO]:: Created directory: "<< path <<std::endl;
+		std::cout << "[INFO]:: Created directory2: "<< path <<std::endl;
 		fs::create_directories(dp);
 	}
 	return path;
@@ -133,7 +133,7 @@ size_t svc::countDirsInLocation(const std::string& path,const std::string& subst
   auto dirIter = std::filesystem::directory_iterator(path);
   std::string patternNum = substr + std::string("_([0-9]+)");
   std::string pattern0 = substr + std::string("$");
-  LOGSVC_TRACE("pattern: {}", patternNum);
+  // LOGSVC_TRACE("pattern: {}", patternNum);
   std::regex regexPatternNum(patternNum);
   std::regex regexPattern0(pattern0);
   int maxNumber = -1; // Initialize with a minimum value
@@ -141,26 +141,26 @@ size_t svc::countDirsInLocation(const std::string& path,const std::string& subst
       if (entry.is_directory()){
         std::smatch match;
         std::string path = entry.path().string(); //nedded for regexp search
-        LOGSVC_TRACE("Path: {}", path);
+        // LOGSVC_TRACE("Path: {}", path);
         int number = -1;
         if (std::regex_search(path, match, regexPattern0)) {
-          LOGSVC_TRACE("Match first.");
+          // LOGSVC_TRACE("Match first.");
           number = 0;
         }
         else if (std::regex_search(path, match, regexPatternNum)) {
             std::string numberStr = match[1].str();
-            LOGSVC_TRACE("Matchstr: {}", numberStr);
+            // LOGSVC_TRACE("Matchstr: {}", numberStr);
             try {
                 number = std::stoi(numberStr);
             } catch (const std::exception& e) {
-                LOGSVC_TRACE("Conversion to int error. Skiping.")
+                // LOGSVC_TRACE("Conversion to int error. Skiping.")
             }
         }
         // Update the maximum number if necessary
         if (number > maxNumber) {
             maxNumber = number;
         }
-        LOGSVC_TRACE("Maxnum: {}", maxNumber);
+        // LOGSVC_TRACE("Maxnum: {}", maxNumber);
       }
   }
   return maxNumber + 1;

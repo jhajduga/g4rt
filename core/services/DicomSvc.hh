@@ -7,6 +7,7 @@
 
 #ifndef Dose3D_DicomSvcSVC_H
 #define Dose3D_DicomSvcSVC_H
+#pragma GCC diagnostic ignored "-Wattributes"
 
 #include "Types.hh"
 #include <pybind11/pybind11.h>

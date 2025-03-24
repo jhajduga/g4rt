@@ -11,7 +11,7 @@ MlcSimplified::MlcSimplified() : VMlc("Simplified"){
 };
 
 void MlcSimplified::SetRunConfiguration(const ControlPoint* control_point){
-    LOGSVC_INFO("Initializing MLC Simplified for position {} and control point {}", m_isocentre, control_point->Id());
+    // LOGSVC_INFO("Initializing MLC Simplified for position {} and control point {}", m_isocentre, control_point->Id());
     // Update the control point
     m_control_point_id = control_point->Id();
     m_fieldShape = control_point->GetFieldType();
@@ -25,7 +25,7 @@ void MlcSimplified::SetRunConfiguration(const ControlPoint* control_point){
         m_fieldParamA = control_point->GetFieldSizeA();
         m_fieldParamB = control_point->GetFieldSizeB();
     } else if (m_fieldShape == "RTPlan" || m_fieldShape == "CustomPlan") {
-        LOGSVC_INFO("Initializing MLC from RTPlan");
+        // LOGSVC_INFO("Initializing MLC from RTPlan");
         m_mlc_a_corners.clear();
         m_mlc_b_corners.clear();
         m_mlc_corners.clear();
@@ -66,7 +66,7 @@ void MlcSimplified::SetRunConfiguration(const ControlPoint* control_point){
 bool MlcSimplified::IsInField(const G4ThreeVector& position, bool transformToIsocentre) {
     auto maskLevelPosition = position;
     if((maskLevelPosition.z()!=m_isocentre.z()) && !transformToIsocentre){
-        LOGSVC_WARN("Position z {} not equal to isocentre z {}",maskLevelPosition.z(), m_isocentre.z());
+        // LOGSVC_WARN("Position z {} not equal to isocentre z {}",maskLevelPosition.z(), m_isocentre.z());
         return false;
     } else if( transformToIsocentre ) {
         // G4cout << "Transforming position to isocentre plane, before: " << maskLevelPosition;
@@ -91,7 +91,7 @@ bool MlcSimplified::IsInField(const G4ThreeVector& position, bool transformToIso
     if(! Initialized(current_cp)){
         G4String msg = "IsInField is called before MLC initialization for current control point.";
         msg+="\nThis #CP "+ std::to_string(m_control_point_id) + " #CurrentControlPoint: " + std::to_string(current_cp->Id());
-        LOGSVC_CRITICAL(msg.data());
+        // LOGSVC_CRITICAL(msg.data());
         G4Exception("MlcSimplified", "IsInField", FatalErrorInArgument , msg);
     }
 

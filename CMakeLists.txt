@@ -3,19 +3,21 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(G4rt)
 
+#----------------------------------------------------------------------------
+# Ustawienia CMake
 set(CMAKE_VERBOSE_MAKEFILE ON)
-set(CMAKE_COLOR_MAKEFILE   ON)
+set(CMAKE_COLOR_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_DEFAULT 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
-
+add_compile_definitions(LOGURU_USE_FMTLIB=1)
 #----------------------------------------------------------------------------
-# prevent for in-source building
+# Zabronienie budowania w katalogu źródłowym
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
-set(CMAKE_DISABLE_SOURCE_CHANGES  ON)
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
-  message(SEND_ERROR "In-source builds are not allowed.")
-endif ()
+    message(SEND_ERROR "In-source builds are not allowed.")
+endif()
 
 #----------------------------------------------------------------------------
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -24,8 +26,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON) # This needs to be done universally to a
 
 #----------------------------------------------------------------------------
 if(NOT $ENV{CLHEP_INCLUDE_DIR} STREQUAL "")
-  set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES $ENV{CLHEP_INCLUDE_DIR})
-endif ()
+    set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES $ENV{CLHEP_INCLUDE_DIR})
+endif()
 #----------------------------------------------------------------------------
 SET(PROJECT_DATA_PATH "${PROJECT_SOURCE_DIR}/data")
 SET(PROJECT_INSTALL_DIR "/opt/g4rt")
@@ -40,7 +42,6 @@ add_definitions(-DPROJECT_BINARY_PATH=\"${PROJECT_BINARY_DIR}\")
 
 #----------------------------------------------------------------------------
 # Testing suite configuration
-#
 find_package(GTest REQUIRED)
 include(GoogleTest)
 include(CTest)
@@ -48,22 +49,17 @@ include(CTest)
 #----------------------------------------------------------------------------
 # Configure the components (subprojects)
 # NOTE: The order matters! The most independent ones should go first.
-#       If A and B really depend on each other, CMake  can build such correctly,
-#       if you specify full path to the include directlry
+#       If A and B really depend on each other, CMake can build such correctly,
+#       if you specify full path to the include directory
 add_subdirectory(externals)
 add_subdirectory(core)
-# add_subdirectory(executables)
 add_subdirectory(app)
 
 #----------------------------------------------------------------------------
 message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
 
-
 #----------------------------------------------------------------------------
-# Copy all scripts to the build directory, i.e. the directory in which we
-# build g4af. This is so that we can run the executable directly because it
-# relies on these scripts being in the current working directory.
-#
+# Copy all scripts to the build directory
 set(RUN_SCRIPTS
     scoring_pre.mac
     scoring_post.mac
@@ -72,9 +68,9 @@ set(RUN_SCRIPTS
 )
 
 foreach(_script ${RUN_SCRIPTS})
-  configure_file(
-    ${PROJECT_SOURCE_DIR}/scripts/${_script}
-    ${PROJECT_BINARY_DIR}/${_script}
-    COPYONLY
+    configure_file(
+        ${PROJECT_SOURCE_DIR}/scripts/${_script}
+        ${PROJECT_BINARY_DIR}/${_script}
+        COPYONLY
     )
 endforeach()

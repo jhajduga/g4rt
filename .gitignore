@@ -20,6 +20,7 @@ build-vscode/
 output/
 core/utilities/python/__pycache__
 output/*
+logs/*
 out/*
 jobs/test/*
 

@@ -125,7 +125,7 @@ void IO::ExtendAndWriteHdf5(const std::string &file_path, const std::vector<std:
 void IO::CreateDirIfNotExits(const std::string &path) {
   fs::path dp(path);
   if (!fs::exists(dp)) {
-    std::cout << "[INFO]:: Created directory: " << path << std::endl;
+    std::cout << "[INFO]:: Created directory3: " << path << std::endl;
     fs::create_directories(dp);
   }
 }
