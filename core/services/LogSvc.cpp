@@ -47,7 +47,10 @@ void LogSvc::AddModuleLogFile(const std::string& module, const std::string& full
         throw std::runtime_error("Failed to open log file for module: " + module);
     }
 
-    module_log_files[module] = std::shared_ptr<FILE>(file, [](FILE* f) { fclose(f); });
+    {
+        std::lock_guard<std::mutex> guard(module_log_files_mutex);
+        module_log_files[module] = std::shared_ptr<FILE>(file, [](FILE* f) { fclose(f); });
+    }
 
     loguru::add_callback(
         module.c_str(),
@@ -58,7 +61,16 @@ void LogSvc::AddModuleLogFile(const std::string& module, const std::string& full
             std::string message_text(message.message);
 
             if (message_text.find(prefix) == 0) {
-                FILE* file = LogSvc::module_log_files[*target_module].get();
+                FILE* file = nullptr;
+
+                {
+                    std::lock_guard<std::mutex> guard(module_log_files_mutex);
+                    auto it = LogSvc::module_log_files.find(*target_module);
+                    if (it != LogSvc::module_log_files.end()) {
+                        file = it->second.get();
+                    }
+                }
+
                 if (file) {
                     fprintf(file, "%s%s%s\n", message.preamble, message.indentation, message.message);
                     fflush(file);
@@ -71,10 +83,5 @@ void LogSvc::AddModuleLogFile(const std::string& module, const std::string& full
     );
 }
 
-void LogSvc::moduleLogCallbackImpl(void* user_data, const loguru::Message& message) {
-    FILE* file = static_cast<FILE*>(user_data);
-    if (file) {
-        fprintf(file, "%s%s%s\n", message.preamble, message.indentation, message.message);
-        fflush(file);
-    }
-}
+
+

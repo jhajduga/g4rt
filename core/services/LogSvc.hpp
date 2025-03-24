@@ -6,6 +6,7 @@
 #include <string>
 #include <unordered_map>
 #include <memory>
+#include <mutex>
 
 class LogSvc {
 public:
@@ -82,14 +83,14 @@ static void LogFatal(const std::string& module, const char* file, int line, cons
     logToModule(module, loguru::Verbosity_FATAL, file, line, format, args...);
     loguru::flush();
 }
+    private:
+    static inline std::mutex module_log_files_mutex;
 
-private:
     static inline std::string s_log_folder = "logs";
     static inline std::string s_main_log_id = "";
     static inline loguru::Verbosity s_verbosity = loguru::Verbosity_INFO;
 
     static std::unordered_map<std::string, std::shared_ptr<FILE>> module_log_files;
-    static void moduleLogCallbackImpl(void* user_data, const loguru::Message& message);
     /**
      * @brief Logs a formatted message to the specified module.
      */
