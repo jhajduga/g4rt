@@ -42,7 +42,9 @@ void VoxelHit::Fill(G4Step* aStep){
         G4cout << "[WARNING]::VoxelHit::GetDose() The voxel mass is not set!" << G4endl;
       }
     }
-
+    
+    // Shouldn't we move the if here that sits inside FillTrack?
+    // Unnecessary going into the method.I don't know if it changes anything but... TODO:?
     /// Fill track info
     FillTrack(aStep);
 
@@ -94,6 +96,32 @@ G4int VoxelHit::GetTrkType(G4Step* aStep) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
+G4int VoxelHit::GetProcessType(G4Step* aStep) const {
+  G4int procType = -1;
+  auto procName = aStep->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
+
+  if (procName == "phot")                   procType = 1;  // Photoelectric effect
+  else if (procName == "compt")             procType = 2;  // Compton scattering
+  else if (procName == "conv")              procType = 3;  // Pair production (gamma -> e+ e-)
+  else if (procName == "Rayl")              procType = 4;  // Rayleigh scattering
+  else if (procName == "eIoni")             procType = 5;  // Electron ionization
+  else if (procName == "msc")               procType = 6;  // Multiple Coulomb scattering (MSC)
+  else if (procName == "annihil")           procType = 7;  // e+ e- annihilation (for positrons)
+  else if (procName == "eBrem")             procType = 8;  // Bremsstrahlung
+  else if (procName == "RadioactiveDecay")  procType = 9;  // Radioactive decay
+  else if (procName == "Auger")             procType = 10;  // Auger electrons
+  else if (procName == "phot_fluo")         procType = 11;  // X-ray fluorescence
+  else if (procName == "hadElastic")        procType = 12;  // Hadronic elastic interaction (mainly neutrons)
+  else if (procName == "neutronInelastic")  procType = 13;  // Neutron inelastic interaction
+  else if (procName == "nCapture")          procType = 14;  // Neutron capture
+  else if (procName == "ionIoni")           procType = 15;  // Ionization by heavy ions (e.g., protons, alphas)
+  // else if (procName == "Transportation")    procType = 0;  // Particle transportation (always happening)
+  return procType;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+///
 void VoxelHit::FillTrack(G4Step* aStep){
   if(m_tracks_analysis){
     auto aTrack = aStep->GetTrack();
@@ -103,6 +131,7 @@ void VoxelHit::FillTrack(G4Step* aStep){
     auto preStepPoint = aStep->GetPreStepPoint();
       if (ret.second==true) { // new element inserted
         m_Voxel.m_trksTypeId.emplace_back(GetTrkType(aStep));
+        m_Voxel.m_trksTypeId.emplace_back(GetProcessType(aStep));
         m_Voxel.m_trksE.emplace_back(aTrack->GetDynamicParticle()->GetKineticEnergy());
         // m_Voxel.m_trksPotentialE.emplace_back((aTrack->GetDynamicParticle()->GetTotalEnergy())-(aTrack->GetDynamicParticle()->GetKineticEnergy())) (>dla niefotonów)
         m_Voxel.m_trksTheta.emplace_back(aTrack->GetDynamicParticle()->GetMomentum().theta());
@@ -267,6 +296,26 @@ std::vector<std::pair<G4int,G4int>> VoxelHit::GetTrkType() const {
     trkTypeId.emplace_back(*itId,*itType++);
   return trkTypeId;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a list of pairs containing the track ID and the physical process type that occurred in that track.
+///
+std::vector<std::pair<G4int, G4int>> VoxelHit::GetProcessType() const {
+
+  // Vector to store the resulting pairs (Track ID, Process Type ID)
+  std::vector<std::pair<G4int, G4int>> processTypeId;
+
+  // Iterator for process types
+  auto itProcType = m_Voxel.m_trksProcessTypeId.begin();
+  for (auto itId = m_Voxel.m_trksId.begin(); itId != m_Voxel.m_trksId.end(); ++itId) {
+    // Create a pair: (track ID, process type), e.g., (123, 2)
+    processTypeId.emplace_back(*itId, *itProcType++);
+  }
+
+  return processTypeId;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

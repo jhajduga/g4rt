@@ -42,6 +42,7 @@ class VoxelHit final : public G4VHit {
     std::set<G4int> m_trksId;
     std::set<G4Track*> m_trksPtr;
     std::vector<G4int> m_trksTypeId; // 1:G4Gamma, 2:G4Electron, 3:G4Positron, 4:G4Neutron, 5:G4Proton
+    std::vector<G4int> m_trksProcessTypeId; // typr of physical process
     std::vector<G4double> m_trksE;
     std::vector<G4double> m_trksTheta;
     std::vector<G4double> m_trksLength;
@@ -202,6 +203,7 @@ class VoxelHit final : public G4VHit {
   std::vector<std::pair<G4int,G4double>> GetUserTrkLength() const;
   std::vector<std::pair<G4int,G4ThreeVector>> GetTrkPosition() const;
   std::vector<std::pair<G4int,G4int>> GetTrkType() const;
+  std::vector<std::pair<G4int,G4int>> VoxelHit::GetProcessType() const;
 
   ///  
   G4double GetPrimaryTrkEnergy() const;
@@ -217,6 +219,9 @@ class VoxelHit final : public G4VHit {
 
   ///
   G4int GetTrkType(G4Step* aStep) const;
+
+  ///
+  G4int GetProcessType(G4Step* aStep) const;
 
   ///
   G4double GetGlobalTime() const { return m_global_time; }
