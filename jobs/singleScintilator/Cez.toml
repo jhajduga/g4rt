@@ -1,0 +1,44 @@
+[RunSvc]
+JobName = "AmerykOnGPS"
+BeamType = "gps"
+GpsMacFileName = "/home/jhajduga/scratch/work/g4rt/data/gps/gps_gamma_Cs_137.mac" # gets file from data/ in this repo
+PrintProgressFrequency = 0.01
+Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
+GenerateCT = false
+PrimariesAnalysis = true
+NTupleAnalysis = true
+StepAnalysis = false
+RunAnalysis = true
+
+[GeoSvc]
+BuildLinac = true
+BuildPatient = true
+
+[PatientGeometry]
+Type = "WaterPhantom"
+EnviromentPositionX = 0.0
+EnviromentPositionY = 0.0
+EnviromentPositionZ = 0.0
+EnviromentSizeX = 100.0
+EnviromentSizeY = 100.0
+EnviromentSizeZ = 100.0
+EnviromentMedium = "Usr_G4AIR20C"
+
+[WaterPhantom_Detector]
+Size = [10.0,10.0,10.0]
+Voxelization = [2,2,2] # Number of cells in every direction
+Medium = "RMPS470" #G4_WATER, PMMA
+
+[WaterPhantom_Scoring]
+FullVolume = true
+FarmerDoseCalibration = false
+TracksAnalysis = true
+
+[RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
+nControlPoints = 1      # This will limit number of ctrl points defined below!
+BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
+nParticles = 10000      # This will overwrite Rotation value for all below plan files!
+PlanInputFile = [
+        "plan/custom/cp5x5.dat"
+        # "plan/custom/prostate/prostate_imrt_beam0_cp0.dat"
+]

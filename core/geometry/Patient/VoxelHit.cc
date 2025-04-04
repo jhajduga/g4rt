@@ -100,6 +100,11 @@ G4int VoxelHit::GetProcessType(G4Step* aStep) const {
   G4int procType = -1;
   auto procName = aStep->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
 
+    // Ignore user processes such as UserLimits (StepMax)
+  if (procName == "UserStepMax" || procName == "Transportation") {
+      return 0;  
+  }
+
   if (procName == "phot")                   procType = 1;  // Photoelectric effect
   else if (procName == "compt")             procType = 2;  // Compton scattering
   else if (procName == "conv")              procType = 3;  // Pair production (gamma -> e+ e-)
@@ -115,7 +120,6 @@ G4int VoxelHit::GetProcessType(G4Step* aStep) const {
   else if (procName == "neutronInelastic")  procType = 13;  // Neutron inelastic interaction
   else if (procName == "nCapture")          procType = 14;  // Neutron capture
   else if (procName == "ionIoni")           procType = 15;  // Ionization by heavy ions (e.g., protons, alphas)
-  // else if (procName == "Transportation")    procType = 0;  // Particle transportation (always happening)
   return procType;
 }
 
@@ -131,7 +135,7 @@ void VoxelHit::FillTrack(G4Step* aStep){
     auto preStepPoint = aStep->GetPreStepPoint();
       if (ret.second==true) { // new element inserted
         m_Voxel.m_trksTypeId.emplace_back(GetTrkType(aStep));
-        m_Voxel.m_trksTypeId.emplace_back(GetProcessType(aStep));
+        m_Voxel.m_trksProcessTypeId.emplace_back(GetProcessType(aStep));
         m_Voxel.m_trksE.emplace_back(aTrack->GetDynamicParticle()->GetKineticEnergy());
         // m_Voxel.m_trksPotentialE.emplace_back((aTrack->GetDynamicParticle()->GetTotalEnergy())-(aTrack->GetDynamicParticle()->GetKineticEnergy())) (>dla niefotonów)
         m_Voxel.m_trksTheta.emplace_back(aTrack->GetDynamicParticle()->GetMomentum().theta());

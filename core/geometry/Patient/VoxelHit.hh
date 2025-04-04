@@ -203,7 +203,7 @@ class VoxelHit final : public G4VHit {
   std::vector<std::pair<G4int,G4double>> GetUserTrkLength() const;
   std::vector<std::pair<G4int,G4ThreeVector>> GetTrkPosition() const;
   std::vector<std::pair<G4int,G4int>> GetTrkType() const;
-  std::vector<std::pair<G4int,G4int>> VoxelHit::GetProcessType() const;
+  std::vector<std::pair<G4int,G4int>> GetProcessType() const;
 
   ///  
   G4double GetPrimaryTrkEnergy() const;

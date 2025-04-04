@@ -64,23 +64,23 @@ void PhysicsList::ConstructProcess() {
 
   /// transportation
   AddTransportation();
-  AddStepMax();
+  // AddStepMax();
 
   /// electromagnetic physics list
   m_emPhysicsModelCtr->ConstructProcess();
 
-  //  /// EmStandard additional parameters
-  // G4EmParameters* param = G4EmParameters::Instance();
-  // /// Auger electron production enabled
-  // param->SetAuger(true);
-  // /// Auger cascade enabled 
-  // param->SetAugerCascade(true);
-  // /// atomic de-excitation enabled
-  // param->SetPixe(true);
-  // /// Fluorescence enabled
-  // param->SetFluo(true);
-  // ///
-  // param->SetDeexcitationIgnoreCut(true);
+   /// EmStandard additional parameters
+  G4EmParameters* param = G4EmParameters::Instance();
+  /// Auger electron production enabled
+  param->SetAuger(true);
+  /// Auger cascade enabled 
+  param->SetAugerCascade(true);
+  /// atomic de-excitation enabled
+  param->SetPixe(true);
+  /// Fluorescence enabled
+  param->SetFluo(true);
+  ///
+  param->SetDeexcitationIgnoreCut(true);
   // param->SetLowestElectronEnergy(10*eV);
 
   /// decay physics list
