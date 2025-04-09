@@ -1,0 +1,37 @@
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - geant4=11.2.2
+  - root=6.32.2
+  - traitlets=5.7.1
+  - xerces-c=3.2.5
+  - libffi=3.4.4
+  - gxx=12.4.0
+  - make=4.4.1
+  - cmake=3.29.5
+  - pthread-stubs=0.4
+  - doxygen=1.10.0
+  - spdlog=1.12.0
+  - gtest=1.14.0
+  - fmt=9.1.0
+  - pybind11=2.13.6
+  - hdf5=1.14.4
+  - pydicom=3.0.1
+  - pip
+  - pip:
+      - contourpy==1.1.1
+      - cycler==0.11.0
+      - fonttools==4.42.1
+      - iniconfig==2.0.0
+      - kiwisolver==1.4.5
+      - loguru==0.7.0
+      - matplotlib==3.8.0
+      - pandas==2.0.1
+      - pillow==10.0.1
+      - pluggy==1.3.0
+      - pyparsing==3.1.1
+      - pytest==7.3.1
+      - pytz==2023.3.post1
+      - seaborn==0.12.2
+      - tzdata==2023.3
