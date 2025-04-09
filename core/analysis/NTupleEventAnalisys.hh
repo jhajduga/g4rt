@@ -57,8 +57,8 @@ class NTupleEventAnalisys {
         std::vector<G4double> m_CellPositionX, m_CellPositionY, m_CellPositionZ;
         std::vector<std::vector<G4int>> m_VoxelHitsTrkId; std::vector<G4int> m_VoxelTrkId;     // primary / secondary
         std::vector<std::vector<G4int>> m_VoxelHitsTrkTypeId; std::vector<G4int> m_VoxelTrkTypeId;// 1:G4Gamma, 2:G4Electron, 3:G4Positron, 4:G4Neutron, 5:G4Proton
-        std::vector<std::vector<G4int>> m_VoxelHitsProcessId; std::vector<G4int> m_VoxelProcessId;     // primary / secondary
-        std::vector<std::vector<G4int>> m_VoxelHitsProcessTypeId; std::vector<G4int> m_VoxelProcessTypeId;
+        std::vector<std::vector<G4int>> m_VoxelHitsProcessTypeId; std::vector<G4int> m_ProcessTypeId;
+        std::vector<std::vector<G4int>> m_VoxelHitsElectronOriginTypeId; std::vector<G4int> m_ElectronOriginTypeId;
         std::vector<std::vector<G4double>> m_VoxelHitsTrkEnergy; std::vector<G4double> m_VoxelTrkEnergy;
         std::vector<std::vector<G4double>> m_VoxelHitsTrkTheta; std::vector<G4double> m_VoxelTrkTheta;
         std::vector<std::vector<G4double>> m_VoxelHitsTrkLength; std::vector<G4double> m_VoxelTrkLength;

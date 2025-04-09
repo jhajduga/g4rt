@@ -94,33 +94,93 @@ G4int VoxelHit::GetTrkType(G4Step* aStep) const {
   return trkType;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
+/// Full identification of the physical process within the range of medical energies (0–10 MeV),
+/// including the handling of secondary processes (e.g., electrons ejected via the photoelectric effect).
+///
+/// @param aStep – the current Geant4 simulation step.
+/// @return int – ID representing the type of physical process that occurred at this step.
+
 G4int VoxelHit::GetProcessType(G4Step* aStep) const {
-  G4int procType = -1;
-  auto procName = aStep->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
 
-    // Ignore user processes such as UserLimits (StepMax)
-  if (procName == "UserStepMax" || procName == "Transportation") {
-      return 0;  
-  }
+  auto proc = aStep->GetPostStepPoint()->GetProcessDefinedStep();
+  if (!proc) return -1;  // Safety check in case no process is defined.
 
-  if (procName == "phot")                   procType = 1;  // Photoelectric effect
-  else if (procName == "compt")             procType = 2;  // Compton scattering
-  else if (procName == "conv")              procType = 3;  // Pair production (gamma -> e+ e-)
-  else if (procName == "Rayl")              procType = 4;  // Rayleigh scattering
-  else if (procName == "eIoni")             procType = 5;  // Electron ionization
-  else if (procName == "msc")               procType = 6;  // Multiple Coulomb scattering (MSC)
-  else if (procName == "annihil")           procType = 7;  // e+ e- annihilation (for positrons)
-  else if (procName == "eBrem")             procType = 8;  // Bremsstrahlung
-  else if (procName == "RadioactiveDecay")  procType = 9;  // Radioactive decay
-  else if (procName == "Auger")             procType = 10;  // Auger electrons
-  else if (procName == "phot_fluo")         procType = 11;  // X-ray fluorescence
-  else if (procName == "hadElastic")        procType = 12;  // Hadronic elastic interaction (mainly neutrons)
-  else if (procName == "neutronInelastic")  procType = 13;  // Neutron inelastic interaction
-  else if (procName == "nCapture")          procType = 14;  // Neutron capture
-  else if (procName == "ionIoni")           procType = 15;  // Ionization by heavy ions (e.g., protons, alphas)
-  return procType;
+  auto procName = proc->GetProcessName();
+
+  // Special user-defined processes or transportation steps
+  if (procName == "UserStepMax" || procName == "Transportation") 
+      return 0;
+
+  /// Basic electromagnetic (EM) interactions
+  if      (procName == "phot")                   return 1;  // Photoelectric effect: photon is absorbed, ejecting an electron.
+  else if (procName == "compt")                  return 2;  // Compton scattering: photon scatters off an atomic electron.
+  else if (procName == "conv")                   return 3;  // Pair production: photon converts into an electron-positron pair.
+  else if (procName == "Rayl")                   return 4;  // Rayleigh scattering: elastic scattering of a photon by an atom.
+  else if (procName == "eIoni")                  return 5;  // Electron ionization: electron knocks out another electron.
+  else if (procName == "msc")                    return 6;  // Multiple Coulomb scattering: deflections due to repeated interactions.
+  else if (procName == "annihil")                return 7;  // e⁺e⁻ annihilation: positron annihilates with an electron, producing photons.
+  else if (procName == "eBrem")                  return 8;  // Bremsstrahlung: radiation emitted due to electron deceleration near nuclei.
+
+  /// Nuclear interactions and hadronic processes
+  else if (procName == "RadioactiveDecay")       return 9;   // Radioactive decay: spontaneous transformation of unstable nuclei.
+  else if (procName == "hadElastic")             return 10;  // Hadronic elastic scattering: e.g., elastic neutron interactions.
+  else if (procName == "neutronInelastic")       return 11;  // Inelastic neutron scattering: energy transfer with nuclear excitation.
+  else if (procName == "nCapture")               return 12;  // Neutron capture: neutron absorbed by nucleus, often followed by gamma emission.
+  else if (procName == "protonInelastic")        return 13;  // Inelastic proton-nucleus interaction.
+  else if (procName == "alphaInelastic")         return 14;  // Inelastic alpha-particle interactions.
+
+  /// Ionization by heavy particles (protons, alpha particles, ions)
+  else if (procName == "ionIoni")                return 15;  // Ionization by heavy ions or charged particles.
+
+  /// Production of secondary atomic electrons (shell effects)
+  else if (procName == "Auger")                  return 16;  // Auger electron emission: non-radiative atomic de-excitation.
+  else if (procName == "phot_fluo")              return 17;  // X-ray fluorescence: radiative de-excitation following inner-shell ionization.
+  else if (procName == "pixe")                   return 18;  // Proton Induced X-ray Emission (PIXE): X-rays generated by proton bombardment.
+
+  /// Specialized processes for light particles (rare, but possible)
+  else if (procName == "muIoni")                 return 19;  // Ionization caused by muons.
+  else if (procName == "muBrems")                return 20;  // Muon bremsstrahlung: radiation from muon deceleration.
+  else if (procName == "muPairProd")             return 21;  // Muon-induced pair production: e⁺e⁻ creation due to muon.
+
+  /// Optional optical and electromagnetic effects
+  else if (procName == "Cerenkov")               return 22;  // Cerenkov radiation: light emission by charged particles exceeding the phase velocity in a medium.
+  else if (procName == "Scintillation")          return 23;  // Scintillation: light emission from material excited by ionizing radiation.
+  else if (procName == "SynchrotronRadiation")   return 24;  // Synchrotron radiation: emitted by relativistic charged particles in magnetic fields.
+
+  /// Unknown or unexpected process
+  return 99;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Determines the origin of a secondary electron based on its creator process.
+///
+/// @param aStep – the current Geant4 simulation step, to readout a track – the G4Track object representing the electron.
+/// @return int – an integer code representing the origin type of the secondary electron.
+
+G4int VoxelHit::GetElectronOriginType(G4Step* aStep) const{
+
+  if (aStep->GetTrack()->GetDynamicParticle() != G4Electron::Definition())
+    return -1;  // Not an electron
+
+  auto creator = aStep->GetTrack()->GetCreatorProcess();
+  if (!creator) return 0;  // Primary electron (no creator process)
+
+  auto name = creator->GetProcessName();
+
+  if (name == "phot")              return 1;  // Photoelectric electron
+  if (name == "compt")             return 2;  // Compton-scattered electron
+  if (name == "conv")              return 3;  // Pair-production electron
+  if (name == "Auger")             return 4;  // Auger electron (non-radiative transition)
+  if (name == "phot_fluo")         return 5;  // Fluorescent electron (atomic de-excitation)
+  if (name == "eIoni")             return 6;  // Electron ionization electron
+  if (name == "ionIoni")           return 7;  // Ion-induced ionization electron
+  if (name == "RadioactiveDecay")  return 8;  // Beta electron from radioactive decay
+
+  return 99;  // Other or unknown secondary process
 }
 
 
@@ -136,6 +196,7 @@ void VoxelHit::FillTrack(G4Step* aStep){
       if (ret.second==true) { // new element inserted
         m_Voxel.m_trksTypeId.emplace_back(GetTrkType(aStep));
         m_Voxel.m_trksProcessTypeId.emplace_back(GetProcessType(aStep));
+        m_Voxel.m_trksElectronOriginTypeId.emplace_back(GetElectronOriginType(aStep));
         m_Voxel.m_trksE.emplace_back(aTrack->GetDynamicParticle()->GetKineticEnergy());
         // m_Voxel.m_trksPotentialE.emplace_back((aTrack->GetDynamicParticle()->GetTotalEnergy())-(aTrack->GetDynamicParticle()->GetKineticEnergy())) (>dla niefotonów)
         m_Voxel.m_trksTheta.emplace_back(aTrack->GetDynamicParticle()->GetMomentum().theta());
@@ -318,6 +379,24 @@ std::vector<std::pair<G4int, G4int>> VoxelHit::GetProcessType() const {
   }
 
   return processTypeId;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a vector of pairs containing the track ID and the secondary electron origin classification.
+std::vector<std::pair<G4int, G4int>> VoxelHit::GetElectronOriginType() const {
+
+  // Vector to store resulting pairs (Track ID, Electron Origin Type)
+  std::vector<std::pair<G4int, G4int>> electronOriginTypeId;
+
+  // Iterator for electron origin classification IDs
+  auto itElectronType = m_Voxel.m_trksElectronOriginTypeId.begin();
+
+  // Iterate simultaneously over track IDs and electron origin types
+  for (auto itId = m_Voxel.m_trksId.begin(); itId != m_Voxel.m_trksId.end(); ++itId) {
+    electronOriginTypeId.emplace_back(*itId, *itElectronType++);
+  }
+
+  return electronOriginTypeId;
 }
 
 

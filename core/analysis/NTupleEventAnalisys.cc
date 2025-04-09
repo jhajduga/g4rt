@@ -181,17 +181,17 @@ void NTupleEventAnalisys::CreateNTuple(const TTreeCollection& treeColl){
     if(evtNTupleColl.m_tracks_analysis){
       createNtupleVecIColumn("VoxelTrkId",evtNTupleColl.m_VoxelTrkId);
       createNtupleVecIColumn("VoxelTrkTypeId",evtNTupleColl.m_VoxelTrkTypeId);
-      createNtupleVecIColumn("VoxelProcessId",evtNTupleColl.m_VoxelProcessId);
-      createNtupleVecIColumn("VoxelProcessTypeId",evtNTupleColl.m_VoxelProcessTypeId);
-      createNtupleVecDColumn("VoxelTrkPositionX",evtNTupleColl.m_VoxelTrkPositionX);
-      createNtupleVecDColumn("VoxelTrkPositionY",evtNTupleColl.m_VoxelTrkPositionY);
-      createNtupleVecDColumn("VoxelTrkPositionZ",evtNTupleColl.m_VoxelTrkPositionZ);
-          // TEMP!!!!
-      createNtupleVecDColumn("G4EvtPrimaryE",evtNTupleColl.m_G4EvtPrimaryEnergy);
-          // TEMP!!!!
-      createNtupleIColumn("G4EvtPrimaryN");
-          // TEMP!!!!
+      createNtupleVecIColumn("ProcessTypeId",evtNTupleColl.m_ProcessTypeId);
+      createNtupleVecIColumn("ElectronOriginTypeId",evtNTupleColl.m_ElectronOriginTypeId);
       if(!treeColl.m_minimalistic){
+        createNtupleVecDColumn("VoxelTrkPositionX",evtNTupleColl.m_VoxelTrkPositionX);
+        createNtupleVecDColumn("VoxelTrkPositionY",evtNTupleColl.m_VoxelTrkPositionY);
+        createNtupleVecDColumn("VoxelTrkPositionZ",evtNTupleColl.m_VoxelTrkPositionZ);
+            // TEMP!!!!
+        createNtupleVecDColumn("G4EvtPrimaryE",evtNTupleColl.m_G4EvtPrimaryEnergy);
+            // TEMP!!!!
+        createNtupleIColumn("G4EvtPrimaryN");
+            // TEMP!!!!
         createNtupleVecDColumn("VoxelTrkE",evtNTupleColl.m_VoxelTrkEnergy);
         createNtupleVecDColumn("VoxelTrkTheta",evtNTupleColl.m_VoxelTrkTheta);
         createNtupleVecDColumn("VoxelTrkLength",evtNTupleColl.m_VoxelTrkLength);
@@ -295,17 +295,20 @@ void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4
         trkTypeId.emplace_back(iTrkType.second);
       }
 
-      std::vector<G4int> processType;
       std::vector<G4int> processTypeId;
       for(const auto& iProcessType : hit->GetProcessType()){
-        processType.emplace_back(iProcessType.first);
         processTypeId.emplace_back(iProcessType.second);
+      }
+
+      std::vector<G4int> electronOriginTypeId;
+      for(const auto& iElectronOriginType : hit->GetElectronOriginType()){
+        electronOriginTypeId.emplace_back(iElectronOriginType.second);
       }
 
       evtColl.m_VoxelHitsTrkId.emplace_back(trkType);
       evtColl.m_VoxelHitsTrkTypeId.emplace_back(trkTypeId);
-      evtColl.m_VoxelHitsProcessId.emplace_back(processType);
       evtColl.m_VoxelHitsProcessTypeId.emplace_back(processTypeId);
+      evtColl.m_VoxelHitsElectronOriginTypeId.emplace_back(electronOriginTypeId);
 
       std::vector<G4double> trkEnergy;
       for(const auto& iTrkE : hit->GetTrkEnergy()){
@@ -412,10 +415,10 @@ void NTupleEventAnalisys::FillNTupleEvent(){
           treeEvtColl.m_VoxelTrkId = treeEvtColl.m_VoxelHitsTrkId.at(i);
           treeEvtColl.m_VoxelTrkTypeId.clear();
           treeEvtColl.m_VoxelTrkTypeId = treeEvtColl.m_VoxelHitsTrkTypeId.at(i);
-          treeEvtColl.m_VoxelProcessId.clear();
-          treeEvtColl.m_VoxelProcessId = treeEvtColl.m_VoxelHitsProcessId.at(i);
-          treeEvtColl.m_VoxelProcessTypeId.clear();
-          treeEvtColl.m_VoxelProcessTypeId = treeEvtColl.m_VoxelHitsProcessTypeId.at(i);
+          treeEvtColl.m_ProcessTypeId.clear();
+          treeEvtColl.m_ProcessTypeId = treeEvtColl.m_VoxelHitsProcessTypeId.at(i);
+          treeEvtColl.m_ElectronOriginTypeId.clear();
+          treeEvtColl.m_ElectronOriginTypeId = treeEvtColl.m_VoxelHitsElectronOriginTypeId.at(i);
           treeEvtColl.m_VoxelTrkEnergy.clear();
           treeEvtColl.m_VoxelTrkEnergy = treeEvtColl.m_VoxelHitsTrkEnergy.at(i);
           treeEvtColl.m_VoxelTrkTheta.clear();
@@ -491,8 +494,8 @@ void NTupleEventAnalisys::ClearEventCollections(){
     coll->second.m_VoxelHitsTrkId.clear();
     coll->second.m_VoxelHitsTrkTypeId.clear();
     coll->second.m_VoxelHitsTrkEnergy.clear();
-    coll->second.m_VoxelHitsProcessId.clear();
     coll->second.m_VoxelHitsProcessTypeId.clear();
+    coll->second.m_VoxelHitsElectronOriginTypeId.clear();
     coll->second.m_VoxelHitsTrkTheta.clear();
     coll->second.m_VoxelHitsTrkLength.clear();
     coll->second.m_VoxelHitsTrkPosX.clear();

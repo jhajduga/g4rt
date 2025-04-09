@@ -1,0 +1,40 @@
+#############################
+# Flat Pill Source          #
+# Iron 55                   #
+# Emission in -Z Hemisphere #
+#############################
+
+/gps/particle gamma
+/gps/source/intensity 151
+/gps/pos/type Plane
+/gps/pos/shape Circle
+/gps/pos/centre 0 0 -0.6 cm
+/gps/pos/radius 0.4 cm
+/gps/ang/type iso
+/gps/ang/mintheta 0 deg
+/gps/ang/maxtheta 90 deg
+/gps/ang/minphi 0 deg
+/gps/ang/maxphi 360 deg
+
+# Fe 5.89881 & 5.88772 
+################################################################
+/gps/ene/type Gauss
+/gps/ene/mono 5.89 keV
+/gps/ene/sigmae 0.05 keV
+
+## Cd 6.49051 & 6.5354
+#################################################################
+/gps/source/add 20.5 # intensity
+/gps/particle gamma
+/gps/pos/type Plane
+/gps/pos/shape Circle
+/gps/pos/centre 0 0 -0.6 cm
+/gps/pos/radius 0.4 cm
+/gps/ang/type iso
+/gps/ang/mintheta 0 deg
+/gps/ang/maxtheta 90 deg
+/gps/ang/minphi 0 deg
+/gps/ang/maxphi 360 deg
+/gps/ene/type Gauss
+/gps/ene/mono 6.51 keV
+/gps/ene/sigmae 0.05 keV

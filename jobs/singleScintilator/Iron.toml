@@ -1,8 +1,8 @@
 [RunSvc]
-JobName = "AmerykOnGPS"
+JobName = "IronGpsMulticore"
 BeamType = "gps"
-GpsMacFileName = "/home/jhajduga/scratch/work/g4rt/data/gps/gps_alpha_Am_231.mac" # gets file from data/ in this repo
-PrintProgressFrequency = 0.0005
+GpsMacFileName = "/home/jhajduga/scratch/work/g4rt/data/gps/gps_gamma_Fe_55.mac" # gets file from data/ in this repo
+PrintProgressFrequency = 0.005
 Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
 GenerateCT = false
 PrimariesAnalysis = true
@@ -37,7 +37,7 @@ TracksAnalysis = true
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 nControlPoints = 1      # This will limit number of ctrl points defined below!
 BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
-nParticles = 2000000      # This will overwrite Rotation value for all below plan files!
+nParticles = 100000000       # This will overwrite Rotation value for all below plan files!
 PlanInputFile = [
         "plan/custom/cp5x5.dat"
         # "plan/custom/prostate/prostate_imrt_beam0_cp0.dat"
