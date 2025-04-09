@@ -424,10 +424,9 @@ void RunSvc::ParseTomlConfig(){
     }
   }
   // __________________________________________________________________________
-  // Reading the plan from custom TOML inteface is defined with the next priority
+  // Reading the plan from custom TOML inteface is defined with the highest priority
   RUNSVC_INFO("Importing control point configuration from file: {}",configFile);
-  G4double rotationInDeg = 0.;
-  auto n_beam_rot = config[configObj]["BeamRotation"].value_or(-1);
+  auto n_beam_rot = config[configObj]["BeamRotation"].value_or(0.0);
   if(n_beam_rot >= 0) {
     if (m_control_points_config.size()>0){ // configs already exist from plan files
       RUNSVC_INFO("Putting beam rotation to: {} degrees...",n_beam_rot); 
@@ -435,6 +434,10 @@ void RunSvc::ParseTomlConfig(){
         config.RotationInDeg = n_beam_rot;
       }
     }
+  } else {
+    G4String msg = "Beam rotation is "+std::to_string(n_beam_rot)+" but it's assumed to be >=0 degrees";
+    LOGSVC_CRITICAL(msg.data());
+    G4Exception("RunSvc", "BeamRotation", FatalErrorInArgument, msg);
   }
 
   auto n_stat = config[configObj]["nParticles"].value_or(-1);
@@ -450,10 +453,6 @@ void RunSvc::ParseTomlConfig(){
     return; // we relay on configs created based on the plan files
 
   if (_numberOfCP>0){
-    if(n_beam_rot < 0){
-      n_beam_rot = 0;
-      RUNSVC_INFO("Putting beam rotation to: {} degrees...",n_beam_rot);
-    }
     for( int i = 0; i < _numberOfCP; i++ ){
       if(n_stat<0)
         criticalError("RunSvc_Plan should include nParticles value");
