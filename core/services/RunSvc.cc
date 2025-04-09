@@ -425,6 +425,7 @@ void RunSvc::ParseTomlConfig(){
   }
   // __________________________________________________________________________
   // Reading the plan from custom TOML inteface is defined with the highest priority
+
   RUNSVC_INFO("Importing control point configuration from file: {}",configFile);
   auto n_beam_rot = config[configObj]["BeamRotation"].value_or(0.0);
   if(n_beam_rot >= 0) {
@@ -436,7 +437,7 @@ void RunSvc::ParseTomlConfig(){
     }
   } else {
     G4String msg = "Beam rotation is "+std::to_string(n_beam_rot)+" but it's assumed to be >=0 degrees";
-    LOGSVC_CRITICAL(msg.data());
+    RUNSVC_FATAL(msg.data());
     G4Exception("RunSvc", "BeamRotation", FatalErrorInArgument, msg);
   }
 
