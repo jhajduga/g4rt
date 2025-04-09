@@ -32,7 +32,7 @@ G4bool WaterPhantomSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   auto theTouchable = dynamic_cast<const G4TouchableHistory *>(aStep->GetPreStepPoint()->GetTouchable());
   auto volumeName = theTouchable->GetVolume()->GetName();
   if (volumeName != "WaterPhantomPV")
-    LOGSVC_DEBUG("ProcessHits volume name ", volumeName);
+    // LOGSVC_DEBUG("ProcessHits volume name ", volumeName);
   
   // ____________________________________________________________________________
   if(m_tracks_analysis){

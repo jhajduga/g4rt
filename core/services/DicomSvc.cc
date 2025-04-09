@@ -3,7 +3,7 @@
 #include <pybind11/embed.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
-#include "LogSvc.hh"
+// #include "LogSvc.hpp"
 
 namespace py = pybind11;
 using namespace py::literals;
@@ -11,14 +11,14 @@ using namespace py::literals;
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void DicomSvc::Initialize(const std::string& planFileType){
-  LOGSVC_INFO("DicomSvc initalization...");
+  // LOGSVC_INFO("DicomSvc initalization...");
   if(planFileType == "dat")
     m_plan = std::make_unique<ICustomPlan>();
   else if(planFileType == "dcm")
     m_plan = std::make_unique<IDicomPlan>();
   else {
     G4String msg = "Unknown plan file extension: " + planFileType + "Supported: .dat, .dcm";
-    LOGSVC_CRITICAL(msg.data());
+    // LOGSVC_CRITICAL(msg.data());
     G4Exception("DicomSvc", "Initialize", FatalErrorInArgument, msg);
   }
 
@@ -26,11 +26,11 @@ void DicomSvc::Initialize(const std::string& planFileType){
   //
   // auto rtplanMlcReader = py::module::import("dicom_rtplan_mlc");
   // auto beams_counter = rtplanMlcReader.attr("return_number_of_beams")(m_rtplan_file).cast<int>();
-  // LOGSVC_INFO("Found #{} beams",beams_counter);
+  // // LOGSVC_INFO("Found #{} beams",beams_counter);
   // for(int i=0; i<beams_counter;++i){
   //   unsigned nCP = rtplanMlcReader.attr("return_number_of_controlpoints")(m_rtplan_file,i).cast<unsigned>();
   //   m_rtplan_beam_n_control_points.emplace_back(nCP);
-  //   LOGSVC_INFO("Found #{} control poinst for {} beam",nCP,i);
+  //   // LOGSVC_INFO("Found #{} control poinst for {} beam",nCP,i);
   // }
 }
 
@@ -55,8 +55,8 @@ DicomSvc *DicomSvc::GetInstance() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 double IDicomPlan::ReadJawPossition(const std::string& planFile, const std::string& jawName, int beamIdx, int controlpointIdx) const{
-  //LOGSVC_INFO("Reading the Jaws configuration from {}",planFile);
-  //LOGSVC_INFO("JawName: {}, beamIdx: {}, controlpointIdx: {}",jawName,beamIdx,controlpointIdx);
+  //// LOGSVC_INFO("Reading the Jaws configuration from {}",planFile);
+  //// LOGSVC_INFO("JawName: {}, beamIdx: {}, controlpointIdx: {}",jawName,beamIdx,controlpointIdx);
   if(jawName!="X1" && jawName!="X2" && jawName!="Y1" && jawName!="Y2")
     G4Exception("IDicomPlan", "GetJawPossition", FatalErrorInArgument, "Wrong jaw name input given!");
 
@@ -110,8 +110,8 @@ void IPlan::AcknowledgeMlcPositioning(const std::string& side, const std::vector
 ////////////////////////////////////////////////////////////////////////////////
 ///
 std::vector<G4double> IDicomPlan::ReadMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx){
-  // LOGSVC_INFO("Reading the MLC configuration from {}",planFile);
-  // LOGSVC_INFO("Side: {}, beamIdx: {}, controlpointIdx: {}",side,beamIdx,controlpointIdx);
+  // // LOGSVC_INFO("Reading the MLC configuration from {}",planFile);
+  // // LOGSVC_INFO("Side: {}, beamIdx: {}, controlpointIdx: {}",side,beamIdx,controlpointIdx);
   if(side!="Y1" && side!="Y2")
     G4Exception("IDicomPlan", "GetMlcPositioning", FatalErrorInArgument, "Wrong input side given!");
   std::vector<G4double> mlcPositioning;
@@ -140,7 +140,7 @@ double ICustomPlan::ReadJawPossition(const std::string& planFile, const std::str
   std::ifstream file(planFile);
   if (!file.is_open()) {
     G4String msg = "Could not open file: " + planFile;
-    LOGSVC_CRITICAL(msg.data());
+    // LOGSVC_CRITICAL(msg.data());
     G4Exception("ICustomPlan", "GetMlcPositioning", FatalErrorInArgument, msg);
   }
   auto findJawHeader = [&file]() -> int {
@@ -158,7 +158,7 @@ double ICustomPlan::ReadJawPossition(const std::string& planFile, const std::str
   auto jaw_header = findJawHeader();
   if (jaw_header<0){
     G4String msg = "Could find Jaws header in file: " + planFile;
-    LOGSVC_CRITICAL(msg.data());
+    // LOGSVC_CRITICAL(msg.data());
     G4Exception("ICustomPlan", "ReadJawPossition", FatalErrorInArgument, msg); 
   }
   std::string line;
@@ -173,7 +173,7 @@ double ICustomPlan::ReadJawPossition(const std::string& planFile, const std::str
       break;
     } else {
       G4String msg = "Could not parse line: " + line;
-      LOGSVC_CRITICAL(msg.data());
+      // LOGSVC_CRITICAL(msg.data());
       G4Exception("ICustomPlan", "ReadJawPossition", FatalErrorInArgument, msg);
     }
   }
@@ -196,15 +196,15 @@ std::pair<double,double> ICustomPlan::ReadJawsAperture(const std::string& planFi
   if(side=="X"){
     auto x1 = ReadJawPossition(planFile,"X1",beamIdx,controlpointIdx);
     auto x2 = ReadJawPossition(planFile,"X2",beamIdx,controlpointIdx);
-    LOGSVC_INFO("JAWS:: X1={} mm, X2={} mm",x1,x2);
+    // LOGSVC_INFO("JAWS:: X1={} mm, X2={} mm",x1,x2);
     jawsSideAperture = std::make_pair(x1,x2);
   } else if(side=="Y"){
     auto y1 = ReadJawPossition(planFile,"Y1",beamIdx,controlpointIdx);
     auto y2 = ReadJawPossition(planFile,"Y2",beamIdx,controlpointIdx);
-    LOGSVC_INFO("JAWS:: Y1={} mm, Y2={} mm",y1,y2);
+    // LOGSVC_INFO("JAWS:: Y1={} mm, Y2={} mm",y1,y2);
     jawsSideAperture = std::make_pair(y1,y2);
   } else {
-      LOGSVC_ERROR("ICustomPlan::ReadJawsAperture: Unknown side: {}", side);
+      // LOGSVC_ERROR("ICustomPlan::ReadJawsAperture: Unknown side: {}", side);
       std::exit(EXIT_FAILURE);
   }
   AcknowledgeJawsAperture(side,jawsSideAperture);
@@ -214,16 +214,16 @@ std::pair<double,double> ICustomPlan::ReadJawsAperture(const std::string& planFi
 ////////////////////////////////////////////////////////////////////////////////
 ///
 std::vector<G4double> ICustomPlan::ReadMlcPositioning(const std::string& planFile, const std::string& side, int beamIdx, int controlpointIdx){
-  LOGSVC_INFO("Reading the MLC {} side configuration from {}",side,planFile);
+  // LOGSVC_INFO("Reading the MLC {} side configuration from {}",side,planFile);
   if(side!="Y1" && side!="Y2"){
     G4String msg = "Wrong input side given (" + side + ")! Allowed values are 'Y1' and 'Y2'";
-    LOGSVC_CRITICAL(msg.data());
+    // LOGSVC_CRITICAL(msg.data());
     G4Exception("ICustomPlan", "GetMlcPositioning", FatalErrorInArgument, msg);
   }
   std::ifstream file(planFile);
   if (!file.is_open()) {
     G4String msg = "Could not open file: " + planFile;
-    LOGSVC_CRITICAL(msg.data());
+    // LOGSVC_CRITICAL(msg.data());
     G4Exception("ICustomPlan", "GetMlcPositioning", FatalErrorInArgument, msg);
   }
 
@@ -244,7 +244,7 @@ std::vector<G4double> ICustomPlan::ReadMlcPositioning(const std::string& planFil
   auto mlc_header = findMLCheader();
   if (mlc_header<0){
     G4String msg = "Could find MLC header in file: " + planFile;
-    LOGSVC_CRITICAL(msg.data());
+    // LOGSVC_CRITICAL(msg.data());
     G4Exception("ICustomPlan", "GetMlcPositioning", FatalErrorInArgument, msg); 
   }
   while (std::getline(file, line)) {
@@ -406,7 +406,7 @@ double DicomSvc::GetHounsfieldScaleValue(const std::string& materialName, bool n
   if(!tconfig){
     auto hausfieldMaterialMapFile = std::string(PROJECT_DATA_PATH) + "/config/hounsfield_scale_120keV.toml";
     tconfig = std::make_unique<toml::table>(toml::parse_file(hausfieldMaterialMapFile));
-    LOGSVC_INFO("Reading from Hounsfield Material Map File: {}",hausfieldMaterialMapFile);
+    // LOGSVC_INFO("Reading from Hounsfield Material Map File: {}",hausfieldMaterialMapFile);
   }
   const toml::table& config = *tconfig;
   G4double hu_value = 0.;

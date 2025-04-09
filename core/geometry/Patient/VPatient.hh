@@ -8,13 +8,14 @@
 #include "G4Cache.hh"
 #include "IPhysicalVolume.hh"
 #include "TomlConfigModule.hh"
-#include "Logable.hh"
+// #include "Logable.hh"
 #include "VoxelHit.hh"
 #include <map>
 
 class VPatientSD;
 
-class VPatient : public IPhysicalVolume, public TomlConfigModule, public Logable {
+class VPatient : public IPhysicalVolume, public TomlConfigModule{
+// class VPatient : public IPhysicalVolume, public TomlConfigModule, public Logable {
   protected:
     ///
     bool m_tracks_analysis = false;
@@ -33,7 +34,8 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule, public Logable
     VPatient() = delete;
     
     ///
-    explicit VPatient(const std::string& name):IPhysicalVolume(name),TomlConfigModule(name),Logable("GeoAndScoring"){
+    // explicit VPatient(const std::string& name):IPhysicalVolume(name),TomlConfigModule(name),Logable("GeoAndScoring"){
+    explicit VPatient(const std::string& name):IPhysicalVolume(name),TomlConfigModule(name){
       m_patientSD.Put(nullptr);
     }
 
@@ -53,7 +55,7 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule, public Logable
     VPatientSD* GetSD() const { return m_patientSD.Get(); }
 
     virtual std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String&,Scoring::Type) const {
-      LOGSVC_WARN("Returning empty scoring hashed map!");
+      // LOGSVC_WARN("Returning empty scoring hashed map!");
       return std::map<std::size_t, VoxelHit>();
     }
 

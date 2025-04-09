@@ -32,7 +32,7 @@ void NTupleEventAnalisys::DefineTTree(const G4String& treeName, bool cellVoxelis
     return;
 
   if(hcName.empty()){
-    LOGSVC_INFO("Defining TTree: {}",treeName);
+    // LOGSVC_INFO("Defining TTree: {}",treeName);
     // Given tree is related to single scoring volume (hits collection)
     m_ttree_collection.emplace_back(NTupleEventAnalisys::TTreeCollection());
     m_ttree_collection.back().m_name = treeName;
@@ -54,7 +54,7 @@ void NTupleEventAnalisys::DefineTTree(const G4String& treeName, bool cellVoxelis
         ++treeIdx;
     }
     if (!treeExists){
-      LOGSVC_INFO("Defining TTree: {}",treeName);
+      // LOGSVC_INFO("Defining TTree: {}",treeName);
       m_ttree_collection.emplace_back(NTupleEventAnalisys::TTreeCollection());
       m_ttree_collection.back().m_name = treeName;
       m_ttree_collection.back().m_description = treeDescription;
@@ -211,7 +211,7 @@ void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4
   }
   auto& evtColl = m_ntuple_collection.Get(treeName); // Note: once the treeName is wrong this gives undefined beheviour!!
   int nHits = hitsColl->entries();
-  // LOGSVC_INFO("nHist: {}",nHits);
+  // // LOGSVC_INFO("nHist: {}",nHits);
   if(nHits==0){
    return; // no hits in this event
   }

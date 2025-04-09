@@ -11,6 +11,7 @@
 #include "CsvRunAnalysis.hh"
 #include "NTupleRunAnalysis.hh"
 #include "Services.hh"
+#include "LogSvc.hpp"
 #ifdef G4MULTITHREADED
   #include "G4MTRunManager.hh"
 #endif
@@ -41,7 +42,9 @@ RunAnalysis *RunAnalysis::GetInstance() {
 void RunAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
     m_current_cp = Service<RunSvc>()->CurrentControlPoint();
     std::string worker = G4Threading::IsWorkerThread() ? "*WORKER*" : " *MASTER* ";
-    LOGSVC_DEBUG("RunAnalysis:: begin of run at {} thread.",worker);
+    // LOGSVC_INFO("Message from {} thread.", worker);
+    std::cout << "Message from " << worker << std::endl;
+    // LOGSVC_DEBUG("RunAnalysis:: begin of run at {} thread.",worker);
     // Note: Everything is being care by ControlPointRun::InitializeScoringCollection
 }
 
@@ -55,7 +58,7 @@ void RunAnalysis::EndOfEventAction(const G4Event *evt){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void RunAnalysis::EndOfRun(const G4Run* runPtr){
-    LOGSVC_INFO("RunAnalysis::EndOfRun:: CtrlPoint-{} / G4Run-{}", m_current_cp->GetId(), runPtr->GetRunID());
+    // LOGSVC_INFO("RunAnalysis::EndOfRun:: CtrlPoint-{} / G4Run-{}", m_current_cp->GetId(), runPtr->GetRunID());
     // Note: Multithreading merging is being performed before...
     m_current_cp->GetRun()->EndOfRun();
     if(m_csv_run_analysis){

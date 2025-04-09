@@ -8,8 +8,10 @@
 ///
 UIManager::UIManager()
     : UIG4Manager(G4UImanager::GetUIpointer()), m_isG4kernelInitialized(false) {
-      LogSession * LoggedSession = new LogSession();
-      UIG4Manager->SetCoutDestination(LoggedSession);
+      auto log_session = new LogSession(); // Utworzenie sesji
+      G4UImanager::GetUIpointer()->SetCoutDestination(log_session);
+      // UIG4Manager->ApplyCommand("/control/verbose 2");
+      // UIG4Manager->ApplyCommand("/run/verbose 2");
     }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -120,7 +122,7 @@ void UIManager::UserRunInitialization() {
     InitializeG4kernel();
     for (auto ic : PreBeamOnCommands) 
       ApplyCommand(ic);
-    LOGSVC_DEBUG("UIManager::BeamOn({})",cp.GetNEvts());
+    // LOGSVC_DEBUG("UIManager::BeamOn({})",cp.GetNEvts());
     runSvc->G4RunManagerPtr()->BeamOn(cp.GetNEvts());
   }
 
