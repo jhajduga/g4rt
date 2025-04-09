@@ -163,7 +163,7 @@ G4int VoxelHit::GetProcessType(G4Step* aStep) const {
 
 G4int VoxelHit::GetElectronOriginType(G4Step* aStep) const{
 
-  if (aStep->GetTrack()->GetDynamicParticle() != G4Electron::Definition())
+  if (aStep->GetTrack()->GetDynamicParticle()->GetDefinition() != G4Electron::Definition())
     return -1;  // Not an electron
 
   auto creator = aStep->GetTrack()->GetCreatorProcess();
