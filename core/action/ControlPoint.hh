@@ -15,6 +15,7 @@
 #include "VPatient.hh"
 #include "G4Run.hh"
 #include "VoxelHit.hh"
+#include "G4Threading.hh" 
 
 typedef std::map<Scoring::Type, std::map<std::size_t, VoxelHit>> ScoringMap;
 
@@ -153,14 +154,14 @@ class ControlPoint {
     std::vector<G4ThreeVector> m_plan_mask_points;
 
     /// Store to kepp raw pointers from ControlPoint::GenerateRun
-    std::vector<ControlPointRun*> m_mt_run;
+    G4Cache<std::vector<ControlPointRun*>> m_mt_run;
 
     /// MTRunManager generates new run on each thread
     G4Cache<ControlPointRun*> m_cp_run;
 
     /// Many HitsCollections can be associated to given run collection name 
     // (e.g. when many sensitive detectors constituting a single detection unit a.k.a ROI)
-    static std::map<G4String,std::vector<G4String>> m_run_collections;
+    static G4Cache<std::map<G4String,std::vector<G4String>>> m_run_collections;
     static void RegisterRunHCollection(const G4String& collection_name, const G4String& hc_name);
 
     static double FIELD_MASK_POINTS_DISTANCE;

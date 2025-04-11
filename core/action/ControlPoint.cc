@@ -21,7 +21,7 @@
 double ControlPoint::FIELD_MASK_POINTS_DISTANCE = 0.50 * mm;
 std::string ControlPoint::m_sim_dir = "sim";
 
-std::map<G4String,std::vector<G4String>> ControlPoint::m_run_collections = std::map<G4String,std::vector<G4String>>();
+G4Cache<std::map<G4String,std::vector<G4String>>> ControlPoint::m_run_collections;
 
 namespace {
     G4Mutex CPMutex = G4MUTEX_INITIALIZER;
@@ -37,7 +37,7 @@ ControlPointConfig::ControlPointConfig(int id, int nevts, double rot)
 void ControlPointRun::InitializeScoringCollection(){
     std::string worker = G4Threading::IsWorkerThread() ? "worker" : "master";
     auto scoring_types = Service<RunSvc>()->GetScoringTypes(); 
-    auto run_collections = ControlPoint::m_run_collections; 
+    auto run_collections = ControlPoint::m_run_collections.Get(); 
     // LOGSVC_INFO("Run scoring initialization for #{} collections ({})",run_collections.size(),worker);
     for(const auto& run_collection : run_collections){
         auto run_collection_name = run_collection.first;
@@ -237,19 +237,16 @@ ControlPoint::ControlPoint(ControlPoint&& cp):m_config(cp.m_config){
 ///
 ControlPoint::~ControlPoint() {
     if (m_rotation) delete m_rotation; m_rotation = nullptr;
-    // for(auto run : m_mt_run){
-    //     delete run;
-    //     //TODO m_mt_run.erase(run);
-    // }
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Multi-thread safe method
 G4Run* ControlPoint::GenerateRun(bool scoring){
     G4AutoLock lock(&CPMutex);
-    m_mt_run.push_back(new ControlPointRun(scoring));
-    m_cp_run.Put(m_mt_run.back());
-    return m_mt_run.back();
+    m_mt_run.Get().push_back(new ControlPointRun(scoring));
+    m_cp_run.Put(m_mt_run.Get().back());
+    return m_mt_run.Get().back();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -529,7 +526,7 @@ G4double ControlPoint::GetAngleScalingFactor(G4double angle, const G4ThreeVector
 ////////////////////////////////////////////////////////////////////////////////
 /// 
 void ControlPoint::FillEventCollections(G4HCofThisEvent* evtHC){
-    for(const auto& run_collection: ControlPoint::m_run_collections){
+    for(const auto& run_collection: ControlPoint::m_run_collections.Get()){
         // LOGSVC_DEBUG("RunAnalysis::EndOfEvent: RunColllection {}",run_collection.first);
         for(const auto& hc: run_collection.second){
             // Related SensitiveDetector collection ID (Geant4 architecture)
@@ -583,18 +580,18 @@ void ControlPoint::FillEventCollection(const G4String& run_collection, VoxelHits
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void ControlPoint::RegisterRunHCollection(const G4String& run_collection_name, const G4String& hc_name){
-    if(m_run_collections.find( run_collection_name ) == m_run_collections.end()){
-        m_run_collections[run_collection_name] = std::vector<G4String>();
+    if(m_run_collections.Get().find( run_collection_name ) == m_run_collections.Get().end()){
+        m_run_collections.Get()[run_collection_name] = std::vector<G4String>();
         LOGSVC_INFO("Register new run collection:  {} ", run_collection_name);
     }
-    m_run_collections.at(run_collection_name).emplace_back(hc_name);
+    m_run_collections.Get().at(run_collection_name).emplace_back(hc_name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 std::vector<G4String> ControlPoint::GetRunCollectionNames() {
     std::vector<G4String> run_collection_names;
-    for(const auto& run_collection: ControlPoint::m_run_collections){
+    for(const auto& run_collection: ControlPoint::m_run_collections.Get()){
         // G4cout << "RunCollection: " << run_collection.first << G4endl;
         run_collection_names.emplace_back(run_collection.first);
     }
@@ -606,7 +603,7 @@ std::vector<G4String> ControlPoint::GetRunCollectionNames() {
 std::set<G4String> ControlPoint::GetHitCollectionNames() {
     static std::set<G4String> hit_collection_names;
         if(hit_collection_names.empty()){
-        for(const auto& run_collection: ControlPoint::m_run_collections){
+        for(const auto& run_collection: ControlPoint::m_run_collections.Get()){
             const auto& rc_hcs = run_collection.second;
             hit_collection_names.insert(rc_hcs.begin(), rc_hcs.end());
         }

@@ -14,54 +14,58 @@
 #include "D3DCell.hh"
 #include <algorithm>
 #include <vector>
+#include <set>
 
+G4ThreadLocal NTupleEventAnalisys* NTupleEventAnalisys::fInstance = nullptr;
 
-std::vector<NTupleEventAnalisys::TTreeCollection> NTupleEventAnalisys::m_ttree_collection = std::vector<TTreeCollection>();
+G4Cache<std::vector<NTupleEventAnalisys::TTreeCollection>> NTupleEventAnalisys::m_ttree_collection;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-NTupleEventAnalisys *NTupleEventAnalisys::GetInstance() {
-  static NTupleEventAnalisys instance = NTupleEventAnalisys();
-  return &instance;
+NTupleEventAnalisys* NTupleEventAnalisys::GetInstance() {
+  if (!fInstance) {
+    fInstance = new NTupleEventAnalisys();
+  }
+  return fInstance;
 }
-
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void NTupleEventAnalisys::DefineTTree(const G4String& treeName, bool cellVoxelisation, const G4String& hcName, const G4String& treeDescription){
+void NTupleEventAnalisys::DefineTTree(const G4String& treeName, bool cellVoxelisation, 
+                                      const G4String& hcName, const G4String& treeDescription) {
   if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis") == false)
     return;
+
+  // Obtain a reference to the underlying vector from the cache
+  std::vector<TTreeCollection>& ttreeVec = m_ttree_collection.Get();
 
   if(hcName.empty()){
     LOGSVC_INFO("Defining TTree: {}",treeName);
     // Given tree is related to single scoring volume (hits collection)
-    m_ttree_collection.emplace_back(NTupleEventAnalisys::TTreeCollection());
-    m_ttree_collection.back().m_name = treeName;
-    m_ttree_collection.back().m_hc_names.emplace_back(treeName);
-    m_ttree_collection.back().m_description = treeDescription;
-    m_ttree_collection.back().m_voxel_tree_structure = cellVoxelisation;
+    ttreeVec.emplace_back(TTreeCollection());
+    ttreeVec.back().m_name = treeName;
+    ttreeVec.back().m_hc_names.emplace_back(treeName);
+    ttreeVec.back().m_description = treeDescription;
+    ttreeVec.back().m_voxel_tree_structure = cellVoxelisation;
   }
   else {
-    // Given tree is related to many scoring volume (hits collection)
     G4int treeIdx = -1;
     G4bool treeExists = false;
-    for(const auto& tree : m_ttree_collection){
-      if (tree.m_name==treeName){
+    for(const auto& tree : ttreeVec){
+      ++treeIdx;
+        if (tree.m_name == treeName){
         treeExists = true;
-        ++treeIdx;
         break;
-      }
-      else 
-        ++treeIdx;
+        }
     }
     if (!treeExists){
-      LOGSVC_INFO("Defining TTree: {}",treeName);
-      m_ttree_collection.emplace_back(NTupleEventAnalisys::TTreeCollection());
-      m_ttree_collection.back().m_name = treeName;
-      m_ttree_collection.back().m_description = treeDescription;
-      m_ttree_collection.back().m_hc_names.emplace_back(hcName);
-      m_ttree_collection.back().m_voxel_tree_structure = cellVoxelisation;
+      LOGSVC_INFO("Defining TTree: {}", treeName);
+      ttreeVec.emplace_back(TTreeCollection());
+      ttreeVec.back().m_name = treeName;
+      ttreeVec.back().m_description = treeDescription;
+      ttreeVec.back().m_hc_names.emplace_back(hcName);
+      ttreeVec.back().m_voxel_tree_structure = cellVoxelisation;
     } else {
-      m_ttree_collection.at(treeIdx).m_hc_names.emplace_back(hcName);
+    ttreeVec.at(treeIdx).m_hc_names.emplace_back(hcName);
     }
   }
 }
@@ -71,7 +75,7 @@ void NTupleEventAnalisys::DefineTTree(const G4String& treeName, bool cellVoxelis
 void NTupleEventAnalisys::SetTracksAnalysis(const G4String& treeName, bool flag){
   if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis") == false)
     return;
-  for(auto& tree : m_ttree_collection){
+  for(auto& tree : m_ttree_collection.Get()){
     if (tree.m_name==treeName){
       //G4cout<< "[INFO]:: NTupleEventAnalisys:: Set Tracks Analysis for " << treeName << " to:" << flag << G4endl;
       tree.m_tracks_analysis = flag;
@@ -90,12 +94,16 @@ void NTupleEventAnalisys::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
   auto runSvc = Service<RunSvc>();
   auto control_point = runSvc->CurrentControlPoint();
   m_degree_rotation = control_point->GetDegreeRotation();
-  for(const auto& tree : NTupleEventAnalisys::m_ttree_collection){
-    if(GetNTupleId(tree.m_name+m_treeNamePostfix) == -1){ // not created yet
+  
+  // Get the underlying vector from the cache
+  const std::vector<TTreeCollection>& ttreeVec = m_ttree_collection.Get();
+  for(const auto& tree : ttreeVec){
+    if(GetNTupleId(tree.m_name + m_treeNamePostfix) == -1){ // Not created yet
       CreateNTuple(tree);
     }
   }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -239,7 +247,7 @@ void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4
     }
 
     auto voxelDose = hit->GetDose(); // note: it's in gray already;
-    auto size = D3DCell::SIZE;
+    auto size = D3DCell::SIZE; // Nie działa poprawnie. Dla Water phantomu to przekłamanie
     double cellVolume = pow(size,3);
     auto cellDose = voxelDose * hit->GetVolume() / cellVolume;
     evtColl.m_CellIDose.emplace_back( cellDose );
@@ -416,7 +424,8 @@ void NTupleEventAnalisys::EndOfEventAction(const G4Event *evt){
   if(hCofThisEvent){
     auto nColl = hCofThisEvent->GetNumberOfCollections();
     ClearEventCollections();
-  for(const auto& tree : NTupleEventAnalisys::m_ttree_collection){
+    const std::vector<TTreeCollection>& ttreeVec = m_ttree_collection.Get();
+  for(const auto& tree : ttreeVec){
     for(const auto& hc : tree.m_hc_names){
       //G4cout << "NTupleEventAnalisys::filling: " << tree.m_name+m_treeNamePostfix << " / " << hc << G4endl;
 
@@ -436,6 +445,37 @@ void NTupleEventAnalisys::EndOfEventAction(const G4Event *evt){
   }
 }
 
+
+
+// ////////////////////////////////////////////////////////////////////////////////
+// /// This member is called at the end of every event from EventAction::EndOfEventAction
+// void NTupleEventAnalisys::EndOfEventAction(const G4Event *evt){
+//   // G4cout << "NTupleEventAnalisys::EndOfEventAction" << G4endl;
+//   auto hCofThisEvent = evt->GetHCofThisEvent();
+//   if(hCofThisEvent){
+//     ClearEventCollections();
+//     std::set<G4int> processedIDs;  // Zestaw już przetworzonych identyfikatorów kolekcji
+//     for(const auto& tree : NTupleEventAnalisys::m_ttree_collection){
+//       for(const auto& hc : tree.m_hc_names){
+//         auto collection_id = G4SDManager::GetSDMpointer()->GetCollectionID(hc);
+//         if(collection_id < 0){
+//           G4cout << "[ERROR]:: NTupleEventAnalisys::EndOfEventAction TTree: " 
+//                  << tree.m_name+m_treeNamePostfix << " G4SDManager err: " << collection_id << G4endl;
+//         } else {
+//           // Jeśli ten collection_id już został przetworzony, to pomiń
+//           if(processedIDs.find(collection_id) != processedIDs.end())
+//             continue;
+//           processedIDs.insert(collection_id);
+//           auto hitsColl = dynamic_cast<VoxelHitsCollection*>(hCofThisEvent->GetHC(collection_id));
+//           FillEventCollection(tree.m_name+m_treeNamePostfix, evt, hitsColl);
+//         }
+//       }
+//     }
+//     FillNTupleEvent();
+//   }
+// }
+////////////////////////////////////////////////////////////////////////////////
+///
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void NTupleEventAnalisys::ClearEventCollections(){
@@ -444,25 +484,21 @@ void NTupleEventAnalisys::ClearEventCollections(){
     coll->second.m_global_time= 0.;
     coll->second.m_G4EvtPrimaryEnergy.clear();
     coll->second.m_EvtPrimariesN = 0;
-
     coll->second.m_CellIdX.clear();
     coll->second.m_CellIdY.clear();
     coll->second.m_CellIdZ.clear();
     coll->second.m_CellPositionX.clear();
     coll->second.m_CellPositionY.clear();
     coll->second.m_CellPositionZ.clear();
-
     coll->second.m_VoxelIdX.clear();
     coll->second.m_VoxelIdY.clear();
     coll->second.m_VoxelIdZ.clear();
     coll->second.m_VoxelPositionX.clear();
     coll->second.m_VoxelPositionY.clear();
     coll->second.m_VoxelPositionZ.clear();
-
     coll->second.m_VoxelHitEDeposit.clear();
     coll->second.m_VoxelHitMeanEDeposit.clear();
     coll->second.m_VoxelHitDose.clear();
-
     coll->second.m_VoxelHitsTrkId.clear();
     coll->second.m_VoxelHitsTrkTypeId.clear();
     coll->second.m_VoxelHitsTrkEnergy.clear();
@@ -471,7 +507,6 @@ void NTupleEventAnalisys::ClearEventCollections(){
     coll->second.m_VoxelHitsTrkPosX.clear();
     coll->second.m_VoxelHitsTrkPosY.clear();
     coll->second.m_VoxelHitsTrkPosZ.clear();
-    
     coll->second.m_CellIDose.clear();
 
   }
