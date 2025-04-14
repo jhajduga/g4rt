@@ -22,11 +22,9 @@ G4Cache<std::vector<NTupleEventAnalisys::TTreeCollection>> NTupleEventAnalisys::
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-NTupleEventAnalisys* NTupleEventAnalisys::GetInstance() {
-  if (!fInstance) {
-    fInstance = new NTupleEventAnalisys();
-  }
-  return fInstance;
+NTupleEventAnalisys *NTupleEventAnalisys::GetInstance() {
+  static NTupleEventAnalisys instance = NTupleEventAnalisys();
+  return &instance;
 }
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -247,7 +245,7 @@ void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4
     }
 
     auto voxelDose = hit->GetDose(); // note: it's in gray already;
-    auto size = D3DCell::SIZE; // Nie działa poprawnie. Dla Water phantomu to przekłamanie
+    auto size = D3DCell::SIZE; 
     double cellVolume = pow(size,3);
     auto cellDose = voxelDose * hit->GetVolume() / cellVolume;
     evtColl.m_CellIDose.emplace_back( cellDose );
@@ -445,37 +443,6 @@ void NTupleEventAnalisys::EndOfEventAction(const G4Event *evt){
   }
 }
 
-
-
-// ////////////////////////////////////////////////////////////////////////////////
-// /// This member is called at the end of every event from EventAction::EndOfEventAction
-// void NTupleEventAnalisys::EndOfEventAction(const G4Event *evt){
-//   // G4cout << "NTupleEventAnalisys::EndOfEventAction" << G4endl;
-//   auto hCofThisEvent = evt->GetHCofThisEvent();
-//   if(hCofThisEvent){
-//     ClearEventCollections();
-//     std::set<G4int> processedIDs;  // Zestaw już przetworzonych identyfikatorów kolekcji
-//     for(const auto& tree : NTupleEventAnalisys::m_ttree_collection){
-//       for(const auto& hc : tree.m_hc_names){
-//         auto collection_id = G4SDManager::GetSDMpointer()->GetCollectionID(hc);
-//         if(collection_id < 0){
-//           G4cout << "[ERROR]:: NTupleEventAnalisys::EndOfEventAction TTree: " 
-//                  << tree.m_name+m_treeNamePostfix << " G4SDManager err: " << collection_id << G4endl;
-//         } else {
-//           // Jeśli ten collection_id już został przetworzony, to pomiń
-//           if(processedIDs.find(collection_id) != processedIDs.end())
-//             continue;
-//           processedIDs.insert(collection_id);
-//           auto hitsColl = dynamic_cast<VoxelHitsCollection*>(hCofThisEvent->GetHC(collection_id));
-//           FillEventCollection(tree.m_name+m_treeNamePostfix, evt, hitsColl);
-//         }
-//       }
-//     }
-//     FillNTupleEvent();
-//   }
-// }
-////////////////////////////////////////////////////////////////////////////////
-///
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void NTupleEventAnalisys::ClearEventCollections(){

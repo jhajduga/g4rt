@@ -142,7 +142,5 @@ class NTupleEventAnalisys {
     ///
     static const std::vector<TTreeCollection>& TreeCollection() { return m_ttree_collection.Get(); }
 
-    /// Thread-local singleton instance pointer.
-    G4ThreadLocal static NTupleEventAnalisys* fInstance;
 };
 #endif //D3D_EVENT_ANALYSIS_HH
