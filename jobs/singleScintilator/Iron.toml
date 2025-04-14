@@ -1,9 +1,9 @@
 [RunSvc]
 JobName = "IronGpsMulticore"
 BeamType = "gps"
-GpsMacFileName = "/home/jhajduga/scratch/work/g4rt/data/gps/gps_gamma_Fe_55.mac" # gets file from data/ in this repo
+GpsMacFileName = "gps/gps_gamma_Fe_55.mac" # gets file from data/ in this repo
 PrintProgressFrequency = 0.005
-Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
+Physics = "LowE_Polar_Livermore" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
 GenerateCT = false
 PrimariesAnalysis = true
 NTupleAnalysis = true
