@@ -90,16 +90,18 @@ class NTupleEventAnalisys {
     ///
     G4String m_treeNamePostfix = "TTree";
 
-    
-    // std::map<std::string, G4double> cellSumDose;
-    // std::map<std::string, G4double> voxelSumDose;
-    // // std::string doseMapName = "";
 
-    ///
-    static std::vector<TTreeCollection> m_ttree_collection;
+    /** @brief Cached vector holding all defined TTreeCollection objects.
+     *
+     *  We use G4Cache to wrap a std::vector so that if we ever decide to change the underlying container
+     *  (for instance, to std::set for unique ordering), the rest of the code need not change.
+     *
+     *  Access to the underlying vector is provided by calling m_ttree_collection.Get().
+     */
+    static G4Cache<std::vector<TTreeCollection>> m_ttree_collection;
 
-    ///
-    G4MapCache<G4String,TTreeEventCollection> m_ntuple_collection;
+    /// Cache for mapping tree names to event collection data.
+    G4MapCache<G4String, TTreeEventCollection> m_ntuple_collection;
 
     ///
     void CreateNTuple(const TTreeCollection& treeColl);
@@ -128,22 +130,17 @@ class NTupleEventAnalisys {
     ///
     void EndOfEventAction(const G4Event *evt);
 
-    /// Once the scoringVolumeName remain empty it means that tree is related to single hits collection
+    ///
     static void DefineTTree(const G4String& treeName, bool cellVoxelisation=false, const G4String& hcName=G4String(), const G4String& treeDescription=G4String());
 
     ///
     static void SetTracksAnalysis(const G4String& treeName, bool flag);
 
     ///
-    static G4bool IsAnyTTreeDefined() { return m_ttree_collection.empty() ? false:true; }
+    static G4bool IsAnyTTreeDefined() { return m_ttree_collection.Get().empty() ? false : true; }
 
-
-    static const std::vector<TTreeCollection>& TreeCollection() { return m_ttree_collection; }
-
-    /// 
-    // const std::map<std::string, G4double>& GetSummedVoxelDose() {return voxelSumDose;}
-    // ///
-    // const std::map<std::string, G4double>& GetSummedCellDose() {return cellSumDose;}
+    ///
+    static const std::vector<TTreeCollection>& TreeCollection() { return m_ttree_collection.Get(); }
 
 };
 #endif //D3D_EVENT_ANALYSIS_HH
