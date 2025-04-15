@@ -16,8 +16,6 @@
 #include <vector>
 #include <set>
 
-G4ThreadLocal NTupleEventAnalisys* NTupleEventAnalisys::fInstance = nullptr;
-
 G4Cache<std::vector<NTupleEventAnalisys::TTreeCollection>> NTupleEventAnalisys::m_ttree_collection;
 
 ////////////////////////////////////////////////////////////////////////////////
