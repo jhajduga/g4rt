@@ -7,6 +7,7 @@
 #include "PrimariesAnalysis.hh"
 #include "StepAnalysis.hh"
 #include "NTupleEventAnalisys.hh"
+#include "HDF5EventAnalysis.hh"
 #include "Services.hh"
 #include "G4SDManager.hh"
 #include "G4UImanager.hh"
@@ -81,8 +82,11 @@ void EventAction::EndOfEventAction(const G4Event *evt) {
   if (configSvc->GetValue<bool>("RunSvc", "StepAnalysis"))
     StepAnalysis::GetInstance()->EndOfEventAction(evt);
   
-  if (configSvc->GetValue<bool>("RunSvc", "NTupleAnalysis") && NTupleEventAnalisys::IsAnyTTreeDefined() ) //  
+  if (configSvc->GetValue<bool>("RunSvc", "NTupleAnalysis") && NTupleEventAnalisys::IsAnyTTreeDefined() ){
     NTupleEventAnalisys::GetInstance()->EndOfEventAction(evt);
+    HDF5EventAnalysis::GetInstance()->EndOfEventAction(evt);
+
+  }
 
   if (configSvc->GetValue<bool>("RunSvc", "RunAnalysis"))
     RunAnalysis::GetInstance()->EndOfEventAction(evt);
