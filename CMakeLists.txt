@@ -64,6 +64,7 @@ set(RUN_SCRIPTS
     scoring_pre.mac
     scoring_post.mac
     drawProfiles.py
+    merge_hdf5.py
     testGeo.C
 )
 

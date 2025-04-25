@@ -9,62 +9,56 @@
 #include "tls.hh"
 #include "G4Cache.hh"
 #include "HDF5Manager.hh"
-#include <vector>
-#include <string>
 #include <map>
+#include <string>
+#include <vector>
 
 class HDF5EventAnalysis {
-    public:
-    /// Singleton instance accessor for each thread
+public:
+    /// Thread-local singleton accessor
     static HDF5EventAnalysis* GetInstance();
-    
-    /// Begin of run action (initialization of data structures)
+
+    /// Register datasetName with its corresponding Geant4 hits collection name(s)
+    static void DefineDataset(const G4String& datasetName,
+                              const G4String& hitsCollName);
+
+    /// Called at BeginOfRun: master thread opens file, creates group and chunked datasets
     void BeginOfRun(const G4Run* runPtr, G4bool isMaster);
-    
-    /// End of event action (handling and saving event data)
+
+    /// Called at EndOfEventAction: collects data and appends to HDF5 (MT-safe)
     void EndOfEventAction(const G4Event* evt);
-    
-    /// Define dataset structure for events
-    static void DefineDatasetStructure(const std::string& datasetName);
 
-    static void DefineDataset(const G4String& datasetName, const G4String& hitsCollectionName);
-    
-    /// Write event data to HDF5 file
-    void WriteEventData();
-
-
-    
-    private:
+private:
     HDF5EventAnalysis();
     ~HDF5EventAnalysis();
-    
-    /// Fill event data from hits collection
-    void FillEventData(const G4Event* evt, VoxelHitsCollection* hitsColl);
-    
-    
-    /// Clear event data collections
-    void ClearEventData();
-    
-    struct EventDataCollection {
-        std::vector<int> voxelIdX, voxelIdY, voxelIdZ;
-        std::vector<double> voxelDose;
-        // Add more vectors according to data required
-    };
 
+    // Definition of one dataset and its associated hits collections
     struct DatasetDef {
         G4String name;
         std::vector<G4String> hc_names;
     };
-    
-    static G4Cache<std::vector<DatasetDef>> m_dataset_defs;
 
-    /// Thread-local singleton instance pointer
-    G4ThreadLocal static HDF5EventAnalysis* fInstance;
-    
-    /// Cache for event data collections
-    
-    std::string m_currentRunGroup;
-    static G4Cache<std::map<std::string, EventDataCollection>> m_event_collections;
+    // Global (shared) list of all dataset definitions
+    static std::vector<DatasetDef> m_dataset_defs;
+    // Protects m_dataset_defs across threads
+    static std::mutex m_defs_mutex;
+
+    // Data storage per thread: map from datasetName to collected hits
+    struct EventDataCollection {
+        std::vector<int> voxelIdX, voxelIdY, voxelIdZ;
+        std::vector<double> voxelDose;
+    };
+    G4Cache<std::map<G4String, EventDataCollection>> m_event_collections;
+
+    // Current HDF5 group path for this run, e.g. "Run_0"
+    G4String m_currentRunGroup;
+
+    /// Fill thread-local cache for one datasetName from one hits collection
+    void FillEventData(const G4String& datasetName,
+                       VoxelHitsCollection* hitsColl);
+
+    /// Clear thread-local cache for one datasetName
+    void ClearEventData(const G4String& datasetName);
 };
 
 #endif // HDF5_EVENT_ANALYSIS_HH

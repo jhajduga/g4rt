@@ -31,8 +31,8 @@ EnviromentSizeZ = 400.0
 EnviromentMedium = "G4_WATER"
 
 [WaterPhantom_Detector]
-Size = [80.0,80.0,400.0]
-Voxelization = [40,40,200] # Number of cells in every direction
+Size = [400.0,400.0,400.0]
+Voxelization = [10,10,10] # Number of cells in every direction
 Medium = "G4_WATER" #G4_WATER, PMMA
 
 [WaterPhantom_Scoring]
@@ -44,7 +44,7 @@ TracksAnalysis = false
 # nParticles = [1e4] # Per Control Point
 nControlPoints = 1      # This will limit number of ctrl points defined below!
 BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
-nParticles = 1000      # This will overwrite Rotation value for all below plan files!
+nParticles = 10000      # This will overwrite Rotation value for all below plan files!
 PlanInputFile = [
         "plan/custom/cp5x5.dat"
         # "plan/custom/prostate/prostate_imrt_beam0_cp0.dat"

@@ -7,10 +7,11 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include "Types.hh"
 
 class HDF5Manager {
 public:
-    /// Singleton instance accessor
+    /// Thread-local singleton instance accessor
     static HDF5Manager& Instance();
 
     /// Opens or creates an HDF5 file
@@ -41,12 +42,15 @@ private:
     HDF5Manager();
     ~HDF5Manager();
 
+    /// Thread-local pointer do instancji
+    static G4ThreadLocal HDF5Manager* fInstance;
+
     /// Delete copy and move semantics
     HDF5Manager(const HDF5Manager&) = delete;
     HDF5Manager& operator=(const HDF5Manager&) = delete;
 
     std::unique_ptr<HighFive::File> m_file;
-    std::mutex m_mutex; ///< Mutex for thread-safe file operations
+    std::mutex m_mutex;
 };
 
 #endif // HDF5_MANAGER_HH

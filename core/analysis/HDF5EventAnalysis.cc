@@ -1,148 +1,132 @@
 // HDF5EventAnalysis.cc
 #include "HDF5EventAnalysis.hh"
 #include "G4SDManager.hh"
-#include "G4Threading.hh"
 #include <mutex>
 
-G4ThreadLocal HDF5EventAnalysis* HDF5EventAnalysis::fInstance = nullptr;
+// Static member definitions
+std::vector<HDF5EventAnalysis::DatasetDef>
+    HDF5EventAnalysis::m_dataset_defs;
+std::mutex HDF5EventAnalysis::m_defs_mutex;
 
 HDF5EventAnalysis* HDF5EventAnalysis::GetInstance() {
-    if (!fInstance) {
-        fInstance = new HDF5EventAnalysis();
+    static G4ThreadLocal HDF5EventAnalysis* instance = nullptr;
+    if (!instance) {
+        instance = new HDF5EventAnalysis();
     }
-    return fInstance;
+    return instance;
 }
-
-G4Cache<std::map<std::string, HDF5EventAnalysis::EventDataCollection>> HDF5EventAnalysis::m_event_collections;
-G4Cache<std::vector<HDF5EventAnalysis::DatasetDef>> HDF5EventAnalysis::m_dataset_defs;
 
 HDF5EventAnalysis::HDF5EventAnalysis() {}
-
 HDF5EventAnalysis::~HDF5EventAnalysis() {}
 
-
-void HDF5EventAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster) {
-    // Master thread opens file and creates group + chunked datasets
-    if (isMaster) {
-        std::string fname = "output_run" + std::to_string(runPtr->GetRunID()) + ".h5";
-        auto& hdf5 = HDF5Manager::Instance();
-        hdf5.OpenFile(fname);
-
-        m_currentRunGroup = "Run_" + std::to_string(runPtr->GetRunID());
-        // Create top-level group if needed
-        if (!hdf5.GroupExists(m_currentRunGroup)) {
-            hdf5.File().createGroup(m_currentRunGroup);
-        }
-
-        // Define unlimited, chunked dataspace
-        HighFive::DataSpace ds({0}, {HighFive::DataSpace::UNLIMITED});
-        HighFive::DataSetCreateProps props;
-        props.add(HighFive::Chunking({1024}));
-
-        // Create all required datasets once
-        auto& file = hdf5.File();
-        file.createDataSet<int>(m_currentRunGroup + "/VoxelIdX", ds, props);
-        file.createDataSet<int>(m_currentRunGroup + "/VoxelIdY", ds, props);
-        file.createDataSet<int>(m_currentRunGroup + "/VoxelIdZ", ds, props);
-        file.createDataSet<double>(m_currentRunGroup + "/VoxelDose", ds, props);
-    }
-}
-
-
-void HDF5EventAnalysis::DefineDatasetStructure(const std::string& datasetName) {
-    auto& collections = m_event_collections.Get();
-    if (collections.find(datasetName) == collections.end()) {
-        collections[datasetName] = EventDataCollection();
-    }
-}
-
-void HDF5EventAnalysis::DefineDataset(const G4String& datasetName, const G4String& hcName) {
-    auto& defs = m_dataset_defs.Get();
-    // szukamy, czy już istnieje definition o takiej nazwie
+void HDF5EventAnalysis::DefineDataset(const G4String& datasetName,
+                                      const G4String& hitsCollName) {
+    std::lock_guard<std::mutex> locker(m_defs_mutex);
+    auto& defs = m_dataset_defs;
     for (auto& d : defs) {
         if (d.name == datasetName) {
-            d.hc_names.push_back(hcName);
-        return;
+            d.hc_names.push_back(hitsCollName);
+            return;
+        }
     }
+    defs.push_back({datasetName, {hitsCollName}});
 }
 
-defs.push_back({datasetName, {hcName}});
-}
+void HDF5EventAnalysis::BeginOfRun(const G4Run* runPtr, G4bool) {
+    m_currentRunGroup = "Run_" + std::to_string(runPtr->GetRunID());
+    auto& file = HDF5Manager::Instance().File();
+  
+    if (!file.exist(m_currentRunGroup))
+      file.createGroup(m_currentRunGroup);
+  
+    HighFive::DataSpace ds({0}, {HighFive::DataSpace::UNLIMITED});
+    HighFive::DataSetCreateProps props;
+    props.add(HighFive::Chunking({10240}));
+  
+    // 3) każda definicja datasetów
+    for (auto const& def : m_dataset_defs) {
+      std::string grpPath = m_currentRunGroup + "/" + def.name;
+      if (!file.exist(grpPath))
+        file.createGroup(grpPath);
+  
+      // tu guard przed istnieniem, chociaż w czystym per-thread pliku 
+      // będzie go nie było za pierwszym razem:
+      auto makeField = [&](const std::string& field){
+        auto dsPath = grpPath + "/" + field;
+        if (!file.exist(dsPath)) {
+          file.createDataSet<int>(dsPath, ds, props);
+        }
+      };
+      makeField("VoxelIdX");
+      makeField("VoxelIdY");
+      makeField("VoxelIdZ");
+      // dla double trzeba osobno:
+      auto dsPath = grpPath + "/VoxelDose";
+      if (!file.exist(dsPath)) {
+        file.createDataSet<double>(dsPath, ds, props);
+      }
+    }
+  }
+  
 
-void HDF5EventAnalysis::FillEventData(const G4Event* evt, VoxelHitsCollection* hitsColl) {
-    auto& collections = m_event_collections.Get();
-    auto& evtCollection = collections["EventData"];
 
-    for (int i = 0; i < hitsColl->entries(); ++i) {
+void HDF5EventAnalysis::FillEventData(const G4String& datasetName,
+                                      VoxelHitsCollection* hitsColl) {
+    auto& mapCache = m_event_collections.Get();
+    auto& evtCol = mapCache[datasetName];
+    for (size_t i = 0; i < hitsColl->entries(); ++i) {
         auto hit = dynamic_cast<VoxelHit*>(hitsColl->GetHit(i));
-        evtCollection.voxelIdX.push_back(hit->GetID(0));
-        evtCollection.voxelIdY.push_back(hit->GetID(1));
-        evtCollection.voxelIdZ.push_back(hit->GetID(2));
-        evtCollection.voxelDose.push_back(hit->GetDose());
+        evtCol.voxelIdX.push_back(hit->GetID(0));
+        evtCol.voxelIdY.push_back(hit->GetID(1));
+        evtCol.voxelIdZ.push_back(hit->GetID(2));
+        evtCol.voxelDose.push_back(hit->GetDose());
     }
 }
 
-void HDF5EventAnalysis::WriteEventData() {
-    auto& collections = m_event_collections.Get();
-    auto& hdf5 = HDF5Manager::Instance();
-
-    for (const auto& coll : collections) {
-        const auto& evtCollection = coll.second;
-
-        std::string basePath = m_currentRunGroup + "/" + coll.first;
-        hdf5.WriteDataset(basePath + "/VoxelIdX", evtCollection.voxelIdX);
-        hdf5.WriteDataset(basePath + "/VoxelIdY", evtCollection.voxelIdY);
-        hdf5.WriteDataset(basePath + "/VoxelIdZ", evtCollection.voxelIdZ);
-        hdf5.WriteDataset(basePath + "/VoxelDose", evtCollection.voxelDose);
-    }
+void HDF5EventAnalysis::ClearEventData(const G4String& datasetName) {
+    auto& mapCache = m_event_collections.Get();
+    auto& evtCol = mapCache[datasetName];
+    evtCol.voxelIdX.clear();
+    evtCol.voxelIdY.clear();
+    evtCol.voxelIdZ.clear();
+    evtCol.voxelDose.clear();
 }
-
-void HDF5EventAnalysis::ClearEventData() {
-    auto& collections = m_event_collections.Get();
-
-    for (auto& coll : collections) {
-        auto& evtCollection = coll.second;
-        evtCollection.voxelIdX.clear();
-        evtCollection.voxelIdY.clear();
-        evtCollection.voxelIdZ.clear();
-        evtCollection.voxelDose.clear();
-    }
-}
-
 
 void HDF5EventAnalysis::EndOfEventAction(const G4Event* evt) {
-    // Always collect data in thread-local cache
-    auto hCofThisEvent = evt->GetHCofThisEvent();
-    if (!hCofThisEvent) return;
-
-    ClearEventData();
-
-    auto collection_id = G4SDManager::GetSDMpointer()->GetCollectionID("VoxelHitsCollection");
-    if (collection_id < 0) return;
-    auto hitsColl = dynamic_cast<VoxelHitsCollection*>(hCofThisEvent->GetHC(collection_id));
-    FillEventData(evt, hitsColl);
-
-    // Append to HDF5 under mutex
+    auto hCof = evt->GetHCofThisEvent();
+    if (!hCof) return;
+    auto& defs = m_dataset_defs;
     auto& hdf5 = HDF5Manager::Instance();
-    std::lock_guard<std::mutex> lock(hdf5.Mutex());
     auto& file = hdf5.File();
-    auto& evtCol = m_event_collections.Get()["EventData"];
-
-    // Helper lambda for each dataset
-    auto append = [&](auto const& dataVec, const std::string& name) {
-        auto ds = file.getDataSet(m_currentRunGroup + "/" + name);
+  
+    // Dla każdej rejestracji DatasetDef:
+    for (auto const& def : defs) {
+      // 1) Zbierz event do cache’a ze wszystkich kolekcji
+      for (auto const& hcName : def.hc_names) {
+        int collID = G4SDManager::GetSDMpointer()->GetCollectionID(hcName);
+        if (collID < 0) continue;
+        auto hitsColl = dynamic_cast<VoxelHitsCollection*>(hCof->GetHC(collID));
+        FillEventData(def.name, hitsColl);
+      }
+  
+      // 2) Pod mutexem dopisz do własnego pliku
+      std::lock_guard<std::mutex> lock(hdf5.Mutex());
+      std::string grpPath = m_currentRunGroup + "/" + def.name;
+      auto& evtCol = m_event_collections.Get()[def.name];
+  
+      auto append = [&](auto const& dataVec, const std::string& field) {
+        auto ds = file.getDataSet(grpPath + "/" + field);
         auto dims = ds.getSpace().getDimensions();
-        size_t oldSize = dims[0];
-        size_t newCount = dataVec.size();
+        size_t oldSize = dims[0], newCount = dataVec.size();
         ds.resize({oldSize + newCount});
         ds.select({oldSize}, {newCount}).write(dataVec);
-    };
-
-    append(evtCol.voxelIdX, "VoxelIdX");
-    append(evtCol.voxelIdY, "VoxelIdY");
-    append(evtCol.voxelIdZ, "VoxelIdZ");
-    append(evtCol.voxelDose, "VoxelDose");
-
-    ClearEventData();
-}
-
+      };
+  
+      append(evtCol.voxelIdX, "VoxelIdX");
+      append(evtCol.voxelIdY, "VoxelIdY");
+      append(evtCol.voxelIdZ, "VoxelIdZ");
+      append(evtCol.voxelDose, "VoxelDose");
+  
+      ClearEventData(def.name);
+    }
+  }

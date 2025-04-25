@@ -2,9 +2,14 @@
 #include "HDF5Manager.hh"
 #include <iostream>
 
+
+G4ThreadLocal HDF5Manager* HDF5Manager::fInstance = nullptr;
+
 HDF5Manager& HDF5Manager::Instance() {
-    static HDF5Manager instance;
-    return instance;
+    if (!fInstance) {
+        fInstance = new HDF5Manager();
+    }
+    return *fInstance;
 }
 
 HDF5Manager::HDF5Manager() {}
