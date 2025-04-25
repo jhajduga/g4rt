@@ -29,6 +29,8 @@ class RunAction : public G4UserRunAction {
   private:
     G4Timer m_timer;
     G4bool m_run_scoring = false;  
+
+    G4AnalysisManager* fAnalysisManager;
 };
 
 #endif // Dose3D_RUNACTION_HH

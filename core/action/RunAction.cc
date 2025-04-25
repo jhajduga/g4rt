@@ -59,7 +59,8 @@ G4Run* RunAction::GenerateRun(){
 void RunAction::BeginOfRunAction(const G4Run* aRun) {
   auto configSvc = Service<ConfigSvc>();
   auto runSvc = Service<RunSvc>();
-
+  std::string fname = "simOutput_run" + std::to_string(aRun->GetRunID()) + ".h5";
+  HDF5Manager::Instance().OpenFile(fname);
   fAnalysisManager->SetFileName(runSvc->CurrentControlPoint()->GetSimOutputTFileName(true));
   fAnalysisManager->OpenFile();
 
@@ -90,7 +91,7 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
   
   if (configSvc->GetValue<bool>("RunSvc", "NTupleAnalysis") && NTupleEventAnalisys::IsAnyTTreeDefined() ) {
     NTupleEventAnalisys::GetInstance()->BeginOfRun(aRun, IsMaster());
-    HDF5EventAnalysis::GetInstance()->BeginOfRun(aRun, isMaster);
+    HDF5EventAnalysis::GetInstance()->BeginOfRun(aRun, IsMaster());
   }
 
   //___________________________________________________________________________
@@ -119,8 +120,13 @@ void RunAction::EndOfRunAction(const G4Run* aRun) {
   auto configSvc = Service<ConfigSvc>();
   if(configSvc->GetValue<bool>("RunSvc", "RunAnalysis") && IsMaster()){
     RunAnalysis::GetInstance()->EndOfRun(aRun);
-    HDF5EventAnalysis::GetInstance()->EndOfRun(aRun);
+    
+    // HDF5EventAnalysis::GetInstance()->EndOfRun(aRun);
   }
-
+  if (IsMaster()) {
+    // master raz spłaszcz wszystkie zebrane wektory do pliku
+    HDF5EventAnalysis::GetInstance()->WriteEventData();
+    HDF5Manager::Instance().CloseFile();
+  }
   // Service<RunSvc>()->EndOfRun();
 }

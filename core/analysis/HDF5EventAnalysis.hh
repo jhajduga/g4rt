@@ -1,73 +1,70 @@
-#ifndef HDF5EVENTANALISYS_HH
-#define HDF5EVENTANALISYS_HH
+// HDF5EventAnalysis.hh
+#ifndef HDF5_EVENT_ANALYSIS_HH
+#define HDF5_EVENT_ANALYSIS_HH
+
 #include "globals.hh"
+#include "G4Event.hh"
+#include "G4Run.hh"
 #include "VoxelHit.hh"
-#include <string>
+#include "tls.hh"
+#include "G4Cache.hh"
+#include "HDF5Manager.hh"
 #include <vector>
-#include <memory>
-#include <highfive/H5File.hpp>
+#include <string>
+#include <map>
 
-class G4Event;
-class G4Run;
-
-
-
-/// \brief Minimalistic HDF5-based event analysis using HighFive.
-///        Allows registration of multiple hits collection names to record.
 class HDF5EventAnalysis {
     public:
-        /// Get thread-local singleton instance
-        static HDF5EventAnalysis* GetInstance();
+    /// Singleton instance accessor for each thread
+    static HDF5EventAnalysis* GetInstance();
     
-        /// Register a hits collection name to be recorded
-        static void DefineHitsCollection(const G4String& hcName);
+    /// Begin of run action (initialization of data structures)
+    void BeginOfRun(const G4Run* runPtr, G4bool isMaster);
     
-        /// Called at the beginning of the run in each thread
-        void BeginOfRun(const G4Run* run, bool isMaster);
+    /// End of event action (handling and saving event data)
+    void EndOfEventAction(const G4Event* evt);
     
-        /// Called at the end of each event to collect and write data
-        void EndOfEventAction(const G4Event* event);
+    /// Define dataset structure for events
+    static void DefineDatasetStructure(const std::string& datasetName);
+
+    static void DefineDataset(const G4String& datasetName, const G4String& hitsCollectionName);
     
-        /// Called at the end of the run to close the file
-        void EndOfRun(const G4Run* run);
+    /// Write event data to HDF5 file
+    void WriteEventData();
+
+
     
-        static G4Cache<std::vector<G4String>> m_hc_names;
     private:
-        HDF5EventAnalysis();
-        ~HDF5EventAnalysis();
-        HDF5EventAnalysis(const HDF5EventAnalysis&) = delete;
-        HDF5EventAnalysis& operator=(const HDF5EventAnalysis&) = delete;
+    HDF5EventAnalysis();
+    ~HDF5EventAnalysis();
     
-        /// Thread-local instance pointer
-        static G4ThreadLocal HDF5EventAnalysis* fInstance;
+    /// Fill event data from hits collection
+    void FillEventData(const G4Event* evt, VoxelHitsCollection* hitsColl);
     
-        /// Registered hits collection names cache
     
-        /// Underlying HDF5 file handle
-        std::unique_ptr<HighFive::File> m_file;
+    /// Clear event data collections
+    void ClearEventData();
     
-        /// Datasets for minimalistic columns
-        HighFive::DataSet m_ds_eventId;
-        HighFive::DataSet m_ds_cellX;
-        HighFive::DataSet m_ds_cellY;
-        HighFive::DataSet m_ds_cellZ;
-        HighFive::DataSet m_ds_cellDose;
-    
-        /// Buffers for appending before flushing
-        std::vector<int>    m_buf_eventId;
-        std::vector<int>    m_buf_cellX;
-        std::vector<int>    m_buf_cellY;
-        std::vector<int>    m_buf_cellZ;
-        std::vector<double> m_buf_cellDose;
-    
-        /// Current run identifier
-        int m_runId{-1};
-    
-        /// Create extendible datasets under /Events
-        void CreateDatasets();
-    
-        /// Flush buffered data into HDF5 file
-        void FlushBuffers();
+    struct EventDataCollection {
+        std::vector<int> voxelIdX, voxelIdY, voxelIdZ;
+        std::vector<double> voxelDose;
+        // Add more vectors according to data required
     };
 
-#endif // HDF5EVENTANALISYS_HH
+    struct DatasetDef {
+        G4String name;
+        std::vector<G4String> hc_names;
+    };
+    
+    static G4Cache<std::vector<DatasetDef>> m_dataset_defs;
+
+    /// Thread-local singleton instance pointer
+    G4ThreadLocal static HDF5EventAnalysis* fInstance;
+    
+    /// Cache for event data collections
+    
+    std::string m_currentRunGroup;
+    static G4Cache<std::map<std::string, EventDataCollection>> m_event_collections;
+};
+
+#endif // HDF5_EVENT_ANALYSIS_HH

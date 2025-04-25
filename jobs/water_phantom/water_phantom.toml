@@ -13,7 +13,7 @@ PrintProgressFrequency = 0.1
 Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
 GenerateCT = false
 PrimariesAnalysis = false
-NTupleAnalysis = false
+NTupleAnalysis = true
 RunAnalysis = true
 
 [GeoSvc]

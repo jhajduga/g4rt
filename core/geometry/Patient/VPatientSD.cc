@@ -6,6 +6,8 @@
 #include "PatientTrackInfo.hh"
 #include "PrimaryParticleInfo.hh"
 #include "NTupleEventAnalisys.hh"
+#include "HDF5EventAnalysis.hh"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -50,6 +52,7 @@ void VPatientSD::AddScoringVolume(const G4String& runCollName, const G4String& h
     if(scoringNX > 1 || scoringNY > 1 ||scoringNZ > 1)
       isVoxelised = true;
     NTupleEventAnalisys::DefineTTree(runCollName,isVoxelised,hitsCollName,"Event data");
+    HDF5EventAnalysis::DefineDataset(runCollName,hitsCollName);
     NTupleEventAnalisys::SetTracksAnalysis(hitsCollName,m_tracks_analysis);
   }
 };
