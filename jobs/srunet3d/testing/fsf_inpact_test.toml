@@ -1,0 +1,52 @@
+[RunSvc]
+JobName = "fsf_inpact"
+BeamType = "IAEA"
+# PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
+# PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
+# PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_10x10s2-f0" # AGH LHCBD2 location
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
+PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location
+# PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
+# PhspInputFileName = "/mnt/e/phsp/TNSIM157_3x3s2-f0" # JH Home File
+PhspEvtVrtxMultiplicityTreshold = 20
+PrintProgressFrequency = 0.05
+GenerateCT = false
+PrimariesAnalysis = false
+NTupleAnalysis = false
+RunAnalysis = true
+
+[GeoSvc]
+BuildLinac = true
+BuildPatient = true
+
+[PatientGeometry]
+Type = "D3DDetector"
+EnviromentPositionX = 0.0
+EnviromentPositionY = 0.0
+EnviromentPositionZ = 0.0
+EnviromentSizeX = 64.0
+EnviromentSizeY = 64.0
+EnviromentSizeZ = 64.0
+EnviromentMedium = "Usr_G4AIR20C"
+
+[D3DDetector_Detector]
+TopPositionInEnv = [0.0,1.0,0.0] # In mm
+Voxelization = [4,4,2] # Number of cels in every direction
+
+[D3DDetector_Layer]
+MRowShift = false
+MLayerShift = false
+
+[D3DDetector_Cell]
+Medium = "RMPS470"
+Voxelization = [10,10,10]
+TracksAnalysis = false
+CellVoxelisedScorer = true
+
+[RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
+nParticles = 100000 # Per Control Point
+BeamRotation = 0
+PlanInputFile = [
+        "plan/custom/fsf_inpact_cp0.dat",
+        "plan/custom/fsf_inpact_cp1.dat"
+]
