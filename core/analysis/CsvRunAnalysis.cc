@@ -19,6 +19,7 @@ CsvRunAnalysis *CsvRunAnalysis::GetInstance() {
 ///
 void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
     auto writeVolumeHitDataRaw = [](std::ofstream& file, const VoxelHit& hit, bool voxelised){
+        auto label = hit.GetLabel();
         auto cxId = hit.GetGlobalID(0);
         auto cyId = hit.GetGlobalID(1);
         auto czId = hit.GetGlobalID(2);
@@ -29,7 +30,7 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
         auto dose = hit.GetDose();
         auto fsf = hit.GetFieldScalingFactor();
         auto asf = hit.GetAngleScalingFactor();
-        file <<cxId<<","<<cyId<<","<<czId;
+        file <<label<<"," <<cxId<<","<<cyId<<","<<czId;
         if(voxelised)
             file <<","<<vxId<<","<<vyId<<","<<vzId;
         file <<","<<volume_centre.getX()<<","<<volume_centre.getY()<<","<<volume_centre.getZ();
@@ -48,10 +49,10 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
             auto type_str = svc::tolower(Scoring::to_string(scoring_type));
             auto coll_str = svc::tolower(scoring_map.first);
             auto file = cp->GetOutputFileName()+"_"+coll_str+"_"+type_str+".csv";
-            std::string header = "Cell IdX,Cell IdY,Cell IdZ,X [mm],Y [mm],Z [mm],Dose [Gy],FieldScalingFactor,AngleScalingFactor";
+            std::string header = "Label,Cell IdX,Cell IdY,Cell IdZ,X [mm],Y [mm],Z [mm],Dose [Gy],FieldScalingFactor,AngleScalingFactor";
 
             if(scoring_type==Scoring::Type::Voxel)
-                header = "Cell IdX,Cell IdY,Cell IdZ,Voxel IdX,Voxel IdY,Voxel IdZ,X [mm],Y [mm],Z [mm],Dose [Gy],FieldScalingFactor,AngleScalingFactor";
+                header = "Label,Cell IdX,Cell IdY,Cell IdZ,Voxel IdX,Voxel IdY,Voxel IdZ,X [mm],Y [mm],Z [mm],Dose [Gy],FieldScalingFactor,AngleScalingFactor";
 
             std::ofstream c_outFile;
             c_outFile.open(file.c_str(), std::ios::out);

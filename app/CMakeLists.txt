@@ -22,6 +22,8 @@ include(${Geant4_USE_FILE})
 # Setup the module for embedding the python interpreter
 set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 REQUIRED)
+# Legacy fallback
+set(PYTHON_EXECUTABLE "$ENV{CONDA_PREFIX}/bin/python" CACHE FILEPATH "" FORCE)
 
 #
 find_package(spdlog REQUIRED)

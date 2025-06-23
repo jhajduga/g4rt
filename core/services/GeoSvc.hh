@@ -64,9 +64,6 @@ class GeoSvc : public TomlConfigurable, Logable {
   ///
   void ExportToGateGenericRepeater() const;
 
-  ///
-  void ExportDose3DLayerPads() const;
-
   public:
   ///\brief Static method to get instance of this singleton object.
   static GeoSvc *GetInstance();

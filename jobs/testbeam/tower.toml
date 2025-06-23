@@ -1,10 +1,10 @@
 [RunSvc]
 JobName = "tower"
 BeamType = "IAEA" # "gps" IAEA 
-# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
+PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
 # PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # BR AGH pc location
 # PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
-PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH Dell-XPS location
+# PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH Dell-XPS location
 PhspEvtVrtxMultiplicityTreshold = 20
 PrintProgressFrequency = 0.05
 GenerateCT = false
@@ -18,17 +18,18 @@ BuildPatient = true
 
 [PatientGeometry]
 Type = "D3DDetector"
-EnviromentPositionX = 0.0
-EnviromentPositionY = 0.0
-EnviromentPositionZ = -42.0
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = -42.0
 EnviromentSizeX = 400
 EnviromentSizeY = 400
 EnviromentSizeZ = 600
 EnviromentMedium = "Usr_G4AIR20C"
 
 [D3DDetector_Detector]
-TopPositionInEnv = [0.0,0.0,-54.0] # In mm
+TranslationInLocalFrame = [0.0,0.0,-54.0] # In mm
 Geometry = "dose3d/geo/Tower/full_tower.stl"
+Positioning = "dose3d/geo/Tower/full_tower.csv"
 
 [D3DDetector_Layer]
 Positioning = "dose3d/geo/Tower/full_tower.csv"

@@ -8,6 +8,7 @@
 #include "G4Box.hh"
 #include "G4Run.hh"
 #include "BeamMonitoring.hh"
+#include "MyGeometryTolerance.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -68,7 +69,7 @@ void WorldConstruction::DefaultConfig(const std::string &unit) {
   // The full length of the World in [mm]
   // - the actual WorldBox is defined as cuboid with size WorldSize.X/2  WorldSize.Y/2 x WorldSize.Z/2)
   if (unit.compare("WorldSize") == 0) 
-    thisConfig()->SetValue(unit, G4ThreeVector(6000., 6000., 6000.));
+    thisConfig()->SetValue(unit, G4ThreeVector(2000., 2000., 2000.));
 
   if (unit.compare("Isocentre") == 0) 
     thisConfig()->SetValue(unit, G4ThreeVector(0.,0.,0.));
@@ -146,7 +147,7 @@ G4VPhysicalVolume* WorldConstruction::Construct() { return GetPhysicalVolume(); 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 bool WorldConstruction::Create() {
-
+  // MyGeometryTolerance::ResetSurfaceTolerance(0.0005*mm);
   // create the world box
   auto worldSize = configSvc()->GetValue<G4ThreeVector>("WorldConstruction", "WorldSize");
   //auto Air = configSvc()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C");

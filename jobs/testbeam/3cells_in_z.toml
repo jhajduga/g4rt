@@ -12,16 +12,16 @@ NTupleAnalysis = true
 [PatientGeometry]
 Type = "Dose3D"
 ConfigPrefix = "Dose3D"
-EnviromentPositionX = 0.0
-EnviromentPositionY = 0.0
-EnviromentPositionZ = 0.0
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 0.0
 EnviromentSizeX = 400.0
 EnviromentSizeY = 400.0
 EnviromentSizeZ = 400.0
 EnviromentMedium = "G4_Galactic"
 
 [Dose3D_Detector]
-TopPositionInEnv = [0.0,0.0,0.0] # In mm
+TranslationInLocalFrame = [0.0,0.0,0.0] # In mm
 Voxelization = [1,1,3] # Number of cels in every direction
 
 [Dose3D_Layer]

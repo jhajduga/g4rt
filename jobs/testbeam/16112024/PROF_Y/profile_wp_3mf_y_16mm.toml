@@ -1,0 +1,48 @@
+[RunSvc]
+JobName = "profile_wp_3mf_y_16mm"
+BeamType = "IAEA"
+PhspInputFileName = "/mnt/e/PHSP/TB_20x20_Merged" 
+PhspEvtVrtxMultiplicityTreshold = 10
+PrintProgressFrequency = 0.05
+Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
+GenerateCT = false
+PrimariesAnalysis = false
+NTupleAnalysis = false
+RunAnalysis = true
+
+[GeoSvc]
+BuildLinac = true
+BuildPatient = true
+
+[PatientGeometry]
+Type = "D3DDetector"
+PatientIsocentreX = 0.0
+PatientIsocentreY = 16.0
+PatientIsocentreZ = 0.0
+EnviromentSizeX = 680.0
+EnviromentSizeY = 710.0
+EnviromentSizeZ = 460.0
+EnviromentMedium = "Usr_G4AIR20C"
+EnviromentPatientEnvelop = "ModularWaterPhantom_3mf" # 
+PatientDBPath = "d3df-patients/patient/phantoms/modular_water_phantom"  
+
+
+[GeometryBuilder]
+ExcludeObjList = [
+        "WaterPhantom v8|Cap v3:5"
+]
+Position = [0.0, 0.0, 0.0] # Position X/Y/Z inside the patient environment
+Rotation = [0.0, 0.0, 0.0] # Rotation aouynd axis X/Y/Z inside the patient environment
+
+[D3DDetector_Cell]
+Medium = "RMPS470" #G4_WATER, PMMA
+Voxelization = [5,5,5]
+
+[RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
+nControlPoints = 1      # This will limit number of ctrl points defined below!
+BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
+nParticles = 5000      # This will overwrite Rotation value for all below plan files!
+PlanInputFile = [
+        "plan/custom/cp10x10.dat"
+        # "plan/custom/prostate/prostate_imrt_beam0_cp0.dat"
+]

@@ -16,16 +16,16 @@ FieldSize = 60 # mm
 [PatientGeometry]
 Type = "Dose3D" # "WaterPhantom" "Dose3D"
 ConfigPrefix = "Dose3D" # WP  Dose3D
-EnviromentPositionX = 0.0
-EnviromentPositionY = 0.0
-EnviromentPositionZ = 42.0
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 42.0
 EnviromentSizeX = 50.0
 EnviromentSizeY = 50.0
 EnviromentSizeZ = 288.0
 EnviromentMedium = "PMMA"
 
 [Dose3D_Detector]
-TopPositionInEnv = [0.0,0.0,-137.0] # In mm
+TranslationInLocalFrame = [0.0,0.0,-137.0] # In mm
 Voxelization = [1,1,10] # Number of cels in every direction
 
 [Dose3D_Layer]

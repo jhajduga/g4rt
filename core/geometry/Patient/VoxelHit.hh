@@ -80,6 +80,9 @@ class VoxelHit final : public G4VHit {
   Voxel m_Voxel;
 
   ///
+  G4String m_label;
+
+  ///
   G4double m_global_time = 0;
 
   ///
@@ -140,6 +143,12 @@ class VoxelHit final : public G4VHit {
 
   ///
   void SetGravCentre(const G4ThreeVector& position);
+
+  ///
+  void SetLabel(const G4String& label) { m_label = label; }
+
+  ///
+  G4String GetLabel() const { return m_label; }
 
   ///
   void SetVolume(G4double volume) { m_Voxel.m_Volume = volume;}

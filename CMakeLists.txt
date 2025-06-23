@@ -8,6 +8,8 @@ set(CMAKE_COLOR_MAKEFILE   ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_DEFAULT 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+# Force Python from conda
+set(Python_EXECUTABLE "$ENV{CONDA_PREFIX}/bin/python" CACHE FILEPATH "" FORCE)
 
 #----------------------------------------------------------------------------
 # prevent for in-source building

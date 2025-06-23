@@ -20,16 +20,16 @@ BuildPatient = true
 
 [PatientGeometry]
 Type = "D3DDetector"
-EnviromentPositionX = 0.0
-EnviromentPositionY = 0.0
-EnviromentPositionZ = 0.0
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 0.0
 EnviromentSizeX = 64.0
 EnviromentSizeY = 64.0
 EnviromentSizeZ = 64.0
 EnviromentMedium = "Usr_G4AIR20C"
 
 [D3DDetector_Detector]
-TopPositionInEnv = [0.0,0.0,0.0] # In mm
+TranslationInLocalFrame = [0.0,0.0,0.0] # In mm
 Voxelization = [4,4,2] # Number of cels in every direction
 
 [D3DDetector_Layer]

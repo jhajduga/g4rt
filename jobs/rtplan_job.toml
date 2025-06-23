@@ -18,16 +18,16 @@ FieldSizeB = 30 # mm
 
 [PatientGeometry]
 Type = "D3DDetector"
-EnviromentPositionX = 0.0
-EnviromentPositionY = 0.0
-EnviromentPositionZ = 0.0
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 0.0
 EnviromentSizeX = 50.0
 EnviromentSizeY = 50.0
 EnviromentSizeZ = 80.0
 EnviromentMedium = "G4_Galactic"
 
 [D3DDetector_Detector]
-TopPositionInEnv = [0.0,0.0,-20.0] # In mm
+TranslationInLocalFrame = [0.0,0.0,-20.0] # In mm
 Voxelization = [3,2,5] # Number of cels in every direction
 
 [D3DDetector_Layer]

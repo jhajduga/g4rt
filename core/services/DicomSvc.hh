@@ -21,27 +21,18 @@ using namespace py::literals;
 ////////////////////////////////////////////////////////////////////////////////
 /// 
 class ICtSvc {
+  public:
+      ICtSvc();
+      ~ICtSvc();
+  
+      void set_paths(const std::string& output_path) const;
+      void create_ct_series(const std::string& series_csv_path) const;
   
   private:
-    py::object m_py_dicom_ct;
-  public:
-    ///
-    ICtSvc():m_py_dicom_ct(py::reinterpret_borrow<py::object>(py::module::import("dicom_ct").attr("CtSvc")().ptr())) {
-    }
-    ///
-    ~ICtSvc(){
-      m_py_dicom_ct.release();
-    }
-    void set_paths(const std::string& output_path) const{
-      m_py_dicom_ct.attr("set_output_path")(output_path);
-      m_py_dicom_ct.attr("set_project_path")(PROJECT_DATA_PATH);
-    }
-    ///
-    void create_ct_series(const std::string& series_csv_path) const{
-      m_py_dicom_ct.attr("create_ct_series")(series_csv_path);
-    }
-};
-
+      class Impl;
+      std::unique_ptr<Impl> m_impl;
+  };
+  
 ////////////////////////////////////////////////////////////////////////////////
 /// 
 class IPlan {

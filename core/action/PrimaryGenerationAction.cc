@@ -108,7 +108,7 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
         BeamCollimation::FilterPrimaries(read_p_vrtx);
         primary_vrtx.insert(primary_vrtx.end(),read_p_vrtx.begin(),read_p_vrtx.end());
         auto nVrtx = primary_vrtx.size();
-        if(nVrtx < m_min_p_vrtx_vec_size && n_reader_calls > 99){ // in order to avoid infinit loop
+        if(nVrtx < m_min_p_vrtx_vec_size && n_reader_calls > 199){ // in order to avoid infinit loop
           LOGSVC_WARN("Maximum number of reader calls to reach Evt Vtrx Multiplicity treshold reached!: #Vrtx({}/{}), #Calls:{}",nVrtx,m_min_p_vrtx_vec_size,n_reader_calls);
           break;
         }

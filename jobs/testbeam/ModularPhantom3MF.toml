@@ -1,0 +1,50 @@
+[RunSvc]
+JobName = "water_phantom_PhisicalPhantom"
+BeamType = "IAEA"
+# PhspInputFileName = "/sekhemet/scratch/d3df/IAEAPhSp/TNSIM157_10x10s2-f0"
+#PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
+# PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location
+PhspInputFileName = "/mnt/e/14x14merged" # AGH JH File
+# PhspInputFileName = "/mnt/e/phsp/TNSIM157_3x3s2-f0" # JH Home File
+PhspEvtVrtxMultiplicityTreshold = 25
+PrintProgressFrequency = 0.001
+Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
+GenerateCT = false
+PrimariesAnalysis = false
+NTupleAnalysis = true
+RunAnalysis = true
+
+[GeoSvc]
+BuildLinac = true
+BuildPatient = true
+
+[PatientGeometry]
+Type = "D3DDetector"
+PatientIsocentreX = 0.0 
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 0.0
+EnviromentSizeX = 190.0
+EnviromentSizeY = 190.0
+EnviromentSizeZ = 190.0
+EnviromentMedium = "Usr_G4AIR20C"
+EnviromentPatientEnvelop = "IbaImRT_3mf" 
+DataBase = "dose3d/geo/IBA_ImRT/SimpleBodies_512.csv"
+
+[IBA_ImRT] 
+Bodies = [
+  "Bar","screw","Plate"
+]
+
+
+
+[RunSvc_Plan] 
+
+nControlPoints = 1    
+BeamRotation = 0      
+nParticles = 50000     
+PlanInputFile = [
+        "plan/custom/cp10x10.dat"
+        # "plan/custom/prostate/prostate_imrt_beam0_cp0.dat"
+]

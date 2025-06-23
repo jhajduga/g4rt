@@ -10,9 +10,9 @@ FieldSizeB = 40 # mm
 
 [PatientGeometry]
 Type = "WaterPhantom"
-EnviromentPositionX = 0.0
-EnviromentPositionY = 0.0
-EnviromentPositionZ = 200.0
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 200.0
 EnviromentSizeX = 400.0
 EnviromentSizeY = 400.0
 EnviromentSizeZ = 400.0

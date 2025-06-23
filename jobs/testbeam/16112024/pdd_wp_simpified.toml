@@ -1,0 +1,52 @@
+[RunSvc]
+JobName = "tb16112024-pdd"
+BeamType = "IAEA"
+PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
+# PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH Dell-XPS location
+# PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
+PhspEvtVrtxMultiplicityTreshold = 20
+PrintProgressFrequency = 0.05
+GenerateCT = false
+PrimariesAnalysis = false
+NTupleAnalysis = true
+RunAnalysis = true
+
+[GeoSvc]
+BuildLinac = true
+BuildPatient = true
+
+[PatientGeometry]
+Type = "D3DDetector"
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 200.0
+EnviromentSizeX = 500.0
+EnviromentSizeY = 500.0
+EnviromentSizeZ = 500.0
+EnviromentMedium = "G4_WATER"
+EnviromentPatientEnvelop = "ModularWaterPhantom_simplified"
+# SupplementaryGeometry = "dose3d/geo/WaterPhantom/PhantomTop.stl"
+# SupplementaryGeometryMaterial = "PMMA"
+# SupplementaryGeometryPositionX = 0.0
+# SupplementaryGeometryPositionY = 0.0
+# SupplementaryGeometryPositionZ = 0.0
+
+[D3DDetector_Detector]
+# TranslationInLocalFrame = [0.0,-6.0,-195.0] # P: -6 in Y
+# TranslationInLocalFrame = [0.0,+6.0,-195.0] # L: +6 in Y
+Geomertry = "dose3d/geo/Tower/Waterphantom_Tower_Shell.stl"
+TranslationInLocalFrame = [0.0,0.0,-198.0] # Top on the surface of the water
+
+[D3DDetector_Layer]
+# Positioning = "dose3d/geo/Tower/pdd_1x2x32.csv"
+Positioning = "dose3d/geo/Tower/Waterphantom_Cell_Positioning.csv"
+
+[D3DDetector_Cell]
+Medium = "RMPS470"
+Voxelization = [5,5,5]
+
+[RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
+PlanInputFile = [
+    "plan/custom/cp5x5.dat"
+    # "plan/custom/cp10x10.dat"
+]

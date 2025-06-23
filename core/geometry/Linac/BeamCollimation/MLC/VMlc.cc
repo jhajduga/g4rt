@@ -118,7 +118,7 @@ std::vector<G4ThreeVector> VMlc::GetMlcPositioning(const std::string& side) cons
 
     for(size_t i=0; i<m_leaves_x_positioning.size(); i++){
         auto x = m_leaves_x_positioning.at(i);
-        auto y = mlc_y_positioning.at(i);
+        auto y = - mlc_y_positioning.at(i); // For propouse proper reading from custom dat and properly oriented this (MLC lew right side orientation.) we are using -1 here. 
         mlc_positioning.push_back(G4ThreeVector(x,y,z));
     }
     return std::move(mlc_positioning);

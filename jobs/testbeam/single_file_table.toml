@@ -13,16 +13,16 @@ FieldSize = 360 # mm
 [PatientGeometry]
 Type = "Dose3D" # "WaterPhantom" "Dose3D"
 ConfigPrefix = "Dose3D" # WP  Dose3D
-EnviromentPositionX = 0.0
-EnviromentPositionY = 0.0
-EnviromentPositionZ = 0.0
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 0.0
 EnviromentSizeX = 400.0
 EnviromentSizeY = 400.0
 EnviromentSizeZ = 310.0
 EnviromentMedium = "Usr_G4AIR20C"
 
 [Dose3D_Detector]
-TopPositionInEnv = [0.0,0.0,-155.0] # In mm
+TranslationInLocalFrame = [0.0,0.0,-155.0] # In mm
 Geomertry = "dose3d/geo/full_tower.stl"
 
 [Dose3D_Layer]

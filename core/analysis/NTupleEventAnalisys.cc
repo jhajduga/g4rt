@@ -11,7 +11,6 @@
 #include "VoxelHit.hh"
 #include "G4Threading.hh"
 #include "Services.hh"
-#include "D3DCell.hh"
 #include <algorithm>
 #include <vector>
 #include <set>
@@ -243,8 +242,7 @@ void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4
     }
 
     auto voxelDose = hit->GetDose(); // note: it's in gray already;
-    auto size = D3DCell::SIZE; 
-    double cellVolume = pow(size,3);
+    double cellVolume = Service<GeoSvc>()->Patient()->GetCellVolume();
     auto cellDose = voxelDose * hit->GetVolume() / cellVolume;
     evtColl.m_CellIDose.emplace_back( cellDose );
 

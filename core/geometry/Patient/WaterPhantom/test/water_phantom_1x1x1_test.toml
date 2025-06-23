@@ -3,9 +3,9 @@ JobName = "water phantom construction test"
 LogConfigFile = "/data/config/tests_logger.toml"
 
 [WaterPhantom_Detector]
-TranslationFromCentre = [0.0,0.0,-180.0] # In mm
-Voxelization = [1,1,1] # Number of cels in every direction
 Size = [40.0,40.0,40.0]
+Centre = [0.0,0.0,-180.0] # In mm
+Voxelization = [1,1,1] # Number of cels in every direction
 Medium = "G4_WATER"
 
 [WaterPhantom_Scoring]

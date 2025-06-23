@@ -1,0 +1,49 @@
+[RunSvc]
+JobName = "static"
+BeamType = "IAEA"
+PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
+# PhspInputFileName = "/mnt/c/Users/Jakub/Desktop/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
+# PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH Dell-XPS location
+PhspEvtVrtxMultiplicityTreshold = 20
+PrintProgressFrequency = 0.05
+GenerateCT = false
+PrimariesAnalysis = false
+NTupleAnalysis = true
+RunAnalysis = true
+
+[GeoSvc]
+BuildLinac = true
+BuildPatient = true
+
+[PatientGeometry]
+Type = "D3DDetector"
+PatientIsocentreX = 145.5
+PatientIsocentreY = -145.0
+PatientIsocentreZ = 83.0
+EnviromentSizeX = 380.0
+EnviromentSizeY = 380.0
+EnviromentSizeZ = 200.0
+EnviromentMedium = "Usr_G4AIR20C"
+EnviromentPatientEnvelop = "IbaImRT_Full" # Simplified iba Im'RT model
+
+[D3DDetector_Detector]
+Positioning = "dose3d/geo/IBA_ImRT/Cell_Positioning_TB21122024_Full.csv"
+
+
+[D3DDetector_Cell]
+TranslationInLocalFrame = [0.00,0.00,0.00] # In mm | 21.12.2024 testbeam (by my conclusion it should be 
+Medium = "RMPS470" #G4_WATER, PMMA
+Voxelization = [5,5,5]
+
+[RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
+nControlPoints = 1      # This will limit number of ctrl points defined below!
+# BeamRotation = 0       # This will overwrite Rotation value for all below plan files!
+nParticles = 1000     # This will overwrite Rotation value for all below plan files!
+PlanInputFile = [
+    # "plan/custom/cp5x5.dat"
+    # "plan/custom/cp10x10.dat"
+    "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam0_cp0.dat",
+    # "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam1_cp0.dat",
+    # "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam2_cp0.dat",
+    # "plan/TB21122024/static/dat/RP.1.2.246.352.71.5.528868944050.1691284.20241220161403_beam3_cp0.dat",
+]

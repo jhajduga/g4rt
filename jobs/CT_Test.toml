@@ -16,16 +16,16 @@ FieldSizeB = 20 # mm
 
 [PatientGeometry]
 Type = "D3DDetector"
-EnviromentPositionX = 0.0
-EnviromentPositionY = 0.0
-EnviromentPositionZ = 0.0
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 0.0
 EnviromentSizeX = 460.0
 EnviromentSizeY = 460.0
 EnviromentSizeZ = 460.0
 EnviromentMedium = "G4_WATER"
 
 # [D3DDetector_Detector]
-# TopPositionInEnv = [0.0,0.0,-200.0] # In mm
+# TranslationInLocalFrame = [0.0,0.0,-200.0] # In mm
 # Geomertry = "CT_positioner/direction_cube.stl"
 # # Geomertry = "dose3d/geo/1x2x16_tower.stl"
 
@@ -39,7 +39,7 @@ EnviromentMedium = "G4_WATER"
 # Voxelization = [2,2,2]
 # TracksAnalysis = true
 [D3DDetector_Detector]
-TopPositionInEnv = [0.0,0.0,-38.0] # In mm
+TranslationInLocalFrame = [0.0,0.0,-38.0] # In mm
 Voxelization = [6,6,6] # Number of cels in every direction
 
 [D3DDetector_Layer]

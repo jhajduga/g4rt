@@ -11,9 +11,9 @@ FieldSizeB = 55 # mm
 
 [PatientGeometry]
 Type = "D3DDetector"
-EnviromentPositionX = 0.0
-EnviromentPositionY = 0.0
-EnviromentPositionZ = 125.0
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 125.0
 EnviromentSizeX = 80.0
 EnviromentSizeY = 80.0
 EnviromentSizeZ = 315.0
@@ -22,7 +22,7 @@ TableConstruction = false
 
 
 [D3DDetector_Detector]
-TopPositionInEnv = [0.0,0.0,-150.0] # In mm
+TranslationInLocalFrame = [0.0,0.0,-150.0] # In mm
 Geomertry = "dose3d/geo/OneTower.stl"
 
 [D3DDetector_Layer]

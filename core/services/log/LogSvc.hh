@@ -113,7 +113,7 @@ class LogSvc  {
 template<>
 struct fmt::formatter<G4ThreeVector> : fmt::formatter<std::string>
 {
-    auto format(G4ThreeVector my, format_context &ctx) -> decltype(ctx.out())
+    auto format(G4ThreeVector my, format_context &ctx)  const -> decltype(ctx.out())
     {
         return format_to(ctx.out(), "{},{},{}", my.getX(), my.getY(), my.getZ());
     }

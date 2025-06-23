@@ -55,7 +55,7 @@ void MlcSimplified::SetRunConfiguration(const ControlPoint* control_point){
         // Transform to isocentre plane once the input type is the DICOM RT_Plan
         if( dynamic_cast<IDicomPlan*>(Service<DicomSvc>()->GetPlan()) ) {
             for (int i = 0; i < m_mlc_corners.size(); i++) {
-                m_mlc_corners.at(i) = getTransformToIsocentrePlane(m_mlc_corners.at(i),m_isocentre.getZ());
+                m_mlc_corners.at(i) = getTransformToIsocentrePlane(m_mlc_corners.at(i),(BeamCollimation::AfterMLC + BeamCollimation::BeforeMLC)/2.);
             }
         }
     }

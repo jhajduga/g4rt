@@ -355,10 +355,10 @@ G4ThreeVector svc::transformPosition(const G4ThreeVector& localPosition, IPhysic
   // Traverse up the hierarchy
   auto currentVolume = volumeOfLocalFrame->GetParentPtr();
   while (currentVolume) {
-    G4cout << " current volume of local frame: " << currentVolume->GetName() << G4endl;
+    // G4cout << " current volume of local frame: " << currentVolume->GetName() << G4endl;
     auto pv = currentVolume->GetPhysicalVolume();
     if (pv){
-      G4cout << " got physical volume: " << pv->GetName() << G4endl;
+      // G4cout << " got physical volume: " << pv->GetName() << G4endl;
 
       auto is_rotated = false;
       auto is_translated = false;
@@ -417,6 +417,5 @@ std::size_t svc::getHashedStrFromIndexes(const std::vector<int>& indexes){
     G4cout << "[WARNING]::Svc::getHashedStrFromIndexes:: Returning hashed key for empty string! " << G4endl;
   return std::hash<std::string>{}(hash_str);
 }
-
 
 

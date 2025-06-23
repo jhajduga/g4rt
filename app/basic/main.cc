@@ -15,12 +15,14 @@
 #include "colors.hh"
 #include "LogSvc.hh"
 #include "WorldConstruction.hh"
+#include <locale.h>
 
 int main(int argc, const char *argv[]) {
+  setenv("LC_ALL", "C", 1);
 
 
-  pybind11::scoped_interpreter guard{};
-  pybind11::module sys = pybind11::module::import("sys");
+  py::initialize_interpreter();
+  py::module sys = py::module::import("sys");
   sys.attr("path").attr("append")(std::string(PROJECT_PY_PATH));
 
   SPDLOG_DEBUG("Initialize services");

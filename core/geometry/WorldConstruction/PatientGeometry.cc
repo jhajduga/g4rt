@@ -14,6 +14,10 @@
 #include "DicomSvc.hh"
 #include "IbaImRT.hh"
 #include "CADMesh.hh"
+#include "GeometryBuilder.hh"
+#include "GeometryDBReader.hh"
+#include "ModularWaterPhantom.hh"
+
 
 namespace {
   G4Mutex phantomConstructionMutex = G4MUTEX_INITIALIZER;
@@ -44,9 +48,9 @@ PatientGeometry* PatientGeometry::GetInstance() {
 void PatientGeometry::Configure() {
   G4cout << "\n\n[INFO]::  Configuring the " << thisConfig()->GetName() << G4endl;
   DefineUnit<std::string>("Type");
-  DefineUnit<double>("EnviromentPositionX");
-  DefineUnit<double>("EnviromentPositionY");
-  DefineUnit<double>("EnviromentPositionZ");
+  DefineUnit<double>("PatientIsocentreX");
+  DefineUnit<double>("PatientIsocentreY");
+  DefineUnit<double>("PatientIsocentreZ");
   DefineUnit<double>("EnviromentSizeX");
   DefineUnit<double>("EnviromentSizeY");
   DefineUnit<double>("EnviromentSizeZ");
@@ -62,6 +66,7 @@ void PatientGeometry::Configure() {
   DefineUnit<double>("VoxelSizeXCT");
   DefineUnit<double>("VoxelSizeYCT");
   DefineUnit<double>("VoxelSizeZCT");
+  DefineUnit<std::string>("PatientDBPath");
 
   Configurable::DefaultConfig();   // setup the default configuration for all defined units/parameters
   // G4cout << "[DEBUG]:: PatientGeometry:: Configure: DefaultConfig"<< G4endl;
@@ -83,13 +88,13 @@ void PatientGeometry::DefaultConfig(const std::string &unit) {
     // thisConfig()->SetValue(unit, std::string("Dose3D")); // "DishCubePhantom"  ,WaterPhantom , SciSlicePhantom, Dose3D
     }
   // default box size
-  if (unit.compare("EnviromentPositionX") == 0){
+  if (unit.compare("PatientIsocentreX") == 0){
     thisConfig()->SetTValue<double>(unit, 0.0);
     }
-  if (unit.compare("EnviromentPositionY") == 0){
+  if (unit.compare("PatientIsocentreY") == 0){
     thisConfig()->SetTValue<double>(unit, 0.0);
     }
-  if (unit.compare("EnviromentPositionZ") == 0){
+  if (unit.compare("PatientIsocentreZ") == 0){
     thisConfig()->SetTValue<double>(unit, 0.0);
     }
 
@@ -129,7 +134,15 @@ void PatientGeometry::DefaultConfig(const std::string &unit) {
     thisConfig()->SetTValue<std::string>(unit, std::string("None"));
   }
 
- if (unit.compare("ConfigFile") == 0){
+  if (unit.compare("DBGeometryPath")==0){
+    thisConfig()->SetTValue<std::string>(unit, std::string("None"));
+  }
+
+  if (unit.compare("SupplementaryGeometry")==0){
+    thisConfig()->SetTValue<std::string>(unit, std::string("None"));
+  }
+
+  if (unit.compare("ConfigFile") == 0){
     thisConfig()->SetTValue<std::string>(unit, std::string("None"));
     }
   if (unit.compare("ConfigPrefix") == 0){
@@ -143,6 +156,9 @@ void PatientGeometry::DefaultConfig(const std::string &unit) {
     }
   if (unit.compare("VoxelSizeZCT") == 0){
     thisConfig()->SetTValue<double>(unit, double(1.00));
+    }
+  if (unit.compare("PatientDBPath") == 0){
+    thisConfig()->SetTValue<std::string>(unit, std::string("None"));
     }
 
 }
@@ -182,6 +198,11 @@ bool PatientGeometry::design(void) {
     configFile = m_patient->GetTomlConfigFile();
     G4cout << "PatientGeometry::ConfigFile:: Importing configuration for \""<< patientType <<"\" from: "<< configFile << "\n" << G4endl;
   }
+
+  if(thisConfig()->GetValue<std::string>("PatientDBPath") != "None"){
+    auto path = std::string(PROJECT_LOCATION_PATH) + "/submodules/" + thisConfig()->GetValue<std::string>("PatientDBPath");
+    GeometryDBReader::Instance().LoadDataBase(path);
+  }
   return true;
 }
 
@@ -218,9 +239,15 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   G4LogicalVolume *patientEnvLV = new G4LogicalVolume(patientEnv, medium.get(), "patientEnvLV", 0, 0, 0);
   // The envelope box will bo located at given point with respect to the parentPV.
   // However it shifted to Sim locatin (ie. to the positive querter of the World coordinate system)
-  auto envPosX = thisConfig()->GetValue<double>("EnviromentPositionX");
-  auto envPosY = thisConfig()->GetValue<double>("EnviromentPositionY");
-  auto envPosZ = thisConfig()->GetValue<double>("EnviromentPositionZ");
+  auto envPosX = thisConfig()->GetValue<double>("PatientIsocentreX");
+  auto envPosY = thisConfig()->GetValue<double>("PatientIsocentreY");
+  auto envPosZ = thisConfig()->GetValue<double>("PatientIsocentreZ");
+
+  if (envPatientEnvelop.compare("IbaImRT_Full") == 0){
+    IbaImRT::IbaToLocalTranslation = G4ThreeVector(90.0, -165.0, 90.0);
+  } else if(envPatientEnvelop.compare("IbaImRT_Box") == 0){
+    IbaImRT::IbaToLocalTranslation = G4ThreeVector(90.0, -90.0, 90.0);
+  }
 
   // Region for cuts
   auto regVol = new G4Region("phantomEnviromentRegion");
@@ -229,17 +256,27 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   regVol->SetProductionCuts(cuts);
   patientEnvLV->SetRegion(regVol);
   regVol->AddRootLogicalVolume(patientEnvLV);
-  SetPhysicalVolume(new G4PVPlacement(m_rotation, G4ThreeVector(envPosX,envPosY,envPosZ), "phmWorldPV", patientEnvLV, parentPV, false, 0));
+  SetPhysicalVolume(new G4PVPlacement(m_rotation, G4ThreeVector(envPosX,envPosY,envPosZ)-IbaImRT::IbaToLocalTranslation, "phmWorldPV", patientEnvLV, parentPV, false, 0));
   auto pv = GetPhysicalVolume();
 
-  // create the actual phantom
-  auto boxMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C"); // PMMA
-  auto waterMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_WATER");
-
-  if (envPatientEnvelop.compare("IbaImRT") == 0){
+  if (envPatientEnvelop.compare("IbaImRT_Full") == 0 || envPatientEnvelop.compare("IbaImRT_Box") == 0){
     auto ibaImRT = IbaImRT::GetInstance();
-    ibaImRT->IPhysicalVolume::Construct(this,G4ThreeVector(envPosX, envPosY, envPosZ));
+    ibaImRT->IPhysicalVolume::Construct(this);
     m_patient->IPhysicalVolume::Construct(ibaImRT);
+    m_patient->WriteInfo();
+  }else if(envPatientEnvelop.compare("IbaImRT_3mf") == 0){
+    auto ibaImRT = IbaImRT::GetInstance();
+    ibaImRT->IPhysicalVolume::Construct(this);
+    SetPhysicalVolume(pv);
+    m_patient->IPhysicalVolume::Construct(this);
+    m_patient->WriteInfo();
+  }
+  else if(envPatientEnvelop.compare("ModularWaterPhantom_simplified") == 0 || envPatientEnvelop.compare("ModularWaterPhantom_3mf") == 0){
+    auto modularWaterPhantom = ModularWaterPhantom::GetInstance();
+    modularWaterPhantom->SetRotation(m_rotation);
+    modularWaterPhantom->IPhysicalVolume::Construct(this);
+    modularWaterPhantom->WriteInfo(); 
+    m_patient->IPhysicalVolume::Construct(this);
     m_patient->WriteInfo();
   }
   else{
@@ -247,55 +284,16 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
     m_patient->WriteInfo();
   }
 
-  if(envPatientEnvelop.compare("ModularWaterPhantom") == 0){
-    auto smallInterBox = new G4Box("smallInnerBox", 125.0*mm, 25.0*mm, 200.0*mm);
-    auto smallOuterBox = new G4Box("smallOuterBox", 135.0*mm, 35.0*mm, 200.0*mm);
-    auto smallAquariumBox =  new G4SubtractionSolid("smallAquaBox", smallOuterBox, smallInterBox, nullptr, G4ThreeVector(0.0*mm,0.0*mm,-10.0*mm));
-    auto smallWaterFillingBox = new G4Box("smallWaterFillingBox", 125.0*mm, 25.0*mm, 165.0*mm);
-
-    auto bigInterBox = new G4Box("bigInnerBox", 125.0*mm, 125.0*mm, 200.0*mm);
-    auto bigOuterBox = new G4Box("bigOuterBox", 135.0*mm, 135.0*mm, 200.0*mm);
-    auto bigAquariumBox =  new G4SubtractionSolid("bigAquaBox", bigOuterBox, bigInterBox, nullptr, G4ThreeVector(0.0*mm,0.0*mm,-10.0*mm));
-    auto bigWaterFillingBox = new G4Box("bigWaterFillingBox", 125.0*mm, 125.0*mm, 165.0*mm);
-    
-    auto smallAquaBoxLV =  new G4LogicalVolume(smallAquariumBox, boxMaterial.get(), "smallAquaBoxLV");
-    auto bigAquaBoxLV =    new G4LogicalVolume(bigAquariumBox, boxMaterial.get(), "bigAquaBoxLV");
-    auto smallWaterFillingBoxLV = new G4LogicalVolume(smallWaterFillingBox, waterMaterial.get(), "smallWaterFillingBoxLV");
-    auto bigWaterFillingBoxLV =   new G4LogicalVolume(bigWaterFillingBox, waterMaterial.get(), "bigWaterFillingBoxLV");
-    auto pv1 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 150.0*mm, envPosY, envPosZ-260.0*mm), 
-                                          "smallAquaBoxPV1", smallAquaBoxLV, pv, false, 0);
-    auto pv1_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 150.0*mm, envPosY, envPosZ-235.0*mm), 
-                                          "smallWaterFillingBoxPV1", smallWaterFillingBoxLV, pv, false, 0);
-    auto pv2 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 150.0*mm, envPosY, envPosZ-260.0*mm), 
-                                          "smallAquaBoxPV2", smallAquaBoxLV, pv, false, 0);
-    auto pv2_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 150.0*mm, envPosY, envPosZ-235.0*mm), 
-                                          "smallWaterFillingBoxPV2", smallWaterFillingBoxLV, pv, false, 0);
-    auto pv3 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY + 173.0*mm, envPosZ-260.0*mm), 
-                                          "bigAquaBoxPV3",   bigAquaBoxLV,   pv, false, 0);
-    auto pv3_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY + 173.0*mm, envPosZ-235.0*mm), 
-                                          "bigWaterFillingBoxPV3", bigWaterFillingBoxLV, pv, false, 0);
-    auto pv4 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY + 173.0*mm, envPosZ-260.0*mm), 
-                                          "bigAquaBoxPV4",   bigAquaBoxLV,   pv, false, 0);
-    auto pv4_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY + 173.0*mm, envPosZ-235.0*mm), 
-                                          "bigWaterFillingBoxPV4", bigWaterFillingBoxLV, pv, false, 0);
-    auto pv5 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY - 173.0*mm, envPosZ-260.0*mm), 
-                                          "bigAquaBoxPV5",   bigAquaBoxLV,   pv, false, 0);
-    auto pv5_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX + 138.0*mm, envPosY - 173.0*mm, envPosZ-235.0*mm), 
-                                          "bigWaterFillingBoxPV5", bigWaterFillingBoxLV, pv, false, 0);
-    auto pv6 =         new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY - 173.0*mm, envPosZ-260.0*mm), 
-                                          "bigAquaBoxPV6",   bigAquaBoxLV,   pv, false, 0);
-    auto pv6_filling = new G4PVPlacement(m_rotation, G4ThreeVector(envPosX - 138.0*mm, envPosY - 173.0*mm, envPosZ-235.0*mm), 
-                                          "bigWaterFillingBoxPV6", bigWaterFillingBoxLV, pv, false, 0);
-  }
 
 // Creation of bed?
 
  auto tableMaterial = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_POLYACRYLONITRILE");
  auto tableHeight =  7.0*mm;
- auto tableBox = new G4Box("TableBox", 1100.0*mm, 225.0*mm, tableHeight);
+ auto tableBox = new G4Box("TableBox", 225.0*mm, 1100.0*mm, tableHeight);
  auto dcoverLV = new G4LogicalVolume(tableBox, tableMaterial.get(), "TableBoxLV");
- auto table = new G4PVPlacement(nullptr, G4ThreeVector(900.0,0.0,((1.0*mm)+tableHeight+envPosZ+envSize.z())), "CoverBoxPV", dcoverLV, parentPV, false, 0);
-if (thisConfig()->GetValue<std::string>("SupplementaryGeometry").compare("None")!=0) {
+ auto table = new G4PVPlacement(nullptr, G4ThreeVector(0.0,900.0,((1.0*mm)+tableHeight+envPosZ+envSize.z())), "TableBoxPV", dcoverLV, parentPV, false, 0);
+
+ if (thisConfig()->GetValue<std::string>("SupplementaryGeometry").compare("None")!=0) {
   auto supplementaryGeometryPath = thisConfig()->GetValue<std::string>("SupplementaryGeometry");
   if (supplementaryGeometryPath.at(0)!='/'){
     std::string data_path = PROJECT_DATA_PATH;
@@ -305,14 +303,15 @@ if (thisConfig()->GetValue<std::string>("SupplementaryGeometry").compare("None")
   auto suppGeoPosX = thisConfig()->GetValue<double>("SupplementaryGeometryPositionX");
   auto suppGeoPosY = thisConfig()->GetValue<double>("SupplementaryGeometryPositionY");
   auto suppGeoPosZ = thisConfig()->GetValue<double>("SupplementaryGeometryPositionZ");
-
+  
   auto mesh = CADMesh::TessellatedMesh::FromSTL(supplementaryGeometryPath);
   G4VSolid* solid = mesh->GetSolid();
   auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", supplementaryGeometryMaterial);
   auto supplementaryGeometryLV = new G4LogicalVolume(solid, Medium.get(), "LVStl_Supplementary");
   m_suplementary_volume = new G4PVPlacement(nullptr, G4ThreeVector(suppGeoPosX,suppGeoPosY,suppGeoPosZ), "PVStl_Supplementary", supplementaryGeometryLV, parentPV, false, 0);
-
+  
 }
+
 
 
 
@@ -331,9 +330,9 @@ G4bool PatientGeometry::Update() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void PatientGeometry::WriteInfo() {
-  auto envPosX = thisConfig()->GetValue<double>("EnviromentPositionX");
-  auto envPosY = thisConfig()->GetValue<double>("EnviromentPositionY");
-  auto envPosZ = thisConfig()->GetValue<double>("EnviromentPositionZ");
+  auto envPosX = thisConfig()->GetValue<double>("PatientIsocentreX");
+  auto envPosY = thisConfig()->GetValue<double>("PatientIsocentreY");
+  auto envPosZ = thisConfig()->GetValue<double>("PatientIsocentreZ");
   auto centre = G4ThreeVector(envPosX,envPosY,envPosZ);
   G4cout << "Phantom centre: " << centre / cm << " [cm] " << G4endl; 
 }
@@ -399,13 +398,13 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
 
   // Get the environment size in the x, y, and z directions
   auto env_size_x = thisConfig()->GetValue<double>("EnviromentSizeX");
-  auto ct_cube_init_x = -svc::round_with_prec(env_size_x/2 + thisConfig()->GetValue<double>("EnviromentPositionX") + sizeX/2.,4);
+  auto ct_cube_init_x = -svc::round_with_prec(env_size_x/2 + thisConfig()->GetValue<double>("PatientIsocentreX") + sizeX/2.,4);
 
   auto env_size_y = thisConfig()->GetValue<double>("EnviromentSizeY");
-  auto ct_cube_init_y = -svc::round_with_prec(env_size_y/2 + thisConfig()->GetValue<double>("EnviromentPositionY") + sizeY/2.,4);
+  auto ct_cube_init_y = -svc::round_with_prec(env_size_y/2 + thisConfig()->GetValue<double>("PatientIsocentreY") + sizeY/2.,4);
 
   auto env_size_z = thisConfig()->GetValue<double>("EnviromentSizeZ");
-  auto ct_cube_init_z = -svc::round_with_prec(env_size_z/2 + thisConfig()->GetValue<double>("EnviromentPositionZ") + sizeZ/2.,4);
+  auto ct_cube_init_z = -svc::round_with_prec(env_size_z/2 + thisConfig()->GetValue<double>("PatientIsocentreZ") + sizeZ/2.,4);
 
   // Calculate the resolution in the x, y, and z directions
   G4int xResolution = env_size_x / sizeX;
@@ -501,13 +500,13 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   auto sizeZ = thisConfig()->GetValue<double>("VoxelSizeZCT"); 
 
   auto env_size_x = thisConfig()->GetValue<double>("EnviromentSizeX");
-  auto ct_cube_init_x = -svc::round_with_prec(env_size_x/2 + thisConfig()->GetValue<double>("EnviromentPositionX") + sizeX/2.,4);
+  auto ct_cube_init_x = -svc::round_with_prec(env_size_x/2 + thisConfig()->GetValue<double>("PatientIsocentreX") + sizeX/2.,4);
 
   auto env_size_y = thisConfig()->GetValue<double>("EnviromentSizeY");
-  auto ct_cube_init_y = -svc::round_with_prec(env_size_y/2 + thisConfig()->GetValue<double>("EnviromentPositionY") + sizeY/2.,4);
+  auto ct_cube_init_y = -svc::round_with_prec(env_size_y/2 + thisConfig()->GetValue<double>("PatientIsocentreY") + sizeY/2.,4);
 
   auto env_size_z = thisConfig()->GetValue<double>("EnviromentSizeZ");
-  auto ct_cube_init_z = -svc::round_with_prec(env_size_z/2 + thisConfig()->GetValue<double>("EnviromentPositionZ") + sizeZ/2.,4);
+  auto ct_cube_init_z = -svc::round_with_prec(env_size_z/2 + thisConfig()->GetValue<double>("PatientIsocentreZ") + sizeZ/2.,4);
 
 
   G4int xResolution = env_size_x / sizeX;

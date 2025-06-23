@@ -12,16 +12,16 @@ NTupleAnalysis = true
 [PatientGeometry]
 Type = "WaterPhantom" # "WaterPhantom" "Dose3D"
 ConfigPrefix = "WP" # WP  Dose3D
-EnviromentPositionX = 0.0
-EnviromentPositionY = 0.0
-EnviromentPositionZ = 50.0
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 50.0
 EnviromentSizeX = 100.0
 EnviromentSizeY = 100.0
 EnviromentSizeZ = 100.0
 EnviromentMedium = "G4_Galactic"
 
 [Dose3D_Detector]
-TopPositionInEnv = [0.0,0.0,-100.0] # In mm
+TranslationInLocalFrame = [0.0,0.0,-100.0] # In mm
 Voxelization = [4,2,5] # Number of cels in every direction
 
 [Dose3D_Layer]

@@ -8,6 +8,46 @@
 namespace py = pybind11;
 using namespace py::literals;
 
+class ICtSvc::Impl {
+  public:
+      Impl()
+          : m_py_dicom_ct(py::reinterpret_borrow<py::object>(
+                py::module::import("dicom_ct").attr("CtSvc")().ptr()))
+      {}
+  
+      ~Impl() {
+          m_py_dicom_ct.release();
+      }
+  
+      void set_paths(const std::string& output_path) const {
+          m_py_dicom_ct.attr("set_output_path")(output_path);
+          m_py_dicom_ct.attr("set_project_path")(PROJECT_DATA_PATH);
+      }
+  
+      void create_ct_series(const std::string& series_csv_path) const {
+          m_py_dicom_ct.attr("create_ct_series")(series_csv_path);
+      }
+  
+  private:
+      py::object m_py_dicom_ct;
+  };
+  
+
+  ICtSvc::ICtSvc()
+    : m_impl(std::make_unique<Impl>())
+{}
+
+ICtSvc::~ICtSvc() = default;
+
+void ICtSvc::set_paths(const std::string& output_path) const {
+    m_impl->set_paths(output_path);
+}
+
+void ICtSvc::create_ct_series(const std::string& series_csv_path) const {
+    m_impl->create_ct_series(series_csv_path);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void DicomSvc::Initialize(const std::string& planFileType){
@@ -253,8 +293,8 @@ std::vector<G4double> ICustomPlan::ReadMlcPositioning(const std::string& planFil
     // Get the values as strings separated by a comma
     if (std::getline(iss, value_y1, ',') && std::getline(iss, value_y2)) {
       // Convert string to double and add to the respective vectors
-      mlc_y1.push_back(std::stod(value_y1));
-      mlc_y2.push_back(std::stod(value_y2));
+      mlc_y2.push_back(-1*std::stod(value_y1)); // For propouse proper reading from custom dat and properly oriented this (MLC lew right side orientation.) we are using -1 here. 
+      mlc_y1.push_back(-1*std::stod(value_y2)); // For propouse proper reading from custom dat and properly oriented this (MLC lew right side orientation.) we are using -1 here. 
     }
   }
   file.close();
@@ -314,7 +354,6 @@ void DicomSvc::ExportPatientToCT(const std::string& series_csv_path, const std::
     // PyGILState_Release(gstate);
     m_ct_svc.set_paths(output_path);
     m_ct_svc.create_ct_series(series_csv_path);
-    m_ct_svc.~ICtSvc();
   }
 
 ////////////////////////////////////////////////////////////////////////////////

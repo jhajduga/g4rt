@@ -125,5 +125,6 @@ namespace svc {
   /// @param direction 
   /// @return 
   G4ThreeVector transformPosition(const G4ThreeVector& localPosition, IPhysicalVolume* volumeOfLocalFrame, Transform direction = Transform::LocalToGlobal);
+
 }
 #endif  // Dose3D_SERVICES_H

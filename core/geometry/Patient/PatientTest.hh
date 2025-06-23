@@ -1,6 +1,6 @@
 
 #ifndef PGEO_TEST_H
-#define PGEOT_EST_H
+#define PGEO_TEST_H
 
 #include <memory>
 #include "Services.hh"
@@ -12,13 +12,14 @@
 class PatientTest : public ::testing::Test {
 protected:
     void SvcSetup(const std::string& toml_file) {
-        auto configSvc = Service<ConfigSvc>();  // initialize ConfigSvc for TOML parsing
-        auto runSvc = Service<RunSvc>();        // get RunSvc for general App run configuration
+        auto configSvc  = Service<ConfigSvc>();  // initialize ConfigSvc for TOML parsing
+        auto runSvc     = Service<RunSvc>();     // get RunSvc for general App run configuration
+        auto geoSvc     = Service<GeoSvc>();
         runSvc->AppMode(OperationalMode::BuildGeometry);
         configSvc->ParseTomlFile(toml_file);
         configSvc->PrintTomlConfig();
-        auto world = Service<GeoSvc>()->World();
-        runSvc->Initialize(world);
+        auto world = geoSvc->World();
+        // runSvc->Initialize(world);
     }
     G4VPhysicalVolume* WorldSetup() {
         auto testWorldSize = G4ThreeVector(200.0*cm,200.0*cm,200.0*cm);
@@ -34,4 +35,4 @@ protected:
     G4PVPlacement* m_testWorld; // TODO make std::unique
 };
 
-#endif // PGEOT_EST_H
+#endif // PGEO_TEST_H

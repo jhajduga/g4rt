@@ -16,16 +16,16 @@ BuildPatient = true
 
 [PatientGeometry]
 Type = "D3DDetector"
-EnviromentPositionX = 0.0
-EnviromentPositionY = 0.0
-EnviromentPositionZ = 60.5
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 60.5
 EnviromentSizeX = 35.0
 EnviromentSizeY = 35.0
 EnviromentSizeZ = 120.0
 EnviromentMedium = "G4_Galactic"
 
 [D3DDetector_Detector]
-TopPositionInEnv = [0.0,0.0,-60.0] # In mm
+TranslationInLocalFrame = [0.0,0.0,-60.0] # In mm
 Voxelization = [1,1,10] # Number of cels in every direction
 
 [D3DDetector_Layer]

@@ -58,9 +58,9 @@ void WaterPhantom::ParseTomlConfig(){
   /// 
   m_phantomMedium = config[configObjDetector]["Medium"].value_or("G4_WATER");
 
-  auto env_pos_x = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionX");
-  auto env_pos_y = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionY");
-  auto env_pos_z = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "EnviromentPositionZ");
+  auto env_pos_x = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "PatientIsocentreX");
+  auto env_pos_y = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "PatientIsocentreY");
+  auto env_pos_z = Service<ConfigSvc>()->GetValue<double>("PatientGeometry", "PatientIsocentreZ");
   
   ///
   m_watertankScoring = config[configObjScoring]["FullVolume"].value_or(true);
@@ -86,9 +86,9 @@ void WaterPhantom::WriteInfo() {
        + std::to_string (m_sizeX / cm) + " x "
        + std::to_string (m_sizeY / cm) + " x "
        + std::to_string (m_sizeZ / cm) + " [cm^3]";
-  G4ThreeVector translation(configSvc->GetValue<double>("PatientGeometry","EnviromentPositionX"),
-                            configSvc->GetValue<double>("PatientGeometry","EnviromentPositionY"),
-                            configSvc->GetValue<double>("PatientGeometry","EnviromentPositionZ"));
+  G4ThreeVector translation(configSvc->GetValue<double>("PatientGeometry","PatientIsocentreX"),
+                            configSvc->GetValue<double>("PatientGeometry","PatientIsocentreY"),
+                            configSvc->GetValue<double>("PatientGeometry","PatientIsocentreZ"));
   LOGSVC_INFO(info);                            
   info = "Centre of the water phantom environment: (" 
          + std::to_string( translation.getX() / cm) 
@@ -148,8 +148,9 @@ void WaterPhantom::Construct(G4VPhysicalVolume *parentWorld) {
   regVol->SetProductionCuts(cuts);
   waterPhantomLV->SetRegion(regVol);
   regVol->AddRootLogicalVolume(waterPhantomLV);
-  D3DCell::SIZE = std::cbrt( m_sizeX * m_sizeY * m_sizeZ ); // It may differ but for propouse of scoring it is still will be cubed to get the volume. 
 
+  // Set volume for scoring purposes
+  SetVolume(m_sizeX * m_sizeY * m_sizeZ ); // Volume in mm^3
 }
 
 
