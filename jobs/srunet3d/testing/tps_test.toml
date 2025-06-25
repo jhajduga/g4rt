@@ -1,8 +1,7 @@
 [RunSvc]
-JobName = "fsf_training"
+JobName = "tps_test"
 BeamType = "IAEA"
 # PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
-# PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH Dell-XPS location
 # PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
 # PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_10x10s2-f0" # AGH LHCBD2 location
 # PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
@@ -31,8 +30,8 @@ EnviromentSizeZ = 64.0
 EnviromentMedium = "Usr_G4AIR20C"
 
 [D3DDetector_Detector]
-TopPositionInEnv = [0.0,1.0,0.0] # In mm
-Voxelization = [4,4,2] # Number of cels in every direction
+TopPositionInEnv = [0.0,0.0,-32.0] # In mm
+Voxelization = [4,4,4] # Number of cels in every direction
 
 [D3DDetector_Layer]
 MRowShift = false
@@ -45,18 +44,10 @@ TracksAnalysis = false
 CellVoxelisedScorer = true
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
-nParticles = 1000 # Per Control Point
+nParticles = 100000 # Per Control Point
 BeamRotation = 0
 PlanInputFile = [
-        # "plan/custom/custom/cp0_1x2_0_0.dat",
-        # "plan/custom/custom/cp0_1x2_0_1.dat",
-        # "plan/custom/custom/cp0_1x2_0_3.dat",
-        # "plan/custom/custom/cp0_1x2_1_3.dat",
-        # "plan/custom/custom/cp0_1x2_2_0.dat",
-        # "plan/custom/custom/cp0_1x2_2_3.dat",
-        # "plan/custom/custom/cp0_1x1_3_0.dat",
-        # "plan/custom/custom/cp0_1x1_3_3.dat",
-        "plan/custom/custom/cp0_1x1_3_3.dat"
-        # "plan/custom/srunet_test/fsf_inpact_cp0_1x1_2_1.dat",
-        # "plan/custom/srunet_test/fsf_inpact_cp0_1x1_1_2.dat",
+        "plan/custom/srunet_test/static_4x4x4_beam0_cp0.dat",
+        "plan/custom/srunet_test/static_4x4x4_beam1_cp0.dat",
+        "plan/custom/srunet_test/static_4x4x4_beam2_cp0.dat"
 ]

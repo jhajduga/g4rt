@@ -1,19 +1,18 @@
 [RunSvc]
-JobName = "fsf_training"
+JobName = "srunet3d_4x4x2_64x64x64_beam0"
 BeamType = "IAEA"
 # PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
-# PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH Dell-XPS location
 # PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
-# PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_10x10s2-f0" # AGH LHCBD2 location
+PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_10x10s2-f0" # AGH LHCBD2 location
 # PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
-PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location
 # PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
 # PhspInputFileName = "/mnt/e/phsp/TNSIM157_3x3s2-f0" # JH Home File
 PhspEvtVrtxMultiplicityTreshold = 20
 PrintProgressFrequency = 0.05
-GenerateCT = false
+GenerateCT = true
 PrimariesAnalysis = false
-NTupleAnalysis = false
+NTupleAnalysis = true
 RunAnalysis = true
 
 [GeoSvc]
@@ -31,7 +30,7 @@ EnviromentSizeZ = 64.0
 EnviromentMedium = "Usr_G4AIR20C"
 
 [D3DDetector_Detector]
-TopPositionInEnv = [0.0,1.0,0.0] # In mm
+TopPositionInEnv = [0.0,0.0,0.0] # In mm
 Voxelization = [4,4,2] # Number of cels in every direction
 
 [D3DDetector_Layer]
@@ -45,18 +44,16 @@ TracksAnalysis = false
 CellVoxelisedScorer = true
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
-nParticles = 1000 # Per Control Point
-BeamRotation = 0
+# nParticles = [1e4] # Per Control Point
 PlanInputFile = [
-        # "plan/custom/custom/cp0_1x2_0_0.dat",
-        # "plan/custom/custom/cp0_1x2_0_1.dat",
-        # "plan/custom/custom/cp0_1x2_0_3.dat",
-        # "plan/custom/custom/cp0_1x2_1_3.dat",
-        # "plan/custom/custom/cp0_1x2_2_0.dat",
-        # "plan/custom/custom/cp0_1x2_2_3.dat",
-        # "plan/custom/custom/cp0_1x1_3_0.dat",
-        # "plan/custom/custom/cp0_1x1_3_3.dat",
-        "plan/custom/custom/cp0_1x1_3_3.dat"
-        # "plan/custom/srunet_test/fsf_inpact_cp0_1x1_2_1.dat",
-        # "plan/custom/srunet_test/fsf_inpact_cp0_1x1_1_2.dat",
+        "plan/custom/prostate_modified/prostate_imrt_beam0_cp0.dat",
+        "plan/custom/prostate_modified/prostate_imrt_beam0_cp1.dat",
+        "plan/custom/prostate_modified/prostate_imrt_beam0_cp2.dat",
+        "plan/custom/prostate_modified/prostate_imrt_beam0_cp3.dat",
+        "plan/custom/prostate_modified/prostate_imrt_beam0_cp4.dat",
+        "plan/custom/prostate_modified/prostate_imrt_beam0_cp5.dat",
+        "plan/custom/prostate_modified/prostate_imrt_beam0_cp6.dat",
+        "plan/custom/prostate_modified/prostate_imrt_beam0_cp7.dat",
+        "plan/custom/prostate_modified/prostate_imrt_beam0_cp8.dat",
+        "plan/custom/prostate_modified/prostate_imrt_beam0_cp9.dat"
 ]

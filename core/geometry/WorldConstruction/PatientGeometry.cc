@@ -631,6 +631,10 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
 
   auto v_file_merged = path_to_output_dir+"/"+plan_file_name+"_ct_dose_voxel.csv";
   std::ofstream v_outFile_merged(v_file_merged.c_str(), std::ios::out);
+  // Control Point Meta data:
+  v_outFile_merged << "# FieldArea: " + std::to_string(cp->GetRun()->GetBeamMaskArea()) << std::endl;
+  auto beam_grav_centre = cp->GetRun()->GetBeamMaskeGravCentre();
+  v_outFile_merged << "# FieldGravCentre: "+std::to_string(beam_grav_centre.first)+","+std::to_string (beam_grav_centre.second) << std::endl;
   std::string header_merged = "X [mm],Y [mm],Z [mm],Id,IdX,IdY,IdZ,Material,Dose [Gy],FieldScalingFactor,AngleScalingFactor";
   v_outFile_merged << header_merged << std::endl;
   std::string csv_slices_path = path_to_output_dir+"/"+plan_file_name+"_ct_dose_voxel";
@@ -688,6 +692,9 @@ void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
 
   auto c_file_merged = path_to_output_dir+"/"+plan_file_name+"_ct_dose_cell.csv";
   std::ofstream c_outFile_merged(c_file_merged.c_str(), std::ios::out);
+  c_outFile_merged << "# FieldArea: " + std::to_string(cp->GetRun()->GetBeamMaskArea()) << std::endl;
+  beam_grav_centre = cp->GetRun()->GetBeamMaskeGravCentre();
+  c_outFile_merged << "# FieldGravCentre: "+std::to_string(beam_grav_centre.first)+","+std::to_string (beam_grav_centre.second) << std::endl;
   c_outFile_merged << header_merged << std::endl;
   csv_slices_path = path_to_output_dir+"/"+plan_file_name+"_ct_dose_cell";
   IO::CreateDirIfNotExits(csv_slices_path);
