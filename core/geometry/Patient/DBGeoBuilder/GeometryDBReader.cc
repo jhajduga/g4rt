@@ -74,21 +74,7 @@ void GeometryDBReader::LoadDataBase(const std::string& path)
         // Scintillator ID
         gd.sc_id = py::cast<std::string>(d["sc_id"]);
         if (!(gd.sc_id == "nan" || gd.sc_id.empty() || gd.sc_id == "")){
-            /* NOTE: CAD Export Precision
-            When exporting vertices from CAD software (e.g., Fusion 360), floating-point precision limitations 
-            may cause positional "blurring" (typically ±1e-5 to ±1e-7 units). This occurs because:  
-            1. CAD kernels use double-precision math internally  
-            2. Export formats (STEP/IGES) serialize with limited precision  
-            3. Geometric operations accumulate floating-point errors  
-            Mitigation:
-            Apply coordinated rounding to vertex coordinates using a geometric epsilon (e.g., 1e-6) to:  
-            - Eliminate false-positive differences in downstream processing  
-            - Ensure topological consistency  
-            - Avoid phantom gaps in meshes/B-rep models
-            However, we apply this correction only to cells positioning.
-            */
-            auto centre_of_mass = svc::round_with_prec(gd.com, 6);
-            m_db_cells_positioning.emplace_back(gd.sc_id, centre_of_mass);
+            m_db_cells_positioning.emplace_back(gd.sc_id, gd.com);
         }
 
         // Nodes

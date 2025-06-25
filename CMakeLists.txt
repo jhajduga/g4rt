@@ -1,6 +1,6 @@
 #----------------------------------------------------------------------------
 # Setup the project
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 project(G4rt)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -39,6 +39,12 @@ add_definitions(-DJH_DATA_PATH=\"/mnt/d/Data\")
 add_definitions(-DJOBS_PATH=\"${PROJECT_SOURCE_DIR}/jobs\")
 add_definitions(-DPROJECT_PY_PATH=\"${PROJECT_SOURCE_DIR}/core/utilities/python\")
 add_definitions(-DPROJECT_BINARY_PATH=\"${PROJECT_BINARY_DIR}\")
+
+#----------------------------------------------------------------------------
+option(BUILD_G4RT "Build the g4rt executable" ON)
+option(BUILD_BG4RT "Build the g4rt_bworld executable" OFF)
+option(BUILD_DCM2DAT "Build the g4rt_bworld executable" OFF)
+option(BUILD_TLD "Build the tld executable" ON)
 
 #----------------------------------------------------------------------------
 # Testing suite configuration

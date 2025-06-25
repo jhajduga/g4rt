@@ -1,8 +1,7 @@
 [RunSvc]
 JobName = "pdd_wp_3mf_0mm"
 BeamType = "IAEA"
-# PhspInputFileName = "/mnt/e/PHSP/TB_20x20_Merged" 
-PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # BR AGH pc location
+PhspInputFileName = "/mnt/e/PHSP/TB_20x20_Merged" 
 PhspEvtVrtxMultiplicityTreshold = 10
 PrintProgressFrequency = 0.05
 Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"

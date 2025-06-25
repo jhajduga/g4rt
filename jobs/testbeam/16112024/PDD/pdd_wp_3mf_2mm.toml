@@ -1,7 +1,7 @@
 [RunSvc]
 JobName = "pdd_wp_3mf_2mm"
 BeamType = "IAEA"
-PhspInputFileName = "/mnt/e/PHSP/TB_20x20_Merged" 
+PhspInputFileName = "/mnt/data/PHSP/TB_20X20_Merged" 
 PhspEvtVrtxMultiplicityTreshold = 10
 PrintProgressFrequency = 0.0005
 Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
@@ -13,6 +13,7 @@ RunAnalysis = true
 [GeoSvc]
 BuildLinac = true
 BuildPatient = true
+MlcModel="Simplified"
 
 [PatientGeometry]
 Type = "D3DDetector"

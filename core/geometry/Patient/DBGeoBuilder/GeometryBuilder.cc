@@ -89,21 +89,34 @@ G4bool GeometryBuilder::LoadDefaultParameterization(){
   return true;
 }
 
+
+static std::string to_lower(const std::string& input) {
+    std::string out;
+    out.resize(input.size());
+    std::transform(input.begin(), input.end(), out.begin(),
+                  [](unsigned char c) { return std::tolower(c); });
+    return out;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void GeometryBuilder::Build(G4VPhysicalVolume *parentWorld) {
   LoadParameterization();
-  const auto& list =  GeometryDBReader::Instance().GetData();
+  // auto* nist = G4NistManager::Instance();
+  // auto* mat  = nist->FindOrBuildMaterial(m_phantomMedium); // Default temp material
+    const auto& list =  GeometryDBReader::Instance().GetData();
+  
+
 
   for (const auto& obj : list) {
-    std::string component_lower = svc::tolower(obj.component);
+    std::string component_lower = to_lower(obj.component);
 
     // Check if any exclusion string is a case-insensitive substring of the component name
     bool is_excluded = std::any_of(
         m_exclusde_object_list.begin(),
         m_exclusde_object_list.end(),
         [&](const std::string& excl) {
-            return component_lower.find(svc::tolower(excl)) != std::string::npos;
+            return component_lower.find(to_lower(excl)) != std::string::npos;
         });
 
     if (is_excluded) {

@@ -1,0 +1,21 @@
+################# Launch parameters ############################
+# List of commands to be applied >> BEFORE << beamOn execution #
+################################################################
+
+################################################################
+# 70 keV X-ray tube emitting a Gaussian energy distribution
+/gps/source/intensity 1
+/gps/particle gamma
+/gps/direction 0 0 +1
+/gps/ang/type beam
+/gps/ang/sigma_r 0.1 deg #for slight divergence
+/gps/ene/type Gauss
+/gps/ene/mono 70 keV
+/gps/ene/sigma 0.5 keV
+/gps/pos/type Plane
+/gps/pos/shape Rectangle
+/gps/pos/centre 0.0 0.0 -0.01 cm
+/gps/pos/halfx 60.0 mm
+/gps/pos/halfy 60.0 mm
+
+

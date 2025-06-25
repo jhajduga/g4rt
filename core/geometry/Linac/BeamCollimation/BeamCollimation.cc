@@ -101,7 +101,7 @@ void BeamCollimation::SetRunConfiguration(const ControlPoint* control_point){
     m_physicalVolume[name]->SetRotation(cRotation);
   };
 
-  if((inputType=="CustomPlan" && (model != EMlcModel::Simplified))){
+  if((inputType=="CustomPlan" && (model != EMlcModel::Simplified && model != EMlcModel::None))){
     setCustomPositioning("Jaw1X");
     setCustomPositioning("Jaw2X");
     setCustomPositioning("Jaw1Y");
@@ -134,7 +134,7 @@ void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
     } else {
       BeamCollimation::SetParticlePositionBeforeCollimators(p_vrtx.at(i), BeforeJaws);
     }
-  }
+  } 
   p_vrtx.erase(std::remove_if(p_vrtx.begin(), p_vrtx.end(), [](G4PrimaryVertex* ptr) { return ptr == nullptr; }), p_vrtx.end());
   Service<RunSvc>()->CurrentControlPoint()->FillSimFieldMask(p_vrtx);
 }

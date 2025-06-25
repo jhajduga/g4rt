@@ -44,7 +44,7 @@ void GeoSvc::Configure() {
   //G4cout << "[INFO]:: GeoSvc :: Service default configuration " << G4endl;
 
   DefineUnit<G4String>("HeadModel");
-  DefineUnit<G4String>("MlcModel");
+  DefineUnit<std::string>("MlcModel");
   DefineUnit<G4double>("isoCentre");
   DefineUnit<std::string>("SavePhspRequest");
   DefineUnit<VecG4doubleSPtr>("SavePhSpHead");
@@ -85,7 +85,7 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
   if (unit.compare("MlcModel") == 0){
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
     // m_config->SetValue(unit, G4String("Varian-HD120")); 
-    m_config->SetValue(unit, G4String("Simplified")); 
+    thisConfig()->SetTValue<std::string>(unit, std::string("None")); 
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
   }
 
@@ -333,7 +333,7 @@ EHeadModel GeoSvc::GetHeadModel() const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 EMlcModel GeoSvc::GetMlcModel() const {
-  auto mlcName = m_configSvc->GetValue<G4String>("GeoSvc", "MlcModel");
+  auto mlcName = m_configSvc->GetValue<std::string>("GeoSvc", "MlcModel");
   if (mlcName.compare("Varian-Millennium") == 0) {
     return EMlcModel::Millennium;
   } else if (mlcName.compare("Varian-HD120") == 0) {
@@ -351,6 +351,8 @@ EMlcModel GeoSvc::GetMlcModel() const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 VPatient* GeoSvc::Patient(){
+  if (m_patient)
+    return m_patient;
   if(World()->PatientEnvironment())
     return World()->PatientEnvironment()->GetPatient();
   return nullptr;

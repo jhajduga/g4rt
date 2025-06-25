@@ -52,19 +52,24 @@ void MaterialsSvc::Configure() {
   DefineUnit<G4MaterialSPtr>("steel2");
   DefineUnit<G4MaterialSPtr>("steel3");
   DefineUnit<G4MaterialSPtr>("tungstenAlloy1");
-  DefineUnit<G4MaterialSPtr>("PMMA");
-  DefineUnit<G4MaterialSPtr>("PLA");
-  DefineUnit<G4MaterialSPtr>("Z-FLEX");
   DefineUnit<G4MaterialSPtr>("RW3");
-
+  
+  DefineUnit<G4MaterialSPtr>("PMMA");
   DefineUnit<G4MaterialSPtr>("PMMA03");
-  DefineUnit<G4MaterialSPtr>("PLA05");
-  DefineUnit<G4MaterialSPtr>("Z-FLEX05");
-
   DefineUnit<G4MaterialSPtr>("PMMA075");
+
+  DefineUnit<G4MaterialSPtr>("PLA");
+  DefineUnit<G4MaterialSPtr>("PLA05");
   DefineUnit<G4MaterialSPtr>("PLA075");
+  
+  DefineUnit<G4MaterialSPtr>("Z-FLEX");
+  DefineUnit<G4MaterialSPtr>("Z-FLEX05");
   DefineUnit<G4MaterialSPtr>("Z-FLEX075");
 
+  //  LiF doped with Mg and Ti - > Thermoluminescent dosimeter material
+  //  LiF:Mg,Ti
+  DefineUnit<G4MaterialSPtr>("LiF:Mg,Ti");
+  DefineUnit<G4MaterialSPtr>("LiF:Cu,Mg,P");
 
   DefineUnit<G4MaterialSPtr>("RMPS470");
   DefineUnit<G4MaterialSPtr>("EPS"); // Expanded Polystyrene
@@ -210,6 +215,31 @@ void MaterialsSvc::DefaultConfig(const std::string &unit) {
       const std::vector<G4int> natoms{32,48,13};
       auto zflex = G4NISTManager->ConstructNewMaterial("Z-FLEX05", elements, natoms, d);
       thisConfig()->SetValue(unit, std::shared_ptr<G4Material>(zflex));
+  }
+
+  if (unit.compare("LiF:Mg,Ti") == 0) {
+
+      G4Material* temp_mat = G4NISTManager->FindOrBuildMaterial("G4_LITHIUM_FLUORIDE");
+      d = 2.635 * g / cm3;
+      G4Material* lif = new G4Material("LiF:Mg,Ti", d, 3);
+      lif->AddMaterial(temp_mat, 0.99983);
+      lif->AddElement(G4NISTManager->FindOrBuildElement("Mg"), 0.00005);
+      lif->AddElement(G4NISTManager->FindOrBuildElement("Ti"), 0.00012);
+      lif->GetIonisation()->SetMeanExcitationEnergy(94.0 * eV);
+      thisConfig()->SetValue(unit, std::shared_ptr<G4Material>(lif));
+  }
+
+  if (unit.compare("LiF:Cu,Mg,P") == 0) {
+
+      G4Material* temp_mat = G4NISTManager->FindOrBuildMaterial("G4_LITHIUM_FLUORIDE");
+      d = 1.867 * g / cm3;
+      G4Material* lif = new G4Material("LiF:Cu,Mg,P", d, 4);
+      lif->AddMaterial(temp_mat, 0.99274);
+      lif->AddElement(G4NISTManager->FindOrBuildElement("Cu"), 0.00024);
+      lif->AddElement(G4NISTManager->FindOrBuildElement("Mg"), 0.00097);
+      lif->AddElement(G4NISTManager->FindOrBuildElement("P"), 0.00605);
+      lif->GetIonisation()->SetMeanExcitationEnergy(94.0 * eV);
+      thisConfig()->SetValue(unit, std::shared_ptr<G4Material>(lif));
   }
 
   if (unit.compare("TiO2") == 0) {

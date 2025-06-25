@@ -52,6 +52,9 @@ class GeoSvc : public TomlConfigurable, Logable {
   ///
   std::vector<const GeoComponet*> m_scoring_components;
 
+  ///
+  VPatient* m_patient = nullptr;
+
   ///\brief Virtual method implementation defining the list of configuration units for this module.
   void Configure() override;
 
@@ -87,6 +90,9 @@ class GeoSvc : public TomlConfigurable, Logable {
   /// 
   void SetWorld(WorldConstruction *world) { my_world = world; }
 
+  ///
+  void RegisterPatient(VPatient* patient) { m_patient = patient; }
+  
   ///
   VPatient* Patient();
 

@@ -1,6 +1,6 @@
 #----------------------------------------------------------------------------
 # Setup the project
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 project(Executables)
 
 #----------------------------------------------------------------------------
@@ -39,7 +39,8 @@ add_definitions(${Core_DEFINITIONS}
         ${ROOT_DEFINITIONS})
 
 set(HEADERS_DIR ${PROJECT_SOURCE_DIR}/basic
-                ${PROJECT_SOURCE_DIR}/bworld/src)
+                ${PROJECT_SOURCE_DIR}/bworld/src
+                ${PROJECT_SOURCE_DIR}/tld/src)
 
 include_directories(${IAEA_INCLUDE_DIR}
         ${Cmd_INCLUDE_DIR}
@@ -53,19 +54,44 @@ include_directories(${IAEA_INCLUDE_DIR}
 
         
 #---------------------------------------------------------------------------
-file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/basic/*.cc)
-add_executable(g4rt ${SOURCES} basic/main.cc)
-target_link_libraries(g4rt IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES})
+if(BUILD_G4RT)
+        message(STATUS "BUILD_G4RT is ON: \tBuilding g4rt executable.")
+        file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/basic/*.cc)
+        add_executable(g4rt ${SOURCES} basic/main.cc)
+        target_link_libraries(g4rt IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES})
+else()
+        message(STATUS "BUILD_G4RT is OFF: \tSkipping build of g4rt executable.")
+endif()
 
 #---------------------------------------------------------------------------
-file(GLOB_RECURSE SOURCES_BWORLD ${PROJECT_SOURCE_DIR}/bworld/*.cc)
-add_executable(g4rt_bworld ${SOURCES_BWORLD} bworld/main.cc)
-target_link_libraries(g4rt_bworld IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES})
+if(BUILD_BG4RT)
+        message(STATUS "BUILD_BG4RT is ON: \tBuilding g4rt_bworld executable.")
+        file(GLOB_RECURSE SOURCES_BWORLD ${PROJECT_SOURCE_DIR}/bworld/*.cc)
+        add_executable(g4rt_bworld ${SOURCES_BWORLD} bworld/main.cc)
+        target_link_libraries(g4rt_bworld IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES})
+else()
+        message(STATUS "BUILD_BG4RT is OFF: \tSkipping build of g4rt_bworld executable.")
+endif()
 
 #---------------------------------------------------------------------------
-file(GLOB_RECURSE SOURCES_DCM2DAT ${PROJECT_SOURCE_DIR}/rtplan_converter/*.cc)
-add_executable(g4rt_dcm2dat ${SOURCES_DCM2DAT} rtplan_converter/main.cc)
-target_link_libraries(g4rt_dcm2dat IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES})
+if(BUILD_DCM2DAT)
+        message(STATUS "BUILD_DCM2DAT is ON: \tBuilding dcm2dat executable.")
+        file(GLOB_RECURSE SOURCES_DCM2DAT ${PROJECT_SOURCE_DIR}/rtplan_converter/*.cc)
+        add_executable(dcm2dat ${SOURCES_DCM2DAT} rtplan_converter/main.cc)
+        target_link_libraries(dcm2dat IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES})
+else()
+        message(STATUS "BUILD_DCM2DAT is OFF: \tSkipping build of dcm2dat executable.")
+endif()
+
+#---------------------------------------------------------------------------
+if(BUILD_TLD)
+        message(STATUS "BUILD_TLD is ON: \tBuilding tld executable.")
+        file(GLOB_RECURSE SOURCES_DCM2DAT ${PROJECT_SOURCE_DIR}/tld/*.cc)
+        add_executable(tld ${SOURCES_DCM2DAT} tld/main.cc)
+        target_link_libraries(tld IAEA ConfigSvc Core spdlog::spdlog ${Geant4_LIBRARIES})
+else()
+        message(STATUS "BUILD_TLD is OFF: \tSkipping build of tld executable.")
+endif()
 
 #---------------------------------------------------------------------------
 # install definitions

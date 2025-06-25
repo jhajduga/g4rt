@@ -15,6 +15,7 @@ namespace {
 }
 
 G4RotationMatrix* PrimaryGenerationAction::m_rotation_matrix=nullptr;
+G4double PrimaryGenerationAction::m_source_isocentre_distance = 0.0;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -120,24 +121,30 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
   }
 
 
-  // IDEA:: Implement Origin/Frame switch (See: IAEAPrimaryGenerator, l. 27-30)
-  G4ThreeVector new_centre;
-
-  // PERFORM BEAM ROTATION ADD VTRXES TO CURRENT EVENT
-  for (const auto& vrtx : primary_vrtx){
-    if(m_rotation_matrix){
-      new_centre=(*m_rotation_matrix)*(vrtx->GetPosition());
+G4ThreeVector new_centre;
+// PERFORM BEAM ROTATION ADD VTRXES TO CURRENT EVENT
+for (const auto& vrtx : primary_vrtx){
+    G4ThreeVector position = vrtx->GetPosition();
+    
+    if (m_source_isocentre_distance > 0) {
+        position.setZ(m_source_isocentre_distance * cm);
     }
-    vrtx->SetPosition(new_centre.x(),new_centre.y(),new_centre.z());
-
+    
+    if (m_rotation_matrix) {
+        new_centre = (*m_rotation_matrix) * position;
+        vrtx->SetPosition(new_centre.x(), new_centre.y(), new_centre.z());
+    } else {
+        vrtx->SetPosition(position.x(), position.y(), position.z());
+    }
+    
     auto momentum = (vrtx->GetPrimary()->GetMomentum());
     if(m_rotation_matrix){
-      momentum = (*m_rotation_matrix)*(momentum);
+        momentum = (*m_rotation_matrix) * (momentum);
     }
-    vrtx->GetPrimary()->SetMomentum(momentum.x(),momentum.y(),momentum.z());
+    vrtx->GetPrimary()->SetMomentum(momentum.x(), momentum.y(), momentum.z());
     if( dynamic_cast<IaeaPrimaryGenerator*>(m_primaryGenerator) )
-      anEvent->AddPrimaryVertex(vrtx);
-  }
+        anEvent->AddPrimaryVertex(vrtx);
+}
   // FILL PRIMARYPARTICLEINFO
   auto nVrtx = anEvent->GetNumberOfPrimaryVertex();
   for(int i =0; i<nVrtx; ++i ){

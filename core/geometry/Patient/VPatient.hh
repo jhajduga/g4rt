@@ -51,6 +51,10 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule, public Logable
     ///
     virtual G4bool IsInside(double x, double y, double z) { return false; }
 
+    /// TO BE DELETED
+    virtual std::map<std::size_t, VoxelHit> GetScoringHashedMap(const std::string& name, bool voxelised) const {
+      return std::map<std::size_t, VoxelHit>();
+    }
     VPatientSD* GetSD() const { return m_patientSD.Get(); }
 
     virtual std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String&,Scoring::Type) const {

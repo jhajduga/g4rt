@@ -12,14 +12,13 @@
 class PatientTest : public ::testing::Test {
 protected:
     void SvcSetup(const std::string& toml_file) {
-        auto configSvc  = Service<ConfigSvc>();  // initialize ConfigSvc for TOML parsing
-        auto runSvc     = Service<RunSvc>();     // get RunSvc for general App run configuration
-        auto geoSvc     = Service<GeoSvc>();
+        auto configSvc = Service<ConfigSvc>();  // initialize ConfigSvc for TOML parsing
+        auto runSvc = Service<RunSvc>();        // get RunSvc for general App run configuration
         runSvc->AppMode(OperationalMode::BuildGeometry);
         configSvc->ParseTomlFile(toml_file);
         configSvc->PrintTomlConfig();
-        auto world = geoSvc->World();
-        // runSvc->Initialize(world);
+        auto world = Service<GeoSvc>()->World();
+        runSvc->Initialize(world);
     }
     G4VPhysicalVolume* WorldSetup() {
         auto testWorldSize = G4ThreeVector(200.0*cm,200.0*cm,200.0*cm);

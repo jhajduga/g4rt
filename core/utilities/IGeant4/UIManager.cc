@@ -4,6 +4,7 @@
 #include "toml.hh"
 #include "PrimaryGenerationAction.hh"
 #include "LogSession.hh"
+#include "LinacGeometry.hh"
 ////////////////////////////////////////////////////////////////////////////////
 ///
 UIManager::UIManager()
@@ -115,8 +116,8 @@ void UIManager::UserRunInitialization() {
     runSvc->CurrentControlPoint(&cp);
     runSvc->LoadSimulationPlan();
     runSvc->G4RunManagerPtr()->SetRunIDCounter(cp.GetId());
-    G4cout << "DEBUG:: UIManager::UserRunInitialization:: rotation_matrix:\n" << *cp.GetRotation() << G4endl;
     PrimaryGenerationAction::SetRotation(cp.GetRotation());
+    PrimaryGenerationAction::SetSID(LinacGeometry::GetIsocentreDistance());
     InitializeG4kernel();
     for (auto ic : PreBeamOnCommands) 
       ApplyCommand(ic);
