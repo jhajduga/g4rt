@@ -49,7 +49,9 @@ void VPatientSD::AddScoringVolume(const G4String& runCollName, const G4String& h
     if(scoringNX > 1 || scoringNY > 1 ||scoringNZ > 1)
       isVoxelised = true;
     NTupleEventAnalisys::DefineTTree(runCollName,isVoxelised,hitsCollName,"Event data");
-    NTupleEventAnalisys::SetTracksAnalysis(hitsCollName,m_tracks_analysis);
+    NTupleEventAnalisys::SetAnalysisFlag(
+        hitsCollName, AnalysisFlag::StoreTracks,
+        m_tracks_analysis);
   }
 };
 
