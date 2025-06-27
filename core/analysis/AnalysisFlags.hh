@@ -9,12 +9,12 @@
 // Semantic flags that control what kind of data will be stored in a given TTree
 // Can be extended as needed — order matters only for display
 enum class AnalysisFlag {
+  StoreRunInfo,
   StorePositions,
   StoreEnergies,
   StoreTracks,
   StorePrimaries,
-  StoreSecondaries,
-  StoreTiming,
+  Voxelized, 
   MinimalMode,
   COUNT // helper for bitset size
 };

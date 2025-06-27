@@ -39,7 +39,7 @@ G4bool SavePhSpSD::ProcessHits(G4Step *step, G4TouchableHistory *) {
 
   G4double partMass = step->GetTrack()->GetDefinition()->GetPDGMass();
   G4double partMom = preStepPoint->GetMomentum().mag();
-  G4double partEnergy = (std::sqrt(partMom * partMom + partMass * partMass) - partMass) / CLHEP::MeV;
+  G4double partEnergy = (std::sqrt(partMom * partMom + partMass * partMass) - partMass) / CLHEP::keV;
 
   if ((preStepPoint->GetStepStatus() == fGeomBoundary) &&
       (particleCodesMapping.count(pdgcode) == 1)) {
