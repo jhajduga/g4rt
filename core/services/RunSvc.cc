@@ -84,6 +84,8 @@ void RunSvc::Configure() {
   DefineUnit<std::string>("BeamType");
   DefineUnit<double>("phspShiftZ"); 
   DefineUnit<std::string>("Physics");
+  DefineUnit<bool>("EnableExtraProcesses");
+  DefineUnit<double>("StepMax");
   DefineUnit<int>("idEnergy");
 
   // General Particle Source
@@ -173,9 +175,19 @@ void RunSvc::DefaultConfig(const std::string &unit) {
   if (unit.compare("phspShiftZ") == 0) 
     thisConfig()->SetValue(unit, double(100 * cm)); // IAEA phsp reader
 
-  // default physics
+  // Default physics
   if (unit.compare("Physics") == 0) 
     thisConfig()->SetTValue<std::string>(unit, std::string("LowE_Penelope")); //      LowE_Livermore   LowE_Penelope   emstandard_opt3
+
+  // Enable extra processes
+  if (unit.compare("EnableExtraProcesses") == 0) {
+    thisConfig()->SetTValue<bool>(unit, false);
+  }
+
+  // Step max
+  if (unit.compare("StepMax") == 0) {
+    thisConfig()->SetTValue<double>(unit, 0.0 * mm);
+  }
 
   // default ID energy
   if (unit.compare("idEnergy") == 0) 

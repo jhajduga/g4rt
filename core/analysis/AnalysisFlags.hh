@@ -16,8 +16,6 @@ enum class AnalysisFlag {
   StoreSecondaries,
   StoreTiming,
   MinimalMode,
-  DetailedProcessInfo,
-  VerboseLogging,
   COUNT // helper for bitset size
 };
 
@@ -39,17 +37,6 @@ public:
   // Reset all flags
   void Reset() { flags.reset(); }
 
-  // Utility logic for derived meanings
-  bool IsMinimal() const { return (*this)[AnalysisFlag::MinimalMode]; }
-
-  bool ShouldStoreAnySpatial() const {
-    return (*this)[AnalysisFlag::StorePositions] ||
-           (*this)[AnalysisFlag::StoreTracks];
-  }
-
-  bool RequiresTiming() const {
-    return (*this)[AnalysisFlag::StoreTiming] && !IsMinimal();
-  }
 
 private:
   std::bitset<static_cast<size_t>(AnalysisFlag::COUNT)> flags;

@@ -43,8 +43,7 @@ void VoxelHit::Fill(G4Step* aStep){
       }
     }
     
-    // Shouldn't we move the if here that sits inside FillTrack?
-    // Unnecessary going into the method.I don't know if it changes anything but... TODO:?
+
     /// Fill track info
     FillTrack(aStep);
 
