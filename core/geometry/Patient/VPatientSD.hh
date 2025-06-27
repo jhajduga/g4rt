@@ -132,69 +132,66 @@ class VPatientSD : public G4VSensitiveDetector, public Logable {
       G4int m_id_y = -1;
       G4int m_id_z = -1;
 
+
+     public:
+
       ///
-      bool m_tracks_analysis = false;
+      VPatientSD(const G4String& sdName);
 
-  public:
+      ///
+      VPatientSD(const G4String& sdName, const G4ThreeVector& centre);
 
-    ///
-    VPatientSD(const G4String& sdName);
+      ///
+      ~VPatientSD() = default;
 
-    ///
-    VPatientSD(const G4String& sdName, const G4ThreeVector& centre);
+      ///
+      G4ThreeVector GetSDCentre() const;
 
-    ///
-    ~VPatientSD() = default;
+      ///
+      void Initialize(G4HCofThisEvent*) override;
 
-    ///
-    G4ThreeVector GetSDCentre() const;
+      ///
+      void EndOfEvent(G4HCofThisEvent* HCE) override;
 
-    ///
-    void Initialize(G4HCofThisEvent*) override;
-
-    ///
-    void EndOfEvent(G4HCofThisEvent* HCE) override;
-
-    ///
+      ///
     void AddScoringVolume(const G4String& runCollName, const G4String& hitsCollName, const G4Box& scoringBox, int scoringNX, int scoringNY, int scoringNZ, const G4ThreeVector& translation=G4ThreeVector());
 
-    ///
-    G4int GetScoringVolumeIdx(const G4String& hitsCollName) const;
+      ///
+      G4int GetScoringVolumeIdx(const G4String& hitsCollName) const;
 
-    /// Return the ID of the HC that is managed by SDManager
-    G4int GetScoringHcId(const G4String& hitsCollName) const;
+      /// Return the ID of the HC that is managed by SDManager
+      G4int GetScoringHcId(const G4String& hitsCollName) const;
 
-    /// Return the ID of the HC that is managed by SDManager
-    G4int GetScoringHcId(const G4int scoringSdIdx) const;
+      /// Return the ID of the HC that is managed by SDManager
+      G4int GetScoringHcId(const G4int scoringSdIdx) const;
 
-    ///
-    G4String GetScoringHcName(G4int scoringSdIdx) const;
+      ///
+      G4String GetScoringHcName(G4int scoringSdIdx) const;
 
-    ///
-    void SetScoringParameterization(const G4String& hitsCollName, int nX, int nY, int nZ);
+      ///
+      void SetScoringParameterization(const G4String& hitsCollName, int nX, int nY, int nZ);
 
-    ///
-    void SetTracksAnalysis(bool flag) { m_tracks_analysis = flag; }
 
-    ///
-    ScoringVolume* GetRunCollectionReferenceScoringVolume(const G4String& runCollName, bool voxelisation_check = false) const;
 
-    protected:
+      ///
+      ScoringVolume* GetRunCollectionReferenceScoringVolume(const G4String& runCollName, bool voxelisation_check = false) const;
 
-    ///
-    // G4double GetSizeX(G4int scoringSdIdx) const {return m_scoring_volumes.at(scoringSdIdx).second->GetSizeX();}
-    // G4double GetSizeY(G4int scoringSdIdx) const {return m_scoring_volumes.at(scoringSdIdx).second->GetSizeY();}
-    // G4double GetSizeZ(G4int scoringSdIdx) const {return m_scoring_volumes.at(scoringSdIdx).second->GetSizeZ();}
+     protected:
 
-    ///
-    ScoringVolume* GetScoringVolumePtr(G4int scoringSdIdx) const;
-    ScoringVolume* GetScoringVolumePtr(G4int scoringSdIdx);
-    ScoringVolume* GetScoringVolumePtr(const G4String& hitsCollName);
-    ///
-    std::vector<G4String> GetScoringVolumeNames() const;
+      ///
+      // G4double GetSizeX(G4int scoringSdIdx) const {return m_scoring_volumes.at(scoringSdIdx).second->GetSizeX();}
+      // G4double GetSizeY(G4int scoringSdIdx) const {return m_scoring_volumes.at(scoringSdIdx).second->GetSizeY();}
+      // G4double GetSizeZ(G4int scoringSdIdx) const {return m_scoring_volumes.at(scoringSdIdx).second->GetSizeZ();}
 
-    ///
-    void ProcessHitsCollection(const G4String& hitsCollectionName, G4Step* aStep);
+      ///
+      ScoringVolume* GetScoringVolumePtr(G4int scoringSdIdx) const;
+      ScoringVolume* GetScoringVolumePtr(G4int scoringSdIdx);
+      ScoringVolume* GetScoringVolumePtr(const G4String& hitsCollName);
+      ///
+      std::vector<G4String> GetScoringVolumeNames() const;
+
+      ///
+      void ProcessHitsCollection(const G4String& hitsCollectionName, G4Step* aStep);
 
 };
 

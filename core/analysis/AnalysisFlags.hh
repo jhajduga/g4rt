@@ -1,54 +1,50 @@
-// ========================= AnalysisFlags.hh ========================= //
-#ifndef ANALYSIS_FLAGS_HH
-#define ANALYSIS_FLAGS_HH
+#ifndef ANALYSIS_FLAG_REGISTRY_HH
+#define ANALYSIS_FLAG_REGISTRY_HH
 
 #include <bitset>
 #include <map>
 #include <string>
 
-// Semantic flags that control what kind of data will be stored in a given TTree
-// Can be extended as needed — order matters only for display
+// Define all available analysis flags
 enum class AnalysisFlag {
   StoreRunInfo,
   StorePositions,
   StoreEnergies,
   StoreTracks,
   StorePrimaries,
-  Voxelized, 
+  Voxelized,
   MinimalMode,
-  COUNT // helper for bitset size
+  COUNT  // Number of flags (for std::bitset size)
 };
 
-// Class that stores which flags are active for a given analysis context
+// Container class for storing active flags for a given tree
 class AnalysisFlags {
-public:
+ public:
   AnalysisFlags() = default;
 
-  // Query a flag
-  bool operator[](AnalysisFlag flag) const {
-    return flags.test(static_cast<size_t>(flag));
-  }
+  bool operator[](AnalysisFlag flag) const { return flags.test(static_cast<size_t>(flag)); }
 
-  // Set or unset a flag
-  void Set(AnalysisFlag flag, bool value = true) {
-    flags.set(static_cast<size_t>(flag), value);
-  }
+  void Set(AnalysisFlag flag, bool value = true) { flags.set(static_cast<size_t>(flag), value); }
 
-  // Reset all flags
   void Reset() { flags.reset(); }
 
-
-private:
+ private:
   std::bitset<static_cast<size_t>(AnalysisFlag::COUNT)> flags;
 };
 
-// Global registry for flags assigned per TTree name
-inline std::map<std::string, AnalysisFlags> g_tree_flag_map;
+// Singleton that manages the map of tree name → flag set
+class AnalysisFlagRegistry {
+ public:
+  static AnalysisFlagRegistry& Instance();
 
-// Helper for external configuration
-inline void SetAnalysisFlag(const std::string &treeName, AnalysisFlag flag,
-                            bool value = true) {
-  g_tree_flag_map[treeName].Set(flag, value);
-}
+  void SetFlag(AnalysisFlag flag, bool value = true);
+  bool IsEnabled(AnalysisFlag flag) const;
+  void ResetAll();
+  void PrintAllFlags() const;
 
-#endif // ANALYSIS_FLAGS_HH
+ private:
+  AnalysisFlagRegistry() = default;
+  AnalysisFlags m_flags;
+};
+
+#endif  // ANALYSIS_FLAG_REGISTRY_HH

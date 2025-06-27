@@ -19,18 +19,18 @@ class G4Event;
 class G4Run;
 
 class NTupleEventAnalisys {
-private:
+ private:
   NTupleEventAnalisys() = default;
   ~NTupleEventAnalisys() = default;
 
-  NTupleEventAnalisys(const NTupleEventAnalisys &) = delete;
-  NTupleEventAnalisys &operator=(const NTupleEventAnalisys &) = delete;
-  NTupleEventAnalisys(NTupleEventAnalisys &&) = delete;
-  NTupleEventAnalisys &operator=(NTupleEventAnalisys &&) = delete;
+  NTupleEventAnalisys(const NTupleEventAnalisys&) = delete;
+  NTupleEventAnalisys& operator=(const NTupleEventAnalisys&) = delete;
+  NTupleEventAnalisys(NTupleEventAnalisys&&) = delete;
+  NTupleEventAnalisys& operator=(NTupleEventAnalisys&&) = delete;
 
   /// Event-local data collection (filled per event)
   class TTreeEventCollection {
-  public:
+   public:
     G4int m_evtId = -1;
     G4int m_ntupleId = -1;
     std::map<G4String, G4int> m_colId;
@@ -42,8 +42,7 @@ private:
     std::vector<G4int> m_VoxelHitIdX, m_VoxelHitIdY, m_VoxelHitIdZ;
 
     std::vector<G4double> m_CellIDose;
-    std::vector<G4double> m_VoxelHitEDeposit, m_VoxelHitMeanEDeposit,
-        m_VoxelHitDose;
+    std::vector<G4double> m_VoxelHitEDeposit, m_VoxelHitMeanEDeposit, m_VoxelHitDose;
     std::vector<G4double> m_PrimaryTrkEnergy, m_EvtTime, m_G4EvtPrimaryEnergy;
 
     std::vector<G4double> m_VoxelPositionX, m_VoxelPositionY, m_VoxelPositionZ;
@@ -82,11 +81,11 @@ private:
 
   /// Persistent tree-level configuration (flags, branches, names...)
   class TTreeCollection {
-  public:
+   public:
     G4String m_name;
     G4String m_description;
     std::vector<G4String> m_hc_names;
-    AnalysisFlags flags; ///< Unified set of tree-level configuration flags
+    AnalysisFlags flags;  ///< Unified set of tree-level configuration flags
   };
 
   static G4Cache<std::vector<TTreeCollection>> m_ttree_collection;
@@ -96,36 +95,27 @@ private:
   G4double m_degree_rotation = -10000.;
   G4String m_treeNamePostfix = "TTree";
 
-  void CreateNTuple(const TTreeCollection &treeColl);
-  G4int GetNTupleId(const G4String &treeName);
-  void FillEventCollection(const G4String &treeName, const G4Event *evt,
-                           VoxelHitsCollection *hitsColl);
+  void CreateNTuple(const TTreeCollection& treeColl);
+  G4int GetNTupleId(const G4String& treeName);
+  void FillEventCollection(const G4String& treeName, const G4Event* evt, VoxelHitsCollection* hitsColl);
   void FillNTupleEvent();
   void ClearEventCollections();
 
-public:
-  static NTupleEventAnalisys *GetInstance();
+ public:
+  static NTupleEventAnalisys* GetInstance();
 
-  void BeginOfRun(const G4Run *runPtr, G4bool isMaster);
-  void EndOfEventAction(const G4Event *evt);
+  void BeginOfRun(const G4Run* runPtr, G4bool isMaster);
+  void EndOfEventAction(const G4Event* evt);
 
-  static void DefineTTree(const G4String &treeName,
-                          bool cellVoxelisation = false,
-                          const G4String &hcName = G4String(),
-                          const G4String &treeDescription = G4String());
+  static void DefineTTree(const G4String& treeName, bool cellVoxelisation = false, const G4String& hcName = G4String(), const G4String& treeDescription = G4String());
 
-  /// Replaces previous SetTracksAnalysis() etc.
-  static void SetAnalysisFlag(const G4String &treeName, AnalysisFlag which,
-                              bool enable);
+  
+  static void SetAnalysisFlag(AnalysisFlag which, bool enable);
 
-  static G4bool IsAnyTTreeDefined() {
-    return !m_ttree_collection.Get().empty() ? false : true;
-  }
-  static const std::vector<TTreeCollection> &TreeCollection() {
-    return m_ttree_collection.Get();
-  }
+  static G4bool IsAnyTTreeDefined() { return m_ttree_collection.Get().empty() ? false : true; }
+  static const std::vector<TTreeCollection>& TreeCollection() { return m_ttree_collection.Get(); }
 
-  G4ThreadLocal static NTupleEventAnalisys *fInstance;
+  G4ThreadLocal static NTupleEventAnalisys* fInstance;
 };
 
-#endif // D3D_EVENT_ANALYSIS_HH
+#endif  // D3D_EVENT_ANALYSIS_HH

@@ -174,6 +174,7 @@ std::map<std::size_t, VoxelHit> TLDTray::GetScoringHashedMap(const G4String& sco
               auto voxelCentre = tld_sv->GetVoxelCentre(ix,iy,iz);
             //   G4cout << " voxel "<< ix <<","<<iy<<","<<iz<<" centre: " << voxelCentre << G4endl;
               hashed_map_scoring[voxelHash].SetCentre(voxelCentre);
+              hashed_map_scoring[voxelHash].SetStoreTracks(Service<ConfigSvc>()->GetValue<bool>("RunSvc", "StoreTracks"));
               hashed_map_scoring[voxelHash].SetId(ix,iy,iz);
               hashed_map_scoring[voxelHash].SetGlobalId(idX,idY,idZ);
               hashed_map_scoring[voxelHash].SetVolume( tld_sv->GetVoxelVolume() );
@@ -187,6 +188,7 @@ std::map<std::size_t, VoxelHit> TLDTray::GetScoringHashedMap(const G4String& sco
             hashed_map_scoring[tldHash].SetCentre(centre);
             hashed_map_scoring[tldHash].SetId(idX,idY,idZ);
             hashed_map_scoring[tldHash].SetGlobalId(idX,idY,idZ); // Id == GlobalId
+            hashed_map_scoring[tldHash].SetStoreTracks(Service<ConfigSvc>()->GetValue<bool>("RunSvc", "StoreTracks"));
             hashed_map_scoring[tldHash].SetVolume( tld->GetVolume() );
             hashed_map_scoring[tldHash].SetMass(Medium->GetDensity()*tld->GetVolume());
         }

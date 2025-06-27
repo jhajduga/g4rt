@@ -17,21 +17,20 @@ class VPatientSD;
 class VPatient : public IPhysicalVolume, public TomlConfigModule, public Logable {
   protected:
     ///
-    bool m_tracks_analysis = false;
 
-    ///
-    void SetSensitiveDetector(const G4String& logicalVName, VPatientSD* sensitiveDetectorPtr);
+   ///
+   void SetSensitiveDetector(const G4String& logicalVName, VPatientSD* sensitiveDetectorPtr);
 
-    ///
-    virtual void ConstructSensitiveDetector(){};
+   ///
+   virtual void ConstructSensitiveDetector() {};
 
-    /// Pointer to the sensitive detectors, wrapped into the MT service
-    G4Cache<VPatientSD*> m_patientSD;
+   /// Pointer to the sensitive detectors, wrapped into the MT service
+   G4Cache<VPatientSD*> m_patientSD;
 
-    /// Volume in mm^3
-    /// Initial value should be overritten by the final class, 
-    /// otherwise calling the GetVolume method will throw an exception.
-    G4double m_volume = -1.;
+   /// Volume in mm^3
+   /// Initial value should be overritten by the final class,
+   /// otherwise calling the GetVolume method will throw an exception.
+   G4double m_volume = -1.;
 
   public:
     ///
@@ -46,7 +45,6 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule, public Logable
     ~VPatient() = default;
 
     ///
-    void SetTracksAnalysis(bool flag) {m_tracks_analysis = flag; }
 
     ///
     virtual G4bool IsInside(double x, double y, double z) { return false; }

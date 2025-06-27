@@ -7,6 +7,7 @@
 #include "NTupleEventAnalisys.hh"
 
 #include <algorithm>
+#include <iostream>
 #include <vector>
 
 #include "G4AnalysisManager.hh"
@@ -26,11 +27,91 @@ NTupleEventAnalisys* NTupleEventAnalisys::GetInstance() {
   static NTupleEventAnalisys instance = NTupleEventAnalisys();
   return &instance;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// DefineTTree rewritten to preserve logic: single/multi HC registration
+void NTupleEventAnalisys::DefineTTree(const G4String& treeName, bool cellVoxelisation, const G4String& hcName, const G4String& treeDescription) {
+  if (!Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis")) return;
+
+  std::vector<TTreeCollection>& ttreeVec = m_ttree_collection.Get();
+
+  if (hcName.empty()) {
+    LOGSVC_INFO("Defining TTree: {} (single scoring volume)", treeName);
+
+    // Create new entry for single-scoring-volume case
+    ttreeVec.emplace_back();
+    auto& tree = ttreeVec.back();
+    tree.m_name = treeName;
+    tree.m_description = treeDescription;
+    tree.m_hc_names.emplace_back(treeName);
+
+
+    if (cellVoxelisation) {
+      AnalysisFlagRegistry::Instance().SetFlag(AnalysisFlag::Voxelized, true);
+    }
+
+  } else {
+    // Multi-volume TTree (shared structure across HC)
+    G4int treeIdx = -1;
+    G4bool treeExists = false;
+    for (const auto& tree : ttreeVec) {
+      ++treeIdx;
+      if (tree.m_name == treeName) {
+        treeExists = true;
+        break;
+      }
+    }
+
+    if (!treeExists) {
+      LOGSVC_INFO("Defining TTree: {} (new shared tree)", treeName);
+      ttreeVec.emplace_back();
+      auto& tree = ttreeVec.back();
+      tree.m_name = treeName;
+      tree.m_description = treeDescription;
+      tree.m_hc_names.emplace_back(hcName);
+
+      if (cellVoxelisation) {
+        AnalysisFlagRegistry::Instance().SetFlag(AnalysisFlag::Voxelized, true);
+      }
+
+    } else {
+      // Append HC name to existing tree
+      ttreeVec.at(treeIdx).m_hc_names.emplace_back(hcName);
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// BeginOfRun: initialize flags and create Ntuples if missing
+void NTupleEventAnalisys::BeginOfRun(const G4Run* runPtr, G4bool /*isMaster*/) {
+  if (!Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis")) return;
+
+  SetAnalysisFlag(AnalysisFlag::StoreRunInfo,  Service<ConfigSvc>()->GetValue<bool>("RunSvc", "StoreRunInfo"));
+  SetAnalysisFlag(AnalysisFlag::StorePositions, Service<ConfigSvc>()->GetValue<bool>("RunSvc", "StorePositions"));
+  SetAnalysisFlag(AnalysisFlag::StoreEnergies, Service<ConfigSvc>()->GetValue<bool>("RunSvc", "StoreEnergies"));
+  SetAnalysisFlag(AnalysisFlag::StoreTracks, Service<ConfigSvc>()->GetValue<bool>("RunSvc", "StoreTracks"));
+  SetAnalysisFlag(AnalysisFlag::StorePrimaries, Service<ConfigSvc>()->GetValue<bool>("RunSvc", "StorePrimaries"));
+  SetAnalysisFlag(AnalysisFlag::MinimalMode, Service<ConfigSvc>()->GetValue<bool>("RunSvc", "MinimalMode"));
+
+  m_runId = runPtr->GetRunID();
+  m_degree_rotation = Service<RunSvc>()->CurrentControlPoint()->GetDegreeRotation();
+
+  for (const auto& tree : m_ttree_collection.Get()) {
+    const auto fullName = tree.m_name + m_treeNamePostfix;
+    if (GetNTupleId(fullName) == -1) {
+      std::cout << "Creating NTuple for: " << fullName << std::endl;
+      CreateNTuple(tree);
+      std::cout << "NTuple created successfully." << std::endl;
+    }
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Refactored CreateNTuple to use AnalysisFlags instead of legacy bools
 void NTupleEventAnalisys::CreateNTuple(const TTreeCollection& treeColl) {
-  const auto& flags = treeColl.flags;
   const auto treeName = treeColl.m_name + m_treeNamePostfix;
+  auto& registry = AnalysisFlagRegistry::Instance();
+
   const auto& treeDescription = treeColl.m_description;
 
   auto analysisManager = G4AnalysisManager::Instance();
@@ -43,52 +124,53 @@ void NTupleEventAnalisys::CreateNTuple(const TTreeCollection& treeColl) {
   auto createVecI = [&](const char* name, std::vector<G4int>& vec) { evtNTupleColl.m_colId[name] = analysisManager->CreateNtupleIColumn(evtNTupleColl.m_ntupleId, name, vec); };
   auto createVecD = [&](const char* name, std::vector<G4double>& vec) { evtNTupleColl.m_colId[name] = analysisManager->CreateNtupleDColumn(evtNTupleColl.m_ntupleId, name, vec); };
 
-  // General data that are always stored
-  createI("CellIdX");
+
+      // General data that are always stored
+      createI("CellIdX");
   createI("CellIdY");
   createI("CellIdZ");
   createD("CellDose");
-  if (flags[AnalysisFlag::Voxelized]) {
+  if (registry.IsEnabled(AnalysisFlag::Voxelized)) {
     createI("VoxelIdX");
     createI("VoxelIdY");
     createI("VoxelIdZ");
     createD("VoxelDose");
   }
 
-  if (!flags[AnalysisFlag::MinimalMode]) {
+  if (!registry.IsEnabled(AnalysisFlag::MinimalMode)) {
     createI("G4EvtId");
     createD("G4EvtGlobalTime");
 
     // General per-event branches (only in detailed mode)
-    if (flags[AnalysisFlag::StoreRunInfo]) {
+    if (registry.IsEnabled(AnalysisFlag::StoreRunInfo)) {
       createI("ThreadId");
       createI("G4RunId");
       createD("GantryAngle");
     }
 
     // Cell-level scoring info
-    if (flags[AnalysisFlag::StorePositions]) {
+    if (registry.IsEnabled(AnalysisFlag::StorePositions)) {
       createD("CellPositionX");
       createD("CellPositionY");
       createD("CellPositionZ");
-      if (flags[AnalysisFlag::Voxelized]) {
+      if (registry.IsEnabled(AnalysisFlag::Voxelized)) {
         createD("VoxelPositionX");
         createD("VoxelPositionY");
         createD("VoxelPositionZ");
       }
     }
 
-    if (flags[AnalysisFlag::StoreEnergies]) {
+    if (registry.IsEnabled(AnalysisFlag::StoreEnergies)) {
       createD("CellEDeposit");
       createD("CellMeanEDeposit");
-      if (flags[AnalysisFlag::Voxelized]) {
+      if (registry.IsEnabled(AnalysisFlag::Voxelized)) {
         createD("VoxelEDeposit");
         createD("VoxelMeanEDeposit");
       }
     }
 
     // Voxel-level branches
-    if (flags[AnalysisFlag::StoreTracks]) {
+    if (registry.IsEnabled(AnalysisFlag::StoreTracks)) {
       createVecI("VoxelTrkId", evtNTupleColl.m_VoxelTrkId);
       createVecI("VoxelTrkTypeId", evtNTupleColl.m_VoxelTrkTypeId);
       createVecI("ProcessTypeId", evtNTupleColl.m_ProcessTypeId);
@@ -100,7 +182,7 @@ void NTupleEventAnalisys::CreateNTuple(const TTreeCollection& treeColl) {
       createVecD("VoxelTrkPositionY", evtNTupleColl.m_VoxelTrkPositionY);
       createVecD("VoxelTrkPositionZ", evtNTupleColl.m_VoxelTrkPositionZ);
     }
-    if (flags[AnalysisFlag::StorePrimaries]) {
+    if (registry.IsEnabled(AnalysisFlag::StorePrimaries)) {
       createD("G4EvtPrimaryE");
       createI("G4EvtPrimaryN");
     }
@@ -110,16 +192,16 @@ void NTupleEventAnalisys::CreateNTuple(const TTreeCollection& treeColl) {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-void NTupleEventAnalisys::SetAnalysisFlag(const G4String& treeName, AnalysisFlag which, bool enable) { ::SetAnalysisFlag(treeName, which, enable); }
-
-////////////////////////////////////////////////////////////////////////////////
-/// Refactored FillEventCollection to use AnalysisFlags
-// ========================= NTupleEventAnalisys.cc (fragment) ========================= //
+/// \brief Set an analysis flag for a specific TTree
+void NTupleEventAnalisys::SetAnalysisFlag(AnalysisFlag which, bool enable) {
+  AnalysisFlagRegistry::Instance().SetFlag(which, enable);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Refactored FillEventCollection to match final AnalysisFlags layout
 void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4Event* evt, VoxelHitsCollection* hitsColl) {
-  const auto& flags = g_tree_flag_map[treeName];
+  auto& registry = AnalysisFlagRegistry::Instance();
+
   auto isoToSim = Service<ConfigSvc>()->GetValue<G4ThreeVector>("WorldConstruction", "IsoToSimTransformation");
   auto analysisManager = G4AnalysisManager::Instance();
   auto ntplId = GetNTupleId(treeName);
@@ -151,37 +233,37 @@ void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4
     evtColl.m_CellIdZ.push_back(hit->GetGlobalID(2));
     evtColl.m_CellIDose.push_back(dose * hit->GetVolume() / cellVolume);
 
-    if (flags[AnalysisFlag::Voxelized]) {
+    if (registry.IsEnabled(AnalysisFlag::Voxelized)) {
       evtColl.m_VoxelIdX.push_back(hit->GetID(0));
       evtColl.m_VoxelIdY.push_back(hit->GetID(1));
       evtColl.m_VoxelIdZ.push_back(hit->GetID(2));
       evtColl.m_VoxelHitDose.push_back(dose);
     }
 
-    if (!flags[AnalysisFlag::MinimalMode]) {
-      if (flags[AnalysisFlag::StorePositions]) {
+    if (!registry.IsEnabled(AnalysisFlag::MinimalMode)) {
+      if (registry.IsEnabled(AnalysisFlag::StorePositions)) {
         evtColl.m_CellPositionX.push_back(cell.x());
         evtColl.m_CellPositionY.push_back(cell.y());
         evtColl.m_CellPositionZ.push_back(cell.z());
-        if (flags[AnalysisFlag::Voxelized]) {
+        if (registry.IsEnabled(AnalysisFlag::Voxelized)) {
           evtColl.m_VoxelPositionX.push_back(center.x());
           evtColl.m_VoxelPositionY.push_back(center.y());
           evtColl.m_VoxelPositionZ.push_back(center.z());
         }
       }
 
-      if (flags[AnalysisFlag::StoreEnergies]) {
+      if (registry.IsEnabled(AnalysisFlag::StoreEnergies)) {
         evtColl.m_VoxelHitEDeposit.push_back(eDep);
         evtColl.m_VoxelHitMeanEDeposit.push_back(meanEDep);
       }
 
-      if (flags[AnalysisFlag::StorePrimaries]) {
+      if (registry.IsEnabled(AnalysisFlag::StorePrimaries)) {
         const auto& primE = hit->GetEvtPrimariesEnergy();
         evtColl.m_G4EvtPrimaryEnergy.assign(primE.begin(), primE.end());
         evtColl.m_EvtPrimariesN = hit->GetEvtNPrimaries();
       }
 
-      if (flags[AnalysisFlag::StoreTracks]) {
+      if (registry.IsEnabled(AnalysisFlag::StoreTracks)) {
         const auto& trkMap = hit->GetTrackIdTypeMappingList();
         const auto& procMap = hit->GetTrkIdProcessTypeMappingList();
         const auto& origMap = hit->GetTrkIdElectronOriginTypeMappingList();
@@ -224,7 +306,7 @@ void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4
     }
   }
 
-  if (flags[AnalysisFlag::StorePrimaries] && !hits_evt_global_time.empty()) {
+  if (registry.IsEnabled(AnalysisFlag::StorePrimaries) && !hits_evt_global_time.empty()) {
     evtColl.m_global_time = *std::max_element(hits_evt_global_time.begin(), hits_evt_global_time.end());
   }
 }
@@ -235,10 +317,19 @@ void NTupleEventAnalisys::FillNTupleEvent() {
 
   for (auto coll = m_ntuple_collection.Begin(); coll != m_ntuple_collection.End(); ++coll) {
     const auto& treeName = coll->first;
-    const auto& flags = g_tree_flag_map[treeName];
+    auto& registry = AnalysisFlagRegistry::Instance();
+
     auto& treeEvtColl = coll->second;
     const auto ntupleId = treeEvtColl.m_ntupleId;
     const G4int nHits = treeEvtColl.m_CellIdX.size();
+
+    // AnalysisFlagRegistry::Instance().PrintAllFlags();
+
+    // std::cout << "Voxelized: " << registry.IsEnabled(AnalysisFlag::Voxelized) << std::endl;
+    // std::cout << "MinimalMode: " << registry.IsEnabled(AnalysisFlag::MinimalMode) << std::endl;
+    // std::cout << "StoreRunInfo: " << registry.IsEnabled(AnalysisFlag::StoreRunInfo) << std::endl;
+    // std::cout << "StorePositions: " << registry.IsEnabled(AnalysisFlag::StorePositions) << std::endl;
+    // std::cout << "StoreEnergies: " << registry.IsEnabled(AnalysisFlag::StoreEnergies) << std::endl;
 
     if (nHits == 0) continue;  // empty event
 
@@ -250,40 +341,40 @@ void NTupleEventAnalisys::FillNTupleEvent() {
       fillI("CellIdY", treeEvtColl.m_CellIdY.at(i));
       fillI("CellIdZ", treeEvtColl.m_CellIdZ.at(i));
       fillD("CellDose", treeEvtColl.m_CellIDose.at(i));
-      if (flags[AnalysisFlag::Voxelized]) {
+      if (registry.IsEnabled(AnalysisFlag::Voxelized)) {
         fillI("VoxelIdX", treeEvtColl.m_VoxelIdX.at(i));
         fillI("VoxelIdY", treeEvtColl.m_VoxelIdY.at(i));
         fillI("VoxelIdZ", treeEvtColl.m_VoxelIdZ.at(i));
         fillD("VoxelDose", treeEvtColl.m_VoxelHitDose.at(i));
       }
 
-      if (!flags[AnalysisFlag::MinimalMode]) {
+      if (!registry.IsEnabled(AnalysisFlag::MinimalMode)) {
         fillI("G4EvtId", treeEvtColl.m_evtId);
         fillD("G4EvtGlobalTime", treeEvtColl.m_global_time);
-        if (flags[AnalysisFlag::StoreRunInfo]) {
+        if (registry.IsEnabled(AnalysisFlag::StoreRunInfo)) {
           fillI("ThreadId", G4Threading::G4GetThreadId());
           fillI("G4RunId", m_runId);
           fillD("GantryAngle", m_degree_rotation);
         }
-        if (flags[AnalysisFlag::StorePositions]) {
+        if (registry.IsEnabled(AnalysisFlag::StorePositions)) {
           fillD("CellPositionX", treeEvtColl.m_CellPositionX.at(i));
           fillD("CellPositionY", treeEvtColl.m_CellPositionY.at(i));
           fillD("CellPositionZ", treeEvtColl.m_CellPositionZ.at(i));
-          if (flags[AnalysisFlag::Voxelized]) {
+          if (registry.IsEnabled(AnalysisFlag::Voxelized)) {
             fillD("VoxelPositionX", treeEvtColl.m_VoxelPositionX.at(i));
             fillD("VoxelPositionY", treeEvtColl.m_VoxelPositionY.at(i));
             fillD("VoxelPositionZ", treeEvtColl.m_VoxelPositionZ.at(i));
           }
         }
-        if (flags[AnalysisFlag::StoreEnergies]) {
+        if (registry.IsEnabled(AnalysisFlag::StoreEnergies)) {
           fillD("CellEDeposit", treeEvtColl.m_VoxelHitEDeposit.at(i));
           fillD("CellMeanEDeposit", treeEvtColl.m_VoxelHitMeanEDeposit.at(i));
-          if (flags[AnalysisFlag::Voxelized]) {
+          if (registry.IsEnabled(AnalysisFlag::Voxelized)) {
             fillD("VoxelEDeposit", treeEvtColl.m_VoxelHitEDeposit.at(i));
             fillD("VoxelMeanEDeposit", treeEvtColl.m_VoxelHitMeanEDeposit.at(i));
           }
         }
-        if (flags[AnalysisFlag::StoreTracks]) {
+        if (registry.IsEnabled(AnalysisFlag::StoreTracks)) {
           treeEvtColl.m_VoxelTrkId.clear();
           treeEvtColl.m_VoxelTrkId = treeEvtColl.m_VoxelHitsTrkId.at(i);
 
@@ -325,7 +416,8 @@ void NTupleEventAnalisys::FillNTupleEvent() {
 void NTupleEventAnalisys::ClearEventCollections() {
   for (auto coll = m_ntuple_collection.Begin(); coll != m_ntuple_collection.End(); ++coll) {
     const auto& treeName = coll->first;
-    const auto& flags = g_tree_flag_map[treeName];
+    auto& registry = AnalysisFlagRegistry::Instance();
+
     auto& evt = coll->second;
 
     evt.m_evtId = -1;
@@ -370,83 +462,16 @@ void NTupleEventAnalisys::ClearEventCollections() {
   }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// DefineTTree rewritten to preserve logic: single/multi HC registration
-void NTupleEventAnalisys::DefineTTree(const G4String& treeName, bool cellVoxelisation, const G4String& hcName, const G4String& treeDescription) {
-  if (!Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis")) return;
-
-  std::vector<TTreeCollection>& ttreeVec = m_ttree_collection.Get();
-
-  if (hcName.empty()) {
-    LOGSVC_INFO("Defining TTree: {} (single scoring volume)", treeName);
-
-    // Create new entry for single-scoring-volume case
-    ttreeVec.emplace_back();
-    auto& tree = ttreeVec.back();
-    tree.m_name = treeName;
-    tree.m_description = treeDescription;
-    tree.m_hc_names.emplace_back(treeName);
-
-    // Prepare flags if not yet configured externally
-    if (!g_tree_flag_map.count(treeName)) {
-      g_tree_flag_map[treeName] = AnalysisFlags();
-    }
-    if (cellVoxelisation) {
-      g_tree_flag_map[treeName].Set(AnalysisFlag::Voxelized, true);
-    }
-  } else {
-    // Multi-volume TTree (shared structure across HC)
-    G4int treeIdx = -1;
-    G4bool treeExists = false;
-    for (const auto& tree : ttreeVec) {
-      ++treeIdx;
-      if (tree.m_name == treeName) {
-        treeExists = true;
-        break;
-      }
-    }
-
-    if (!treeExists) {
-      LOGSVC_INFO("Defining TTree: {} (new shared tree)", treeName);
-      ttreeVec.emplace_back();
-      auto& tree = ttreeVec.back();
-      tree.m_name = treeName;
-      tree.m_description = treeDescription;
-      tree.m_hc_names.emplace_back(hcName);
-
-      if (!g_tree_flag_map.count(treeName)) {
-        g_tree_flag_map[treeName] = AnalysisFlags();
-      }
-      if (cellVoxelisation) {
-        g_tree_flag_map[treeName].Set(AnalysisFlag::Voxelized, true);
-      }
-    } else {
-      // Append HC name to existing tree
-      ttreeVec.at(treeIdx).m_hc_names.emplace_back(hcName);
-    }
+G4int NTupleEventAnalisys::GetNTupleId(const G4String& treeName) {
+  auto exists = m_ntuple_collection.Has(treeName);
+  if (exists) {
+    auto evtCollection = m_ntuple_collection.Get(treeName);
+    return evtCollection.m_ntupleId;
   }
+  return -1;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// BeginOfRun: initialize flags and create Ntuples if missing
-void NTupleEventAnalisys::BeginOfRun(const G4Run* runPtr, G4bool /*isMaster*/) {
-  if (!Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis")) return;
-
-  m_runId = runPtr->GetRunID();
-  m_degree_rotation = Service<RunSvc>()->CurrentControlPoint()->GetDegreeRotation();
-
-  for (const auto& tree : m_ttree_collection.Get()) {
-    const auto fullName = tree.m_name + m_treeNamePostfix;
-    if (GetNTupleId(fullName) == -1) {
-      CreateNTuple(tree);
-    }
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return Ntuple ID or -1 if not found
-G4int NTupleEventAnalisys::GetNTupleId(const G4String& treeName) { return m_ntuple_collection.Has(treeName) ? m_ntuple_collection.Get(treeName).m_ntupleId : -1; }
-
 ////////////////////////////////////////////////////////////////////////////////
 /// This member is called at the end of every event from
 /// EventAction::EndOfEventAction

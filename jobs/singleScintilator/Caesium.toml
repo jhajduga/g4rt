@@ -10,6 +10,13 @@ NTupleAnalysis = true
 StepAnalysis = false
 RunAnalysis = true
 
+StoreTracks= true
+StorePositions= true
+StoreEnergies = true
+StorePrimaries = true
+StoreRunInfo= true
+MinimalMode= false
+
 [GeoSvc]
 BuildLinac = true
 BuildPatient = true
@@ -32,7 +39,7 @@ Medium = "RMPS470" #G4_WATER, PMMA
 [WaterPhantom_Scoring]
 FullVolume = true
 FarmerDoseCalibration = false
-TracksAnalysis = true
+
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 nControlPoints = 1      # This will limit number of ctrl points defined below!

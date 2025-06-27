@@ -97,9 +97,7 @@ class VoxelHit final : public G4VHit {
   ///
   void FillEvtInfo();
 
-  ///
-  bool m_tracks_analysis = false;
-
+  bool m_store_tracks = false;
   ///
   VoxelHit& operator+=(const VoxelHit& other);
 
@@ -110,6 +108,7 @@ class VoxelHit final : public G4VHit {
   ///
   ~VoxelHit() = default;
 
+  void SetStoreTracks(bool flag) { m_store_tracks = flag; }
   ///
   inline void* operator new(size_t);
 
@@ -260,9 +259,6 @@ class VoxelHit final : public G4VHit {
   }
 
   ///
-  void SetTracksAnalysis(bool flag) { m_tracks_analysis = flag; }
-
-  ///
   void SetFieldScalingFactor(double sf) { m_field_scaling_factor = sf; }
 
   ///
@@ -299,7 +295,7 @@ inline void VoxelHit::operator delete(void* aHit) { VoxelHitAllocator->FreeSingl
 ///
 template <typename T>
 void VoxelHit::FillTrackUserInfo(G4Step* aStep) {
-  if (m_tracks_analysis) {
+  if (m_store_tracks) {
     auto aTrack = aStep->GetTrack();
     auto trkID = aTrack->GetTrackID();
     auto ret = m_Voxel.m_usrTrksId.insert(trkID);

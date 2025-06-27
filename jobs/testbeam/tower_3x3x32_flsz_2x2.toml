@@ -1,44 +1,60 @@
 [RunSvc]
-JobName = "flsz_propagation_study"
+JobName = "3x3x3"
 BeamType = "IAEA" # "gps" IAEA 
 # PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
 # PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_10x10s2-f0" # AGH LHCBD2 location
-PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
-PrintProgressFrequency = 0.01
-NTupleAnalysis = true 
-FieldType = "Rectangular"
-# FieldType = "Elipsoidal"
-FieldSizeA = 20 # mm
-FieldSizeB = 20 # mm
+PhspInputFileName = "/mnt/data/PHSP/TB_20X20_Merged" 
+PhspEvtVrtxMultiplicityTreshold = 10
+PrintProgressFrequency = 0.05
+Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
+GenerateCT = false
+PrimariesAnalysis = true
+NTupleAnalysis = true
+RunAnalysis = true
+
+StoreTracks= true
+StorePositions= true
+StoreEnergies = true
+StorePrimaries = true
+StoreRunInfo= true
+MinimalMode= false
+
+[GeoSvc]
+BuildLinac = true
+BuildPatient = true
+MlcModel="Simplified"
 
 [PatientGeometry]
 Type = "D3DDetector"
 PatientIsocentreX = 0.0
 PatientIsocentreY = 0.0
-PatientIsocentreZ = 200.0
-EnviromentSizeX = 50.0
-EnviromentSizeY = 50.0
-EnviromentSizeZ = 400.0
+PatientIsocentreZ = 25.0
+EnviromentSizeX = 80.0
+EnviromentSizeY = 80.0
+EnviromentSizeZ = 80.0
 EnviromentMedium = "G4_Galactic"
+SupplementaryGeometry = "dose3d/geo/Tower/Model.stl"
+SupplementaryGeometryMaterial = "PMMA"
+SupplementaryGeometryPositionX = 0.0
+SupplementaryGeometryPositionY = 0.0
+SupplementaryGeometryPositionZ = 26.0
+
 
 [D3DDetector_Detector]
-TranslationInLocalFrame = [0.0,0.0,-200.0] # In mm
-# Voxelization = [3,3,20] # Number of cels in every direction
 Voxelization = [3,3,3] # Number of cels in every direction
 
-[D3DDetector_Layer]
-MRowShift = false
-MLayerShift = false
+
 
 [D3DDetector_Cell]
 Medium = "RMPS470" #G4_WATER, PMMA
-Voxelization = [10,10,10]
-TracksAnalysis = false
+Voxelization = [5,5,5]
 
-[RunSvc_Plan]
-Control_Points_In_Treatment_Plan = 1
-Gantry_Angle_Per_Control_Point = [0.0]
-Particle_Counter_Per_Control_Point = [1e4]
+[RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
+nControlPoints = 1      # This will limit number of ctrl points defined below!
+BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
+nParticles = 5000      # This will overwrite Rotation value for all below plan files!
+PlanInputFile = [
+        "plan/custom/cp10x10.dat"
+        # "plan/custom/prostate/prostate_imrt_beam0_cp0.dat"
+]
 
-[LogSvc_D3DCell]
-LogLevel = "debug"

@@ -205,7 +205,7 @@ G4int VoxelHit::GetTrkIdElectronOriginTypeMappingList(G4Step* aStep) const { // 
 /// 
 /// Fills the track information from a Geant4 step into the voxel hit.
 void VoxelHit::FillTrack(G4Step* aStep) {
-  if (m_tracks_analysis) {
+  if (m_store_tracks) {
     // TODO: !!! Store Parent ID or Primary ID -> for Purpose of a visualisation (OpenGL based for example)
     auto aTrack = aStep->GetTrack();
     auto trkID = aTrack->GetTrackID();
@@ -265,10 +265,17 @@ void VoxelHit::SetGlobalId(G4int xId, G4int yId, G4int zId) {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void VoxelHit::SetGravCentre(const G4ThreeVector& position) {
+  // TODO: Replace running 1/2-average with true arithmetic mean.
+  // Current implementation biases toward recent updates:
+  // (((((p1 + p2)/2 + p3)/2 + p4)/2 + ... +pN)/2) != (p1 + p2 + ... + pN)/N
+  // Suggest maintaining cumulative vector sum and count:
+  //   m_sum += position; m_count++;
+  //   m_GravitationalCentre = m_sum / m_count;
+
   if (m_Voxel.m_GravitationalCentre.x() == 0.)
     m_Voxel.m_GravitationalCentre.setX(position.x());
   else
-    m_Voxel.m_GravitationalCentre.setX((position.x() + m_Voxel.m_GravitationalCentre.x()) / 2.);
+    m_Voxel.m_GravitationalCentre.setX((position.x() + m_Voxel.m_GravitationalCentre.x()) / 2.); 
 
   if (m_Voxel.m_GravitationalCentre.y() == 0.)
     m_Voxel.m_GravitationalCentre.setY(position.y());
