@@ -5,22 +5,22 @@
 #ifndef VOXELHIT_HH
 #define VOXELHIT_HH
 
-#include "G4VHit.hh"
-#include "G4Step.hh"
-#include "G4THitsCollection.hh"
-#include "G4Allocator.hh"
-#include "G4ThreeVector.hh"
+#include <G4RunManager.hh>
 #include <memory>
 #include <set>
+
+#include "G4Allocator.hh"
+#include "G4Step.hh"
+#include "G4THitsCollection.hh"
+#include "G4ThreeVector.hh"
+#include "G4VHit.hh"
 #include "tls.hh"
-#include <G4RunManager.hh>
 
 class VoxelHit final : public G4VHit {
-
-  private:
+ private:
   ///
   class Voxel {
-    public:
+   public:
     /// Voxel can be numerated internally and externally, thus:
     /// Local indexes of the voxel
     G4int m_idx_x = -1;
@@ -41,8 +41,8 @@ class VoxelHit final : public G4VHit {
     /// Note: Primary tracks have a track ID = 1, secondary tracks have an ID > 1
     std::set<G4int> m_trksId;
     std::set<G4Track*> m_trksPtr;
-    std::vector<G4int> m_trksTypeId; // 1:G4Gamma, 2:G4Electron, 3:G4Positron, 4:G4Neutron, 5:G4Proton
-    std::vector<G4int> m_trksProcessTypeId; // typr of physical process
+    std::vector<G4int> m_trksTypeId;         // 1:G4Gamma, 2:G4Electron, 3:G4Positron, 4:G4Neutron, 5:G4Proton
+    std::vector<G4int> m_trksProcessTypeId;  // typr of physical process
     std::vector<G4int> m_trksElectronOriginTypeId;
     std::vector<G4double> m_trksE;
     std::vector<G4double> m_trksTheta;
@@ -51,14 +51,13 @@ class VoxelHit final : public G4VHit {
     /// remember history for all steps
     std::vector<G4double> m_stepsEdep;
 
-
     /// User custom track's length measure (e.g. start length accumulation within specific volume)
     std::set<G4int> m_usrTrksId;
     std::vector<G4double> m_usrTrksLength;
 
     ///
     G4double m_incidentE = 0.;
-    G4int m_primaryID = -1;  //ID of the primary particle.
+    G4int m_primaryID = -1;  // ID of the primary particle.
 
     ///
     G4double m_Mass = 0.;
@@ -67,13 +66,13 @@ class VoxelHit final : public G4VHit {
     G4double m_Volume = 0.;
 
     ///
-    G4ThreeVector m_Centre{0.,0.,0.};
+    G4ThreeVector m_Centre{0., 0., 0.};
 
     ///
-    G4ThreeVector m_GlobalCentre{0.,0.,0.};
+    G4ThreeVector m_GlobalCentre{0., 0., 0.};
 
     ///
-    G4ThreeVector m_GravitationalCentre{0.,0.,0.};
+    G4ThreeVector m_GravitationalCentre{0., 0., 0.};
   };
 
   std::vector<G4double> m_evtPrimariesIncidentE;
@@ -97,14 +96,14 @@ class VoxelHit final : public G4VHit {
 
   ///
   void FillEvtInfo();
-  
+
   ///
   bool m_tracks_analysis = false;
 
   ///
   VoxelHit& operator+=(const VoxelHit& other);
 
-  public:
+ public:
   ///
   VoxelHit() = default;
 
@@ -112,10 +111,10 @@ class VoxelHit final : public G4VHit {
   ~VoxelHit() = default;
 
   ///
-  inline void *operator new(size_t);
+  inline void* operator new(size_t);
 
   ///
-  inline void operator delete(void *);
+  inline void operator delete(void*);
 
   ///
   bool operator==(const VoxelHit& other) const;
@@ -128,7 +127,7 @@ class VoxelHit final : public G4VHit {
   void Draw() override {};
 
   ///
-  void Print() override; // shit happens
+  void Print() override;  // shit happens
   void Print() const;
 
   ///
@@ -153,13 +152,13 @@ class VoxelHit final : public G4VHit {
   G4String GetLabel() const { return m_label; }
 
   ///
-  void SetVolume(G4double volume) { m_Voxel.m_Volume = volume;}
+  void SetVolume(G4double volume) { m_Voxel.m_Volume = volume; }
 
   ///
-  G4double GetVolume() const {return m_Voxel.m_Volume; }
+  G4double GetVolume() const { return m_Voxel.m_Volume; }
 
   ///
-  void SetMass(G4double mass) {m_Voxel.m_Mass=mass; }
+  void SetMass(G4double mass) { m_Voxel.m_Mass = mass; }
 
   ///
   G4ThreeVector GetGravCentre() const { return m_Voxel.m_GravitationalCentre; }
@@ -167,7 +166,7 @@ class VoxelHit final : public G4VHit {
   ///
   G4ThreeVector GetCentre() const { return m_Voxel.m_Centre; }
 
-  // G4ThreeVector GetCentreInGlobal() const { return m_Voxel.m_Centre + m_Voxel.m_GlobalCentre; } // if d3d detector will be broken cause of fix then we will use this... 
+  // G4ThreeVector GetCentreInGlobal() const { return m_Voxel.m_Centre + m_Voxel.m_GlobalCentre; } // if d3d detector will be broken cause of fix then we will use this...
 
   ///
   G4ThreeVector GetGlobalCentre() const { return m_Voxel.m_GlobalCentre; }
@@ -179,8 +178,11 @@ class VoxelHit final : public G4VHit {
   G4int GetGlobalID(G4int axisId) const;
 
   ///
-  G4double GetDose() const { return m_Voxel.m_Dose;}
-  G4double SetDose(G4double val) { m_Voxel.m_Dose = val; return m_Voxel.m_Dose;}
+  G4double GetDose() const { return m_Voxel.m_Dose; }
+  G4double SetDose(G4double val) {
+    m_Voxel.m_Dose = val;
+    return m_Voxel.m_Dose;
+  }
 
   ///
   inline G4double GetEnergyDeposit() const { return m_Voxel.m_Edep; }
@@ -189,7 +191,10 @@ class VoxelHit final : public G4VHit {
   G4double GetMeanEnergyDeposit() const;
 
   ///
-  void SetPrimary(G4int fId, G4double fEn){ m_Voxel.m_primaryID = fId; m_Voxel.m_incidentE = fEn; }
+  void SetPrimary(G4int fId, G4double fEn) {
+    m_Voxel.m_primaryID = fId;
+    m_Voxel.m_incidentE = fEn;
+  }
 
   ///
   G4double GetPrimaryEnergy() const { return m_Voxel.m_incidentE; }
@@ -198,16 +203,16 @@ class VoxelHit final : public G4VHit {
   G4int GetPrimaryId() const { return m_Voxel.m_primaryID; }
 
   ///
-  std::vector<std::pair<G4int,G4double>> GetTrkEnergy() const;
-  std::vector<std::pair<G4int,G4double>> GetTrkTheta() const;
-  std::vector<std::pair<G4int,G4double>> GetTrkLength() const;
-  std::vector<std::pair<G4int,G4double>> GetUserTrkLength() const;
-  std::vector<std::pair<G4int,G4ThreeVector>> GetTrkPosition() const;
-  std::vector<std::pair<G4int,G4int>> GetTrkType() const;
-  std::vector<std::pair<G4int,G4int>> GetProcessType() const;
-  std::vector<std::pair<G4int,G4int>> GetElectronOriginType() const;
+  std::vector<std::pair<G4int, G4double>> GetTrkIdEnergyMappingList() const;
+  std::vector<std::pair<G4int, G4double>> GetTrkIdThetaMappingList() const;
+  std::vector<std::pair<G4int, G4double>> GetTrkIdLengthMappingList() const;
+  std::vector<std::pair<G4int, G4double>> GetTrkIdUserLengthMappingList() const;
+  std::vector<std::pair<G4int, G4ThreeVector>> GetTrkIdPositionMappingList() const;
+  std::vector<std::pair<G4int, G4int>> GetTrackIdTypeMappingList() const;
+  std::vector<std::pair<G4int, G4int>> GetTrkIdProcessTypeMappingList() const;
+  std::vector<std::pair<G4int, G4int>> GetTrkIdElectronOriginTypeMappingList() const;
 
-  ///  
+  ///
   G4double GetPrimaryTrkEnergy() const;
 
   ///
@@ -220,22 +225,24 @@ class VoxelHit final : public G4VHit {
   void Update(G4Step* aStep);
 
   ///
-  G4int GetTrkType(G4Step* aStep) const;
+  G4int GetTrackIdTypeMappingList(G4Step* aStep) const;
 
   ///
-  G4int GetProcessType(G4Step* aStep) const;
+  G4int GetTrkIdProcessTypeMappingList(G4Step* aStep) const;
 
-  /// 
-  G4int GetElectronOriginType(G4Step* aStep) const;
+  ///
+  G4int GetTrkIdElectronOriginTypeMappingList(G4Step* aStep) const;
 
   ///
   G4double GetGlobalTime() const { return m_global_time; }
 
   ///
-  template <typename T> void FillTrackUserInfo(G4Step* aStep);
+  template <typename T>
+  void FillTrackUserInfo(G4Step* aStep);
 
   ///
-  template <typename T> void FillPrimaryParticleUserInfo();
+  template <typename T>
+  void FillPrimaryParticleUserInfo();
 
   ///
   void PrintEvtInfo() const;
@@ -244,13 +251,16 @@ class VoxelHit final : public G4VHit {
   const std::vector<G4double>& GetEvtPrimariesEnergy() const { return m_evtPrimariesIncidentE; }
 
   ///
-  G4int GetEvtNPrimaries() const { return m_evtPrimariesIncidentMultiplicity; } 
+  G4int GetEvtNPrimaries() const { return m_evtPrimariesIncidentMultiplicity; }
 
   //
-  G4int AddNEvtPrimary(G4int n) { m_evtPrimariesIncidentMultiplicity+=n; return m_evtPrimariesIncidentMultiplicity; } 
+  G4int AddNEvtPrimary(G4int n) {
+    m_evtPrimariesIncidentMultiplicity += n;
+    return m_evtPrimariesIncidentMultiplicity;
+  }
 
   ///
-  void SetTracksAnalysis(bool flag){ m_tracks_analysis = flag; }
+  void SetTracksAnalysis(bool flag) { m_tracks_analysis = flag; }
 
   ///
   void SetFieldScalingFactor(double sf) { m_field_scaling_factor = sf; }
@@ -267,38 +277,35 @@ class VoxelHit final : public G4VHit {
   ///
   std::size_t GetGlobalHashedStrId() const;
   std::size_t GetHashedStrId() const;
-
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 using VoxelHitsCollection = G4THitsCollection<VoxelHit>;
-extern G4ThreadLocal G4Allocator<VoxelHit> *VoxelHitAllocator;
+extern G4ThreadLocal G4Allocator<VoxelHit>* VoxelHitAllocator;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-inline void *VoxelHit::operator new(size_t) {
-  if (!VoxelHitAllocator)
-    VoxelHitAllocator = new G4Allocator<VoxelHit>;
-  return (void *) VoxelHitAllocator->MallocSingle();
+inline void* VoxelHit::operator new(size_t) {
+  if (!VoxelHitAllocator) VoxelHitAllocator = new G4Allocator<VoxelHit>;
+  return (void*)VoxelHitAllocator->MallocSingle();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-inline void VoxelHit::operator delete(void *aHit) {
-  VoxelHitAllocator->FreeSingle((VoxelHit *) aHit);
-}
+inline void VoxelHit::operator delete(void* aHit) { VoxelHitAllocator->FreeSingle((VoxelHit*)aHit); }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-template <typename T> void VoxelHit::FillTrackUserInfo(G4Step* aStep){
-  if(m_tracks_analysis){
+template <typename T>
+void VoxelHit::FillTrackUserInfo(G4Step* aStep) {
+  if (m_tracks_analysis) {
     auto aTrack = aStep->GetTrack();
     auto trkID = aTrack->GetTrackID();
     auto ret = m_Voxel.m_usrTrksId.insert(trkID);
-    if (ret.second==true) { // new element inserted
+    if (ret.second == true) {  // new element inserted
       auto trackInfo = dynamic_cast<T*>(aTrack->GetUserInformation());
-      if(trackInfo){
+      if (trackInfo) {
         auto trkLength = trackInfo->GetTrackLength();
         m_Voxel.m_usrTrksLength.emplace_back(trkLength);
       }
@@ -308,17 +315,17 @@ template <typename T> void VoxelHit::FillTrackUserInfo(G4Step* aStep){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-template <typename T> void VoxelHit::FillPrimaryParticleUserInfo(){
-
-  if (m_evtPrimariesIncidentE.empty()){ // it should be done only once!
+template <typename T>
+void VoxelHit::FillPrimaryParticleUserInfo() {
+  if (m_evtPrimariesIncidentE.empty()) {  // it should be done only once!
     auto evt = G4RunManager::GetRunManager()->GetCurrentEvent();
     auto nvrtx = evt->GetNumberOfPrimaryVertex();
-    for (int i=0; i< nvrtx; ++i){
+    for (int i = 0; i < nvrtx; ++i) {
       auto vrtx = evt->GetPrimaryVertex(i);
       auto particle = vrtx->GetPrimary(0);
-      if(particle->GetKineticEnergy()>0){
+      if (particle->GetKineticEnergy() > 0) {
         auto particleInfo = particle->GetUserInformation();
-        if(particleInfo){
+        if (particleInfo) {
           m_evtPrimariesIncidentE.emplace_back(dynamic_cast<T*>(particleInfo)->GetInitialTotalEnergy());
         }
       }
@@ -327,4 +334,4 @@ template <typename T> void VoxelHit::FillPrimaryParticleUserInfo(){
   }
 }
 
-#endif //VOXELHIT_HH
+#endif  // VOXELHIT_HH

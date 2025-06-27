@@ -116,10 +116,9 @@ void NTupleEventAnalisys::SetAnalysisFlag(const G4String& treeName, AnalysisFlag
 /// Refactored FillEventCollection to use AnalysisFlags
 // ========================= NTupleEventAnalisys.cc (fragment) ========================= //
 
-
-    ////////////////////////////////////////////////////////////////////////////////
-    /// Refactored FillEventCollection to match final AnalysisFlags layout
-  void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4Event* evt, VoxelHitsCollection* hitsColl) {
+////////////////////////////////////////////////////////////////////////////////
+/// Refactored FillEventCollection to match final AnalysisFlags layout
+void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4Event* evt, VoxelHitsCollection* hitsColl) {
   const auto& flags = g_tree_flag_map[treeName];
   auto isoToSim = Service<ConfigSvc>()->GetValue<G4ThreeVector>("WorldConstruction", "IsoToSimTransformation");
   auto analysisManager = G4AnalysisManager::Instance();
@@ -181,12 +180,12 @@ void NTupleEventAnalisys::SetAnalysisFlag(const G4String& treeName, AnalysisFlag
         evtColl.m_G4EvtPrimaryEnergy.assign(primE.begin(), primE.end());
         evtColl.m_EvtPrimariesN = hit->GetEvtNPrimaries();
       }
-      
+
       if (flags[AnalysisFlag::StoreTracks]) {
-        const auto& trkMap = hit->GetTrkType();
-        const auto& procMap = hit->GetProcessType();
-        const auto& origMap = hit->GetElectronOriginType();
-        
+        const auto& trkMap = hit->GetTrackIdTypeMappingList();
+        const auto& procMap = hit->GetTrkIdProcessTypeMappingList();
+        const auto& origMap = hit->GetTrkIdElectronOriginTypeMappingList();
+
         std::vector<G4int> trkType, trkTypeId;
         for (const auto& [id, type] : trkMap) {
           trkType.push_back(id);
@@ -194,26 +193,26 @@ void NTupleEventAnalisys::SetAnalysisFlag(const G4String& treeName, AnalysisFlag
         }
         evtColl.m_VoxelHitsTrkId.push_back(trkType);
         evtColl.m_VoxelHitsTrkTypeId.push_back(trkTypeId);
-        
+
         std::vector<G4int> procTypeId;
         for (const auto& [_, proc] : procMap) procTypeId.push_back(proc);
         evtColl.m_VoxelHitsProcessTypeId.push_back(procTypeId);
-        
+
         std::vector<G4int> origTypeId;
         for (const auto& [_, org] : origMap) origTypeId.push_back(org);
         evtColl.m_VoxelHitsElectronOriginTypeId.push_back(origTypeId);
-        
+
         std::vector<G4double> eList, thetaList, lenList;
         std::vector<G4double> xList, yList, zList;
-        for (const auto& [_, val] : hit->GetTrkEnergy()) eList.push_back(val / keV);
-        for (const auto& [_, val] : hit->GetTrkTheta()) thetaList.push_back(val);
-        for (const auto& [_, val] : hit->GetTrkLength()) lenList.push_back(val);
-        for (const auto& [_, pos] : hit->GetTrkPosition()) {
+        for (const auto& [_, val] : hit->GetTrkIdEnergyMappingList()) eList.push_back(val / keV);
+        for (const auto& [_, val] : hit->GetTrkIdThetaMappingList()) thetaList.push_back(val);
+        for (const auto& [_, val] : hit->GetTrkIdLengthMappingList()) lenList.push_back(val);
+        for (const auto& [_, pos] : hit->GetTrkIdPositionMappingList()) {
           xList.push_back(pos.x() - isoToSim.x());
           yList.push_back(pos.y() - isoToSim.y());
           zList.push_back(pos.z() - isoToSim.z());
         }
-        
+
         evtColl.m_VoxelHitsTrkEnergy.push_back(eList);
         evtColl.m_VoxelHitsTrkTheta.push_back(thetaList);
         evtColl.m_VoxelHitsTrkLength.push_back(lenList);
