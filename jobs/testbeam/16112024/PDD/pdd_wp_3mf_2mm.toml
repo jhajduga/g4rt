@@ -3,12 +3,19 @@ JobName = "pdd_wp_3mf_2mm"
 BeamType = "IAEA"
 PhspInputFileName = "/mnt/data/PHSP/TB_20X20_Merged" 
 PhspEvtVrtxMultiplicityTreshold = 10
-PrintProgressFrequency = 0.0005
+PrintProgressFrequency = 0.05
 Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
 GenerateCT = false
-PrimariesAnalysis = false
-NTupleAnalysis = false
+PrimariesAnalysis = true
+NTupleAnalysis = true
 RunAnalysis = true
+
+StoreTracks= true
+StorePositions= true
+StoreEnergies = true
+StorePrimaries = true
+StoreRunInfo= true
+MinimalMode= false
 
 [GeoSvc]
 BuildLinac = true
@@ -40,6 +47,12 @@ Rotation = [0.0, 0.0, 0.0] # Rotation aouynd axis X/Y/Z inside the patient envir
 [D3DDetector_Cell]
 Medium = "RMPS470" #G4_WATER, PMMA
 Voxelization = [5,5,5]
+TracksAnalysis = true
+PositionsAnalysis = true
+EnergiesAnalysis = true
+PrimariesAnalysis = true
+RunInfoAnalysis = true
+MinimalOutput = false
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 nControlPoints = 1      # This will limit number of ctrl points defined below!

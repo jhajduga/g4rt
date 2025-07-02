@@ -18,7 +18,7 @@ VPatientSD::VPatientSD(const G4String& sdName, const G4ThreeVector& centre)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Note that a SD can declare more than one hits collection being groupped by runCollName!
-/// Bartek's note: Typically the adding HC call is being placed inside SD constructor, 
+/// Bartek's note: Typically the adding HC call is being placed inside SD constructor,
 /// within this application framework I've exposed this to the level of UserDecectorClass::DefineSensitiveDetector()
 /// method but before the G4SDManager::GetSDMpointer()->AddNewDetector(aSD) is being called
 void VPatientSD::AddHitsCollection(const G4String&runCollName, const G4String& hitsCollName){
@@ -39,7 +39,7 @@ void VPatientSD::AddHitsCollection(const G4String&runCollName, const G4String& h
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// 
+///
 void VPatientSD::AddScoringVolume(const G4String& runCollName, const G4String& hitsCollName, const G4Box& scoringBox, int scoringNX, int scoringNY, int scoringNZ, const G4ThreeVector& translation){
   AddHitsCollection(runCollName,hitsCollName);
   SetScoringParameterization(hitsCollName,scoringNX,scoringNY,scoringNZ);
@@ -49,14 +49,13 @@ void VPatientSD::AddScoringVolume(const G4String& runCollName, const G4String& h
     if(scoringNX > 1 || scoringNY > 1 ||scoringNZ > 1)
       isVoxelised = true;
     NTupleEventAnalisys::DefineTTree(runCollName,isVoxelised,hitsCollName,"Event data");
-    NTupleEventAnalisys::SetTracksAnalysis(hitsCollName,m_tracks_analysis);
   }
 };
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// 
-void VPatientSD::AcknowledgeHitsCollection(const G4String&runCollName,const std::pair<G4String,std::unique_ptr<ScoringVolume>>& scoring_volume){
+///
+void VPatientSD::AcknowledgeHitsCollection(const G4String& runCollName, const std::pair<G4String, std::unique_ptr<ScoringVolume>>& scoring_volume) {
   bool is_ok = false;
   G4String compatibility_reference_obj = "?";
   G4int n_sv_of_current_run_coll = m_scoring_volumes.size();
@@ -106,7 +105,7 @@ bool VPatientSD::ScoringVolume::operator == (const ScoringVolume& other){
   bool is_volume_eq = GetVolume() == other.GetVolume();
   bool is_voxel_volume_eq = GetVoxelVolume() == other.GetVoxelVolume();
   bool is_run_collection_eq = m_run_collection == other.m_run_collection;
-  
+
   return   is_voxelisation_eq
         && is_volume_eq
         && is_voxel_volume_eq
@@ -127,7 +126,7 @@ void VPatientSD::Initialize(G4HCofThisEvent* hCofThisEvent){
     auto this_collection_name = i_sd.first;
     auto& this_collection_id = i_sd.second->id;
     i_sd.second->m_voxelHCollectionPtr = new VoxelHitsCollection(this_sd_name,this_collection_name);
-    
+
     if(this_collection_id<0)
       this_collection_id = sdManager->GetCollectionID(this_collection_name); // Get ID from global storage
 
@@ -154,7 +153,7 @@ void VPatientSD::SetScoringParameterization(const G4String& hitsCollName, int nX
   auto scoring_sd = GetScoringVolumePtr(hitsCollName); // this verify if this name exists, otherwise FatalExeption
   scoring_sd->m_nVoxelsX = nX;
   scoring_sd->m_nVoxelsY = nY;
-  scoring_sd->m_nVoxelsZ = nZ; 
+  scoring_sd->m_nVoxelsZ = nZ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -167,7 +166,7 @@ G4int VPatientSD::GetScoringHcId(const G4String& hitsCollName) const{
 ////////////////////////////////////////////////////////////////////////////////
 ///
 G4int VPatientSD::GetScoringHcId(const G4int scoringSdIdx) const{
-    G4int nElements = m_scoring_volumes.size();
+  G4int nElements = m_scoring_volumes.size();
   if (scoringSdIdx < nElements){
     return m_scoring_volumes.at(scoringSdIdx).second->id;
   } else{
@@ -184,9 +183,9 @@ G4int VPatientSD::GetScoringVolumeIdx(const G4String& hitsCollName) const {
   G4int idx = -1;
   for(const auto& i_sd : m_scoring_volumes){
     if (i_sd.first == hitsCollName){
-      ++idx; 
+      ++idx;
       break;
-    } 
+    }
     ++idx;
   }
   if (idx < 0 ){
@@ -218,8 +217,8 @@ VPatientSD::ScoringVolume* VPatientSD::GetScoringVolumePtr(G4int scoringSdIdx){
     G4String msg =  "GetScoringVolumePtr::The scoring SD for given index doesn't exist! (max size="+std::to_string(nElements)+")";
     LOGSVC_CRITICAL("{}. Verify the AddHitsCollection(...) calls!",msg);
     G4Exception("VPatientSD", msg, FatalException,"Verify the AddHitsCollection(...) calls!");
-    }
-    return nullptr;
+  }
+  return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -232,8 +231,8 @@ VPatientSD::ScoringVolume* VPatientSD::GetScoringVolumePtr(G4int scoringSdIdx) c
     G4String msg =  "GetScoringVolumePtr::The scoring SD for given index doesn't exist! (max size="+std::to_string(nElements)+")";
     LOGSVC_CRITICAL("{}. Verify the AddHitsCollection(...) calls!", msg);
     G4Exception("VPatientSD", msg, FatalException,"Verify the AddHitsCollection(...) calls!");
-    }
-    return nullptr;
+  }
+  return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -284,7 +283,7 @@ void VPatientSD::InitializeChannelsID(){
         channelHCollectionIndex.emplace_back(-1);
       }
   } else // reset of the vector (happens for each event initialization)
-    std::fill(channelHCollectionIndex.begin(), channelHCollectionIndex.end(), -1);
+      std::fill(channelHCollectionIndex.begin(), channelHCollectionIndex.end(), -1);
 
   }
 }
@@ -353,7 +352,7 @@ void VPatientSD::SetScoringVolume(G4int scoringSdIdx, const G4Box& envelopBox, c
   voxelsCentre.reserve(max_uniqe_idx);
   for (int i = 0; i < static_cast<int>(max_uniqe_idx); ++i){
         voxelsCentre.emplace_back(G4ThreeVector(-999,-999,-999));
-      }
+  }
 
   auto dx = static_cast<double>(maxX - minX)/nvX; //
   auto dy = static_cast<double>(maxY - minY)/nvY; //
@@ -382,7 +381,7 @@ G4int VPatientSD::ScoringVolume::LinearizeIndex(int idX, int idY, int idZ) const
 ///
 G4ThreeVector VPatientSD::ScoringVolume::GetVoxelCentre(int idX, int idY, int idZ) const {
     auto index = LinearizeIndex(idX,idY,idZ);
-    return m_channelCentrePosition.at(index);
+  return m_channelCentrePosition.at(index);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -392,7 +391,7 @@ G4ThreeVector VPatientSD::ScoringVolume::GetVoxelCentre(int linearizedId) const 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// 
+///
 G4int VPatientSD::ScoringVolume::GetVoxelID(G4int axisId, const G4ThreeVector& hitPosition)  const {
   G4int voxelId = 0;
 
@@ -426,7 +425,7 @@ G4int VPatientSD::ScoringVolume::GetVoxelID(G4int axisId, const G4ThreeVector& h
     else {
       id = int(std::floor(nVoxels * (x - min) / (max - min) ));
       if(x<=min){
-      G4cout << "max " << max << G4endl;
+        G4cout << "max " << max << G4endl;
       G4cout << "min " << min << G4endl<<G4endl;
       }
       if(id==nVoxels) --id; // for exact edge hit, it happens!
@@ -452,7 +451,7 @@ G4int VPatientSD::ScoringVolume::GetVoxelID(G4int axisId, const G4ThreeVector& h
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// 
+///
 G4int VPatientSD::ScoringVolume::GetLinearizedVoxelID(const G4ThreeVector& hitPosition)  const {
   auto idX = GetVoxelID(0, hitPosition);
   auto idY = GetVoxelID(1, hitPosition);
@@ -482,8 +481,8 @@ G4bool VPatientSD::ScoringVolume::IsOnBorder(const G4ThreeVector& position) cons
     };
     auto pos = svc::round_with_prec(position,8);
     G4bool inBorder = ( IsEqual(pos.x(), m_rangeMaxX) || IsEqual(pos.x(), m_rangeMinX) ||  IsEqual(pos.y(), m_rangeMaxY) || IsEqual(pos.y(), m_rangeMinY) ||  IsEqual(pos.z(), m_rangeMaxZ) || IsEqual(pos.z(), m_rangeMinZ) );
-    return inBorder;
-  }
+  return inBorder;
+}
 
 G4double VPatientSD::ScoringVolume::GetVoxelVolume() const{
   if(m_shape=="Box"){
@@ -495,7 +494,6 @@ G4double VPatientSD::ScoringVolume::GetVoxelVolume() const{
   }
   return 0.;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -519,9 +517,9 @@ G4ThreeVector VPatientSD::GetSDCentre() const {
 ///
 void VPatientSD::ProcessHitsCollection(const G4String& hitsCollectionName, G4Step* aStep){
     auto position = aStep->GetPreStepPoint()->GetPosition(); // in world volume frame;
-    auto scoringVolumePtr = GetScoringVolumePtr(hitsCollectionName);
-    auto inScoringVolume = scoringVolumePtr->IsInside(position);
-    auto isOnBorder = scoringVolumePtr->IsOnBorder(position);
+  auto scoringVolumePtr = GetScoringVolumePtr(hitsCollectionName);
+  auto inScoringVolume = scoringVolumePtr->IsInside(position);
+  auto isOnBorder = scoringVolumePtr->IsOnBorder(position);
 
     if (!inScoringVolume || (isOnBorder && ((aStep->GetTotalEnergyDeposit())==0.))){
       if (!isOnBorder && aStep->GetTotalEnergyDeposit()>0 ){
@@ -530,51 +528,51 @@ void VPatientSD::ProcessHitsCollection(const G4String& hitsCollectionName, G4Ste
                               << ") y(" << scoringVolumePtr->m_rangeMinY << " - " << scoringVolumePtr->m_rangeMaxY
                               << ") z(" << scoringVolumePtr->m_rangeMinZ << " - " << scoringVolumePtr->m_rangeMaxZ 
                               << ")" <<  G4endl;
-      }
-      return; // Nothing to do for this HC
     }
+      return; // Nothing to do for this HC
+  }
 
-    // IMPORTANT: this feature reduce photons hits at small angle scattering!!!
+  // IMPORTANT: this feature reduce photons hits at small angle scattering!!!
     //if (edep == 0.) return false;
-    // ________________________________________________________________
-    // Accumulate data from all steps in this event per volume/local channel.
-    auto voxelIdX = scoringVolumePtr->GetVoxelID(0, position);
-    auto voxelIdY = scoringVolumePtr->GetVoxelID(1, position);
-    auto voxelIdZ = scoringVolumePtr->GetVoxelID(2, position);
+  // ________________________________________________________________
+  // Accumulate data from all steps in this event per volume/local channel.
+  auto voxelIdX = scoringVolumePtr->GetVoxelID(0, position);
+  auto voxelIdY = scoringVolumePtr->GetVoxelID(1, position);
+  auto voxelIdZ = scoringVolumePtr->GetVoxelID(2, position);
     auto voxelId =  scoringVolumePtr->LinearizeIndex(voxelIdX,voxelIdY,voxelIdZ);
 
     if(voxelId>=0 && voxelId < scoringVolumePtr->m_channelHCollectionIndex.size() ) {
       if (scoringVolumePtr->m_channelHCollectionIndex[voxelId] == -1) { // This is new hit within given volume/channel
-        
-        auto voxelHit = new VoxelHit();
-        voxelHit->SetTracksAnalysis(m_tracks_analysis);
-        voxelHit->SetVolume(scoringVolumePtr->GetVoxelVolume());
-        voxelHit->SetCentre(scoringVolumePtr->GetVoxelCentre(voxelId));
-        voxelHit->SetId(voxelIdX, voxelIdY, voxelIdZ);
-        voxelHit->SetGlobalId(m_id_x, m_id_y, m_id_z);
-        voxelHit->SetGlobalCentre(GetSDCentre());
-        voxelHit->Fill(aStep);
-        voxelHit->FillTrackUserInfo<PatientTrackInfo>(aStep);
-        voxelHit->FillPrimaryParticleUserInfo<PrimaryParticleInfo>();
+
+      auto voxelHit = new VoxelHit();
+      voxelHit->SetVolume(scoringVolumePtr->GetVoxelVolume());
+      voxelHit->SetCentre(scoringVolumePtr->GetVoxelCentre(voxelId));
+      voxelHit->SetId(voxelIdX, voxelIdY, voxelIdZ);
+      voxelHit->SetGlobalId(m_id_x, m_id_y, m_id_z);
+      voxelHit->SetStoreTracks(Service<ConfigSvc>()->GetValue<bool>("RunSvc", "StoreTracks"));
+      voxelHit->SetGlobalCentre(GetSDCentre());
+      voxelHit->Fill(aStep);
+      voxelHit->FillTrackUserInfo<PatientTrackInfo>(aStep);
+      voxelHit->FillPrimaryParticleUserInfo<PrimaryParticleInfo>();
         //voxelHit->PrintEvtInfo();
 
-        // Add new voxel hit to the hits collection
-        auto channelHCollectionIndex = scoringVolumePtr->m_voxelHCollectionPtr->insert(voxelHit) - 1;
-        scoringVolumePtr->m_channelHCollectionIndex[voxelId] = channelHCollectionIndex;
+      // Add new voxel hit to the hits collection
+      auto channelHCollectionIndex = scoringVolumePtr->m_voxelHCollectionPtr->insert(voxelHit) - 1;
+      scoringVolumePtr->m_channelHCollectionIndex[voxelId] = channelHCollectionIndex;
       }
       else { // This is already existing hit within given volume/channel
-        // Get voxel hit for given volume/channel
-        auto channelHCollectionIndex = scoringVolumePtr->m_channelHCollectionIndex[voxelId];
-        auto voxelHit = (*scoringVolumePtr->m_voxelHCollectionPtr)[channelHCollectionIndex];
-        voxelHit->Update(aStep);
-        voxelHit->FillTrackUserInfo<PatientTrackInfo>(aStep);
+      // Get voxel hit for given volume/channel
+      auto channelHCollectionIndex = scoringVolumePtr->m_channelHCollectionIndex[voxelId];
+      auto voxelHit = (*scoringVolumePtr->m_voxelHCollectionPtr)[channelHCollectionIndex];
+      voxelHit->Update(aStep);
+      voxelHit->FillTrackUserInfo<PatientTrackInfo>(aStep);
 
-      }
-    } else {
+    }
+  } else {
       auto maxId = scoringVolumePtr->m_channelHCollectionIndex.size()-1;
       LOGSVC_DEBUG("Out of scope ChannelId: {}. Max voxel ID is: {}.\nPosition: {}\nIdX={}, IdY={}, IdZ={}",
                   voxelId,maxId,position,voxelIdX,voxelIdY,voxelIdZ);
-    }
+  }
 }
 ////////////////////////////////////////////////////////////////////////////////
 ///

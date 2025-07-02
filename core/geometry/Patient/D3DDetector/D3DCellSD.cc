@@ -27,7 +27,7 @@ G4bool D3DCellSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
     LOGSVC_DEBUG("ProcessHits volume name ", volumeName);
   
   // ____________________________________________________________________________
-  if(m_tracks_analysis){
+  if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "StoreTracks")) {
     auto aTrack = aStep->GetTrack();
     auto trackInfo = aTrack->GetUserInformation();
     if(trackInfo){

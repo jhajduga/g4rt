@@ -16,7 +16,7 @@
 #include "G4VisExtent.hh"  // for GetExtent()
 
 namespace {
-    G4Mutex TldMutex = G4MUTEX_INITIALIZER;
+G4Mutex TldMutex = G4MUTEX_INITIALIZER;
 }
 
 G4double TLD::SIZE = 4.5 * mm;
@@ -29,8 +29,8 @@ G4bool TLD::m_set_tld_voxelised_scorer = true;
 // Enable or disable cell scorer for TLD
 ////////////////////////////////////////////////////////////////////////////////
 /// static
-void TLD::CellScorer(G4bool val) { 
-  m_set_tld_scorer = val; 
+void TLD::CellScorer(G4bool val) {
+  m_set_tld_scorer = val;
   // if(!val){ // by default it's set to true
   //   Service<RunSvc>()->GetScoringTypes().erase(Scoring::Type::Cell);
   // }
@@ -41,9 +41,9 @@ void TLD::CellScorer(G4bool val) {
 // Enable or disable voxelised cell scorer for TLD
 ////////////////////////////////////////////////////////////////////////////////
 /// static
-void TLD::CellVoxelisedScorer(G4bool val) { 
-  m_set_tld_voxelised_scorer = val; 
-  if(!val){ // by default it's set to true
+void TLD::CellVoxelisedScorer(G4bool val) {
+  m_set_tld_voxelised_scorer = val;
+  if (!val) {  // by default it's set to true
     Service<RunSvc>()->GetScoringTypes().erase(Scoring::Type::Voxel);
   }
 }
@@ -52,8 +52,8 @@ void TLD::CellVoxelisedScorer(G4bool val) {
 // TLD constructor
 ////////////////////////////////////////////////////////////////////////////////
 TLD::TLD(const G4String& label, const G4ThreeVector& centre, G4String tldMediumName, G4String stlGeometryFilePath)
-: VPatient(label), m_tld_medium(tldMediumName), m_stl_geometry_file_path(stlGeometryFilePath){
-    m_centre = centre;
+    : VPatient(label), m_tld_medium(tldMediumName), m_stl_geometry_file_path(stlGeometryFilePath), m_centre(centre) {
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,8 +61,7 @@ TLD::TLD(const G4String& label, const G4ThreeVector& centre, G4String tldMediumN
 ////////////////////////////////////////////////////////////////////////////////
 TLD::~TLD() {
   Destroy();
-  if(m_step_limit)
-    delete m_step_limit;
+  if (m_step_limit) delete m_step_limit;
 }
 
 void TLD::SetIDs(G4int x, G4int y, G4int z) {
@@ -74,9 +73,7 @@ void TLD::SetIDs(G4int x, G4int y, G4int z) {
 ////////////////////////////////////////////////////////////////////////////////
 // Write info (TODO)
 ////////////////////////////////////////////////////////////////////////////////
-void TLD::WriteInfo() {
-  LOGSVC_INFO("The Dose3D cell {} info: Implement me.", GetName());
-}
+void TLD::WriteInfo() { LOGSVC_INFO("The Dose3D cell {} info: Implement me.", GetName()); }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Destroy volumes and clean up
@@ -93,8 +90,8 @@ void TLD::Destroy() {
 ////////////////////////////////////////////////////////////////////////////////
 // Set number of voxels along an axis
 ////////////////////////////////////////////////////////////////////////////////
-void TLD::SetNVoxels(char axis, int nv){
-  switch(std::tolower(axis)) {
+void TLD::SetNVoxels(char axis, int nv) {
+  switch (std::tolower(axis)) {
     case 'x':
       m_tld_voxelization_x = nv;
       break;
@@ -110,10 +107,10 @@ void TLD::SetNVoxels(char axis, int nv){
 ////////////////////////////////////////////////////////////////////////////////
 // Construct TLD geometry and place in the world
 ////////////////////////////////////////////////////////////////////////////////
-void TLD::Construct(G4VPhysicalVolume *parentWorld) {
+void TLD::Construct(G4VPhysicalVolume* parentWorld) {
   // Retrieve name and material
   // std::cout << "[INFO]:: TLD construction... " << std::endl;
-  auto label    = GetName();
+  auto label = GetName();
   auto material = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_tld_medium);
 
   // create a cell box filled with LiF:Mg,Ti, with given side dimensions
@@ -126,9 +123,9 @@ void TLD::Construct(G4VPhysicalVolume *parentWorld) {
   //===================================================================
   // Load STL geometry if provided
   //===================================================================
-  if(m_stl_geometry_file_path != "None") {
+  if (m_stl_geometry_file_path != "None") {
     std::string path = std::string(PROJECT_DATA_PATH) + "/" + m_stl_geometry_file_path;
-    
+
     // Preprocess STL to remove potential UTF-8 BOM or invalid header bytes
     std::ifstream fin(path, std::ios::binary);
     std::string content((std::istreambuf_iterator<char>(fin)), {});
@@ -147,47 +144,44 @@ void TLD::Construct(G4VPhysicalVolume *parentWorld) {
     m_stlMesh = CADMesh::TessellatedMesh::FromSTL(tmpPath);
     G4VSolid* solidMesh = m_stlMesh->GetSolid();
     tldLV = new G4LogicalVolume(solidMesh, material.get(), label + "LV");
-  }
-  else {
+  } else {
     //=================================================================
     // Manual geometry: cylinder + spherical cap
     //=================================================================
-    G4double innerR    = 0.0;
-    G4double outerR    = size.x() / 2.0;
-    G4double halfH     = size.z() / 2.0;
-    G4double startAng  = 0.0;
-    G4double spanAng   = 360.0 * deg;
+    G4double innerR = 0.0;
+    G4double outerR = size.x() / 2.0;
+    G4double halfH = size.z() / 2.0;
+    G4double startAng = 0.0;
+    G4double spanAng = 360.0 * deg;
 
     // Cylinder
     G4VSolid* tube = new G4Tubs(label + "Tube", innerR, outerR, halfH, startAng, spanAng);
 
     // Spherical cap (upper hemisphere)
-    G4double thetaMin = 0.0 * deg;        // From the top
-    G4double thetaMax = 90.0 * deg;       // Only keep the upper half of the sphere
-    G4VSolid* cap = new G4Sphere(label + "SphereCap",
-                                  0.0, outerR,      // Inner and outer radii
-                                  0.0, 360.0 * deg,       // Full azimuthal range
-                                  thetaMin, thetaMax);    // Limit to a spherical slice
-  
+    G4double thetaMin = 0.0 * deg;                                  // From the top
+    G4double thetaMax = 90.0 * deg;                                 // Only keep the upper half of the sphere
+    G4VSolid* cap = new G4Sphere(label + "SphereCap", 0.0, outerR,  // Inner and outer radii
+                                 0.0, 360.0 * deg,                  // Full azimuthal range
+                                 thetaMin, thetaMax);               // Limit to a spherical slice
 
     // Combine tube and cap
     G4ThreeVector capOffset(0, 0, halfH);
-    
+
     // Merge the tube and sphere into a single shape
     G4VSolid* combinedSolid = new G4UnionSolid(label + "CombinedSolid", tube, cap, nullptr, capOffset);
     tldLV = new G4LogicalVolume(combinedSolid, material.get(), label + "LV");
 
-// the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
-  // here we locate the phantom box in the center of envelope box created in PatientGeometry:
-}
+    // the placement of phantom center in the gantry (global) coordinate system that is managed by PatientGeometry class
+    // here we locate the phantom box in the center of envelope box created in PatientGeometry:
+  }
   m_global_centre = m_centre;
 
   // Compute global centre and place volume
-  m_centre = svc::transformPosition(m_global_centre,this,svc::Transform::GlobalToLocal);
+  m_centre = svc::transformPosition(m_global_centre, this, svc::Transform::GlobalToLocal);
   SetPhysicalVolume(new G4PVPlacement(nullptr, m_centre, label + "PV", tldLV, parentWorld, false, 0));
 
   auto regVol = new G4Region(label + "_G4RegionCuts");
-  auto cuts   = new G4ProductionCuts();
+  auto cuts = new G4ProductionCuts();
   cuts->SetProductionCut(0.1 * mm);
   regVol->SetProductionCuts(cuts);
   tldLV->SetRegion(regVol);
@@ -195,22 +189,18 @@ void TLD::Construct(G4VPhysicalVolume *parentWorld) {
 
   // Record volume
   // SetVolume(tldLV->GetSolid()->GetCubicVolume());
-  SetVolume(size.getX()*size.getY()*size.getZ());
+  SetVolume(size.getX() * size.getY() * size.getZ());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Update (placeholder)
 ////////////////////////////////////////////////////////////////////////////////
-G4bool TLD::Update() {
-  return true;
-}
+G4bool TLD::Update() { return true; }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Check if sensitive detector is voxelised
 ////////////////////////////////////////////////////////////////////////////////
-bool TLD::IsRunCollectionScoringVolumeVoxelised(const G4String& run_collection) const {
-  return GetSD()->GetRunCollectionReferenceScoringVolume(run_collection, true) != nullptr;
-}
+bool TLD::IsRunCollectionScoringVolumeVoxelised(const G4String& run_collection) const { return GetSD()->GetRunCollectionReferenceScoringVolume(run_collection, true) != nullptr; }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -218,10 +208,10 @@ bool TLD::IsRunCollectionScoringVolumeVoxelised(const G4String& run_collection) 
 ////////////////////////////////////////////////////////////////////////////////
 void TLD::DefineSensitiveDetector() {
   G4AutoLock lock(&TldMutex);
-  if(!m_patientSD.Get()) {
+  if (!m_patientSD.Get()) {
     // Retrieve logical volume and its solid
-    auto pv    = GetPhysicalVolume();
-    auto lv    = pv->GetLogicalVolume();
+    auto pv = GetPhysicalVolume();
+    auto lv = pv->GetLogicalVolume();
     G4VSolid* solid = lv->GetSolid();
 
     // Compute axis-aligned extents of the solid
@@ -250,11 +240,11 @@ void TLD::DefineSensitiveDetector() {
     auto label = GetName();
     m_patientSD.Put(new TLDSD(label + "_SD", sdCentre, m_id_x, m_id_y, m_id_z));
     auto patientSD = m_patientSD.Get();
-    patientSD->SetTracksAnalysis(m_tracks_analysis);
+
 
     // Determine voxelization grid
     G4int nvx = 1, nvy = 1, nvz = 1;
-    if(TLD::m_set_tld_voxelised_scorer){
+    if (TLD::m_set_tld_voxelised_scorer) {
       nvx = m_tld_voxelization_x;
       nvy = m_tld_voxelization_y;
       nvz = m_tld_voxelization_z;
@@ -262,9 +252,10 @@ void TLD::DefineSensitiveDetector() {
 
     // Derive run collection and hit collection names
     std::string runCollName = label.substr(0, label.find('_'));
-    std::string hcName      = label + "_HC";
+    std::string hcName = label + "_HC";
 
-    G4cout << "[DEBUG] TLD::DefineSensitiveDetector name=" << label << " runColl=" << runCollName << " centre=" << m_global_centre << " voxels=" << nvx << "," << nvy << "," << nvz << G4endl;
+    G4cout << "[DEBUG] TLD::DefineSensitiveDetector name=" << label << " runColl=" << runCollName << " centre=" << m_global_centre << " voxels=" << nvx << "," << nvy << "," << nvz
+           << G4endl;
 
     // Add the scoring volume
     patientSD->AddScoringVolume(runCollName, hcName, envBox, nvx, nvy, nvz);

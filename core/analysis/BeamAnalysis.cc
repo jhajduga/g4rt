@@ -123,7 +123,7 @@ void BeamAnalysis::FillParticles(G4Step *step, G4int scoringPlaneId){
     m_particleY.Push_back(position.y());
     m_particleZ.Push_back(position.z());
 
-    m_particleE.Push_back(dynamic->Get4Momentum().e() / MeV  ); // TODO: is this the same as preStepPoint->GetTotalEnergy(); ????
+    m_particleE.Push_back(dynamic->Get4Momentum().e() / keV  ); // TODO: is this the same as preStepPoint->GetTotalEnergy(); ????
     m_particleEx.Push_back(std::sqrt(partMass * partMass + px * px));
     m_particleEy.Push_back(std::sqrt(partMass * partMass + py * py));
 

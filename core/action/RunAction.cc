@@ -86,7 +86,7 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
 
   if (configSvc->GetValue<bool>("RunSvc", "StepAnalysis"))
     StepAnalysis::GetInstance()->BeginOfRun(aRun, IsMaster());
-  
+
   if (configSvc->GetValue<bool>("RunSvc", "NTupleAnalysis") && NTupleEventAnalisys::IsAnyTTreeDefined() ) 
     NTupleEventAnalisys::GetInstance()->BeginOfRun(aRun, IsMaster());
 
