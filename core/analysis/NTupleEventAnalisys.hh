@@ -94,6 +94,7 @@ class NTupleEventAnalisys {
   G4int m_runId = -1;
   G4double m_degree_rotation = -10000.;
   G4String m_treeNamePostfix = "TTree";
+  static AnalysisFlagRegistry* m_analysis_reg;
 
   void CreateNTuple(const TTreeCollection& treeColl);
   G4int GetNTupleId(const G4String& treeName);
@@ -109,8 +110,6 @@ class NTupleEventAnalisys {
 
   static void DefineTTree(const G4String& treeName, bool cellVoxelisation = false, const G4String& hcName = G4String(), const G4String& treeDescription = G4String());
 
-  
-  static void SetAnalysisFlag(AnalysisFlag which, bool enable);
 
   static G4bool IsAnyTTreeDefined() { return m_ttree_collection.Get().empty() ? false : true; }
   static const std::vector<TTreeCollection>& TreeCollection() { return m_ttree_collection.Get(); }

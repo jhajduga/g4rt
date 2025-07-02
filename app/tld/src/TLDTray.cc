@@ -147,6 +147,8 @@ std::map<std::size_t, VoxelHit> TLDTray::GetScoringHashedMap(const G4String& sco
     // We have to intialize VoxelHits, so get any parameters as needed:
     auto Medium = ConfigSvc::GetInstance()->GetValue<G4MaterialSPtr>("MaterialsSvc", m_config.m_tld_medium);
 
+    auto store_tracks = Service<ConfigSvc>()->GetValue<bool>("RunSvc", "StoreTracks");
+
     for (auto& tld : m_tld_detectors){
         auto centre = tld->GetGlobalCentre();
         // G4cout << tld->GetName() << " centre: " << centre << G4endl;
@@ -174,7 +176,7 @@ std::map<std::size_t, VoxelHit> TLDTray::GetScoringHashedMap(const G4String& sco
               auto voxelCentre = tld_sv->GetVoxelCentre(ix,iy,iz);
             //   G4cout << " voxel "<< ix <<","<<iy<<","<<iz<<" centre: " << voxelCentre << G4endl;
               hashed_map_scoring[voxelHash].SetCentre(voxelCentre);
-              hashed_map_scoring[voxelHash].SetStoreTracks(Service<ConfigSvc>()->GetValue<bool>("RunSvc", "StoreTracks"));
+              hashed_map_scoring[voxelHash].SetStoreTracks(store_tracks);
               hashed_map_scoring[voxelHash].SetId(ix,iy,iz);
               hashed_map_scoring[voxelHash].SetGlobalId(idX,idY,idZ);
               hashed_map_scoring[voxelHash].SetVolume( tld_sv->GetVoxelVolume() );
@@ -188,7 +190,7 @@ std::map<std::size_t, VoxelHit> TLDTray::GetScoringHashedMap(const G4String& sco
             hashed_map_scoring[tldHash].SetCentre(centre);
             hashed_map_scoring[tldHash].SetId(idX,idY,idZ);
             hashed_map_scoring[tldHash].SetGlobalId(idX,idY,idZ); // Id == GlobalId
-            hashed_map_scoring[tldHash].SetStoreTracks(Service<ConfigSvc>()->GetValue<bool>("RunSvc", "StoreTracks"));
+            hashed_map_scoring[tldHash].SetStoreTracks(store_tracks);
             hashed_map_scoring[tldHash].SetVolume( tld->GetVolume() );
             hashed_map_scoring[tldHash].SetMass(Medium->GetDensity()*tld->GetVolume());
         }

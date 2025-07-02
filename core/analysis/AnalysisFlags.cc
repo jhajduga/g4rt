@@ -3,16 +3,11 @@
 #include <iostream>
 #include <iomanip>
 
-AnalysisFlagRegistry& AnalysisFlagRegistry::Instance() {
+AnalysisFlagRegistry* AnalysisFlagRegistry::Instance() {
   static AnalysisFlagRegistry instance;
-  return instance;
+  return &instance;
 }
 
-void AnalysisFlagRegistry::SetFlag(AnalysisFlag flag, bool value) { m_flags.Set(flag, value); }
-
-bool AnalysisFlagRegistry::IsEnabled(AnalysisFlag flag) const { return m_flags[flag]; }
-
-void AnalysisFlagRegistry::ResetAll() { m_flags.Reset(); }
 
 void AnalysisFlagRegistry::PrintAllFlags() const {
   std::cout << "[AnalysisFlagRegistry] Active global flags:\n";

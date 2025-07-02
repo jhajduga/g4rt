@@ -95,8 +95,7 @@ class D3DDetector : public VPatient, public GeoComponet {
     const D3DDetector::Config& GetConfig() const { return m_config; }
 
     ///
-    G4bool IsInside(double x, double y, double z) override;
-
+    G4bool IsInside(double x, double y, double z) override { return false; }
     ///
     static G4double COVER_WIDTH;
 

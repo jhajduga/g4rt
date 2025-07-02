@@ -22,29 +22,29 @@ class AnalysisFlags {
  public:
   AnalysisFlags() = default;
 
-  bool operator[](AnalysisFlag flag) const { return flags.test(static_cast<size_t>(flag)); }
+  bool operator[](AnalysisFlag flag) const { return m_bitset_flags.test(static_cast<size_t>(flag)); }
 
-  void Set(AnalysisFlag flag, bool value = true) { flags.set(static_cast<size_t>(flag), value); }
+  void Set(AnalysisFlag flag, bool value = true) { m_bitset_flags.set(static_cast<size_t>(flag), value); }
 
-  void Reset() { flags.reset(); }
+  void Reset() { m_bitset_flags.reset(); }
 
  private:
-  std::bitset<static_cast<size_t>(AnalysisFlag::COUNT)> flags;
+  std::bitset<static_cast<size_t>(AnalysisFlag::COUNT)> m_bitset_flags;
 };
 
 // Singleton that manages the map of tree name → flag set
 class AnalysisFlagRegistry {
  public:
-  static AnalysisFlagRegistry& Instance();
+  static AnalysisFlagRegistry* Instance();
 
-  void SetFlag(AnalysisFlag flag, bool value = true);
-  bool IsEnabled(AnalysisFlag flag) const;
-  void ResetAll();
+  void SetFlag(AnalysisFlag flag, bool value) { m_analysis_flags.Set(flag, value); }
+  bool IsEnabled(AnalysisFlag flag) const { return m_analysis_flags[flag]; }
+  void ResetAll() { m_analysis_flags.Reset(); }
   void PrintAllFlags() const;
 
  private:
   AnalysisFlagRegistry() = default;
-  AnalysisFlags m_flags;
+  AnalysisFlags m_analysis_flags;
 };
 
 #endif  // ANALYSIS_FLAG_REGISTRY_HH

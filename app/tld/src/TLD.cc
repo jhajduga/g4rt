@@ -52,8 +52,8 @@ void TLD::CellVoxelisedScorer(G4bool val) {
 // TLD constructor
 ////////////////////////////////////////////////////////////////////////////////
 TLD::TLD(const G4String& label, const G4ThreeVector& centre, G4String tldMediumName, G4String stlGeometryFilePath)
-    : VPatient(label), m_tld_medium(tldMediumName), m_stl_geometry_file_path(stlGeometryFilePath) {
-  m_centre = centre;
+    : VPatient(label), m_tld_medium(tldMediumName), m_stl_geometry_file_path(stlGeometryFilePath), m_centre(centre) {
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

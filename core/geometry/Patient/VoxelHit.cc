@@ -49,7 +49,7 @@ void VoxelHit::Fill(G4Step* aStep) {
     FillTrack(aStep);
 
     // Set voxel primary (incident) particle info
-    auto trkType = GetTrackIdTypeMappingList(aStep);
+    auto trkType = GetTrackIdType(aStep);
     auto trkEnergy = aStep->GetPreStepPoint()->GetKineticEnergy();
     SetPrimary(trkType, trkEnergy);
 
@@ -80,7 +80,7 @@ void VoxelHit::Update(G4Step* aStep) {
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-G4int VoxelHit::GetTrackIdTypeMappingList(G4Step* aStep) const {
+G4int VoxelHit::GetTrackIdType(G4Step* aStep) const {
   auto dynamic = aStep->GetTrack()->GetDynamicParticle();
   auto trkDef = dynamic->GetDefinition();
   G4int trkType = -1;
@@ -101,7 +101,7 @@ G4int VoxelHit::GetTrackIdTypeMappingList(G4Step* aStep) const {
 /// @param aStep – the current Geant4 simulation step.
 /// @return int – ID representing the type of physical process that occurred at this step.
 
-G4int VoxelHit::GetTrkIdProcessTypeMappingList(G4Step* aStep) const {
+G4int VoxelHit::GetTrkIdProcessType(G4Step* aStep) const {
   auto proc = aStep->GetPostStepPoint()->GetProcessDefinedStep();
   if (!proc) return -1;  // Safety check in case no process is defined.
 
@@ -181,7 +181,7 @@ G4int VoxelHit::GetTrkIdProcessTypeMappingList(G4Step* aStep) const {
 /// @param aStep – the current Geant4 simulation step, to readout a track – the G4Track object representing the electron.
 /// @return int – an integer code representing the origin type of the secondary electron.
 
-G4int VoxelHit::GetTrkIdElectronOriginTypeMappingList(G4Step* aStep) const { // TODO: !!! Why only for electron this was created? All particles and all interactions should be stored here
+G4int VoxelHit::GetTrkIdElectronOriginType(G4Step* aStep) const { // TODO: !!! Why only for electron this was created? All particles and all interactions should be stored here
   if (aStep->GetTrack()->GetDynamicParticle()->GetDefinition() != G4Electron::Definition()) return -1;  // Not an electron
 
   auto creator = aStep->GetTrack()->GetCreatorProcess();
@@ -213,9 +213,9 @@ void VoxelHit::FillTrack(G4Step* aStep) {
     auto postStepPoint = aStep->GetPostStepPoint();
     auto preStepPoint = aStep->GetPreStepPoint();
     if (ret.second == true) {  // new element inserted
-      m_Voxel.m_trksTypeId.emplace_back(GetTrackIdTypeMappingList(aStep));
-      m_Voxel.m_trksProcessTypeId.emplace_back(GetTrkIdProcessTypeMappingList(aStep));
-      m_Voxel.m_trksElectronOriginTypeId.emplace_back(GetTrkIdElectronOriginTypeMappingList(aStep));
+      m_Voxel.m_trksTypeId.emplace_back(GetTrackIdType(aStep));
+      m_Voxel.m_trksProcessTypeId.emplace_back(GetTrkIdProcessType(aStep));
+      m_Voxel.m_trksElectronOriginTypeId.emplace_back(GetTrkIdElectronOriginType(aStep));
       m_Voxel.m_trksE.emplace_back(aTrack->GetDynamicParticle()->GetKineticEnergy());
       // m_Voxel.m_trksPotentialE.emplace_back((aTrack->GetDynamicParticle()->GetTotalEnergy())-(aTrack->GetDynamicParticle()->GetKineticEnergy())) (>dla niefotonów)
       m_Voxel.m_trksTheta.emplace_back(aTrack->GetDynamicParticle()->GetMomentum().theta());

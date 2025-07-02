@@ -444,11 +444,6 @@ std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String&
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-
-G4bool D3DDetector::IsInside(double x, double y, double z) { return false; }
-
-////////////////////////////////////////////////////////////////////////////////
-///
 bool D3DDetector::IsAnyCellVoxelised(const G4String& run_collection) const {
   for (const auto& cell : m_d3d_cells) {
     if (cell->IsRunCollectionScoringVolumeVoxelised(run_collection)) return true;  // Any cell is voxelised

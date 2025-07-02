@@ -224,13 +224,13 @@ class VoxelHit final : public G4VHit {
   void Update(G4Step* aStep);
 
   ///
-  G4int GetTrackIdTypeMappingList(G4Step* aStep) const;
+  G4int GetTrackIdType(G4Step* aStep) const;
 
   ///
-  G4int GetTrkIdProcessTypeMappingList(G4Step* aStep) const;
+  G4int GetTrkIdProcessType(G4Step* aStep) const;
 
   ///
-  G4int GetTrkIdElectronOriginTypeMappingList(G4Step* aStep) const;
+  G4int GetTrkIdElectronOriginType(G4Step* aStep) const;
 
   ///
   G4double GetGlobalTime() const { return m_global_time; }

@@ -9,6 +9,7 @@ PrimariesAnalysis = true
 NTupleAnalysis = true
 StepAnalysis = false
 RunAnalysis = true
+EnableExtraProcesses = true
 
 StoreTracks= true
 StorePositions= true
@@ -20,6 +21,8 @@ MinimalMode= false
 [GeoSvc]
 BuildLinac = true
 BuildPatient = true
+MlcModel = "Simplified"
+
 
 [PatientGeometry]
 Type = "WaterPhantom"
@@ -39,6 +42,7 @@ Medium = "RMPS470" #G4_WATER, PMMA
 [WaterPhantom_Scoring]
 FullVolume = true
 FarmerDoseCalibration = false
+
 
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute

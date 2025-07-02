@@ -11,6 +11,7 @@ GenerateCT = false
 PrimariesAnalysis = true
 NTupleAnalysis = true
 RunAnalysis = true
+EnableExtraProcesses = true
 
 StoreTracks= true
 StorePositions= true
@@ -48,6 +49,13 @@ Voxelization = [3,3,3] # Number of cels in every direction
 [D3DDetector_Cell]
 Medium = "RMPS470" #G4_WATER, PMMA
 Voxelization = [5,5,5]
+TracksAnalysis = true
+PositionsAnalysis = true
+EnergiesAnalysis = true
+PrimariesAnalysis = true
+RunInfoAnalysis = true
+MinimalOutput = false
+
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 nControlPoints = 1      # This will limit number of ctrl points defined below!
