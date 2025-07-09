@@ -1,136 +1,170 @@
 from loguru import logger
-import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 import os
+import polars as pl
 
+def mask_to_matrix(plan_file: str,
+                   out_csv: str = None,
+                   out_pickle: str = None,
+                   out_png: str = None) -> pl.DataFrame:
+    logger.info(f"Processing file: {plan_file}")
 
-def mask_to_matrix(plan_file, out_csv=None, out_pickle=None, out_png=None):
-    logger.info(f"Starting mask_to_matrix for file: {plan_file}")
-
-    x_min, x_max, x_step = -200.0, 200.0, 0.1
-    logger.debug(f"x range: [{x_min}, {x_max}] with step {x_step}")
-    x_grid = np.arange(x_min, x_max + x_step, x_step)
-    n_cols = len(x_grid)
-    logger.debug(f"Grid has {n_cols} columns")
-    mlc_rows = []
-
+    # Read file lines
     try:
         with open(plan_file, 'r') as f:
-            lines = f.readlines()
-        logger.debug(f"Read {len(lines)} lines from file")
-    except FileNotFoundError:
-        logger.error(f"File not found: {plan_file}")
+            lines = f.read().splitlines()
+        logger.debug(f"Read {len(lines)} lines")
+    except Exception as e:
+        logger.error(f"Cannot open {plan_file}: {e}")
         raise
 
-    mlc_start = None
-    for i, line in enumerate(lines):
-        if line.strip().startswith("# MLC"):
-            mlc_start = i + 1
-            logger.info(f"Found MLC section at line {i + 1}")
+    # Grid parameters
+    x_min, x_max, x_step = -200.0, 200.0, 0.1
+    x_positions = np.arange(x_min, x_max + x_step, x_step)
+
+    # Locate MLC section
+    idx = next((i for i, ln in enumerate(lines) if ln.strip().startswith('# MLC')), None)
+    if idx is None:
+        raise ValueError('No MLC section found')
+
+    # Parse mask segments
+    segments = []
+    for ln in lines[idx+1:]:
+        txt = ln.strip()
+        if not txt or txt.startswith('#'):
             break
-    if mlc_start is None:
-        logger.error("No MLC section found in file.")
-        raise ValueError("No MLC section found in file.")
+        y1, y2 = map(float, txt.split(','))
+        segments.append(sorted([y1, y2]))
+    logger.debug(f"Found {len(segments)} segments")
 
-    for j, line in enumerate(lines[mlc_start:]):
-        if line.strip().startswith("#") or not line.strip():
-            logger.debug(f"Stopping parse at line {mlc_start + j}")
-            break
-        y1_str, y2_str = line.strip().split(",")
-        y1, y2 = float(y1_str), float(y2_str)
-        start, end = sorted([y1, y2])
-        row = np.zeros(n_cols, dtype=int)
-        if np.isclose(start, end):
-            # zero-length segment: leave row as all zeros
-            logger.debug(f"Zero-length segment at {start}, row remains zeros")
-        else:
-            idx_start = int(round((start - x_min) / x_step))
-            idx_end = int(round((end - x_min) / x_step))
-            row[idx_start:idx_end + 1] = 1
-        mlc_rows.append(row)
-    logger.info(f"Parsed {len(mlc_rows)} MLC rows")
+    # Build full matrix rows
+    rows = []
+    for start, end in segments:
+        row = np.zeros_like(x_positions, dtype=np.uint8)
+        if not np.isclose(start, end):
+            i0 = int(round((start - x_min)/x_step))
+            i1 = int(round((end   - x_min)/x_step))
+            row[i0:i1+1] = 1
+        rows.append(row)
+    matrix = np.vstack(rows)
 
-    matrix = np.vstack(mlc_rows)
-    df = pd.DataFrame(matrix, columns=np.round(x_grid, 1))
-    logger.debug(f"Resulting matrix shape: {df.shape}")
+    # Trim columns to X in [-47.5, 47.5]
+    col_mask = (x_positions >= -47.5) & (x_positions <= 47.5)
+    x_trim = x_positions[col_mask]
+    matrix = matrix[:, col_mask]
 
+    # Trim to central 36 rows
+    total_rows = matrix.shape[0]
+    start_row = max((total_rows - 28)//2, 0)
+    matrix = matrix[start_row:start_row+28, :]
+
+    # Create Polars DataFrame
+    df = pl.DataFrame(
+        data=matrix.tolist(),
+        schema=[f"{x:.1f}" for x in x_trim],
+        orient='row'
+    )
+    df = df.with_columns([
+        pl.col(col).cast(pl.Boolean) for col in df.columns
+    ])
+
+    # Integer version for exports
+    df_int = df.select([
+        pl.col(col).cast(pl.UInt8) for col in df.columns
+    ])
+
+    # Save CSV (no header)
     if out_csv:
-        df.to_csv(out_csv, index=False)
-        logger.info(f"Saved mask matrix to CSV: {out_csv}")
+        df_int.write_csv(out_csv, include_header=False)
+        df_int.write_ipc(out_csv+'out.feather', compression='lz4')
+        logger.info(f"Saved CSV: {out_csv}")
 
+    # Save NPY array
     if out_pickle:
-        df.to_pickle(out_pickle)
-        logger.info(f"Saved mask matrix to pickle: {out_pickle}")
+        np.save(out_pickle, matrix)
+        logger.info(f"Saved NPY: {out_pickle}")
 
+    # Save PNG plot (blocks + overlay)
     if out_png:
-        logger.info(f"Saving mask points plot to PNG: {out_png}")
         fig, ax = plt.subplots()
-        rows, cols = matrix.nonzero()
-        xs = x_grid[cols]
-        ys = rows
-        ax.scatter(xs, ys, s=1)
+        nrows, ncols = matrix.shape
+        # Draw each row block-wise
+        for r in range(nrows):
+            row = matrix[r]
+            indices = np.where(row == 1)[0]
+            x0 = x_trim[0]
+            x1 = x_trim[indices[0]] if indices.size else x_trim[-1]
+            ax.add_patch(plt.Rectangle((x0, r), x1 - x0, 1,
+                                       facecolor='white', edgecolor=None))
+            if indices.size:
+                xs = x_trim[indices]
+                ax.add_patch(plt.Rectangle((xs[0], r), xs[-1] - xs[0], 1,
+                                           facecolor='pink', alpha=0.95, edgecolor=None))
+                ax.add_patch(plt.Rectangle((xs[-1], r), x_trim[-1] - xs[-1], 1,
+                                           facecolor='white', edgecolor=None))
+        # Central overlay: 26 rows, X [-32.5,32.5]
+        ostart = (nrows - 26)//2
+        overlay = plt.Rectangle((-32.5, ostart), 65.0, 26,
+                                fill=False, edgecolor='red', linewidth=0.95)
+        ax.add_patch(overlay)
+        overlay = plt.Rectangle((-45.1, ostart), 90.2, 26,
+                        fill=False, edgecolor='blue', linewidth=0.75)
+        ax.add_patch(overlay)
+        overlay = plt.Rectangle((-47.5, ostart-1), 95.0, 28,
+                        fill=False, edgecolor='green', linewidth=1.75)
+        ax.add_patch(overlay)
+        ax.set_xlim(x_trim[0]-2.5, x_trim[-1]+2.5)
+        ax.set_ylim(0-1, nrows+1)
+        ax.set_aspect('2.5')
         ax.set_xlabel('X position')
         ax.set_ylabel('Row index')
-        ax.set_title('MLC Mask Points')
         fig.tight_layout()
-        fig.savefig(out_png, dpi=300)
+        fig.savefig(out_png, dpi=450)
         plt.close(fig)
-        logger.info("PNG plot saved successfully")
+        logger.info(f"Saved PNG: {out_png}")
 
-    logger.info("mask_to_matrix completed")
     return df
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Convert plan file(s) to MLC matrix format and save outputs")
+    parser = argparse.ArgumentParser(
+        description="Convert .dat mask files to trimmed mask matrices"
+    )
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("-i", "--input_file", help="Path to a single input plan file (.dat)")
-    group.add_argument("-d", "--input_dir", help="Path to a directory of plan files (.dat)")
-    parser.add_argument("-o", "--out_dir", required=True, help="Base directory to save outputs")
-    parser.add_argument("--out_csv", action="store_true", help="Save output as CSV")
-    parser.add_argument("--out_pickle", action="store_true", help="Save output as pickle")
-    parser.add_argument("--out_png", action="store_true", help="Save output as PNG plot")
-
+    group.add_argument('-i', '--input_file', help='Single .dat file')
+    group.add_argument('-d', '--input_dir',  help='Directory of .dat files')
+    parser.add_argument('-o', '--out_dir',    required=True, help='Output folder')
+    parser.add_argument('--out_csv',  action='store_true', help='Save CSV')
+    parser.add_argument('--out_pickle', action='store_true', help='Save .npy')
+    parser.add_argument('--out_png',  action='store_true', help='Save PNG')
     args = parser.parse_args()
 
-    # Collect files to process
+    # Gather input files
+    files = []
     if args.input_file:
-        files = [args.input_file]
+        files.append(args.input_file)
     else:
-        files = []
-        for root, dirs, files_in_dir in os.walk(args.input_dir):
-            for fname in files_in_dir:
-                if fname.lower().endswith('.dat'):
-                    files.append(os.path.join(root, fname))
-
-    if not files:
-        logger.error("No .dat files found to process.")
-        return
+        for root, _, fnames in os.walk(args.input_dir):
+            for f in fnames:
+                if f.lower().endswith('.dat'):
+                    files.append(os.path.join(root, f))
 
     # Process each file
-    for plan_file in files:
-        name = os.path.splitext(os.path.basename(plan_file))[0]
-        dest_dir = os.path.join(args.out_dir, name)
-        os.makedirs(dest_dir, exist_ok=True)
-
-        csv_path = os.path.join(dest_dir, f"{name}.csv") if args.out_csv else None
-        pkl_path = os.path.join(dest_dir, f"{name}.pkl") if args.out_pickle else None
-        png_path = os.path.join(dest_dir, f"{name}.png") if args.out_png else None
-
-        logger.info(f"Processing {plan_file}, saving to {dest_dir}")
+    for fpath in files:
+        base = os.path.splitext(os.path.basename(fpath))[0]
+        odir = os.path.join(args.out_dir, base)
+        os.makedirs(odir, exist_ok=True)
         mask_to_matrix(
-            plan_file=plan_file,
-            out_csv=csv_path,
-            out_pickle=pkl_path,
-            out_png=png_path
+            fpath,
+            out_csv=os.path.join(odir, base + '.csv') if args.out_csv else None,
+            out_pickle=os.path.join(odir, base + '.npy') if args.out_pickle else None,
+            out_png=os.path.join(odir, base + '.png') if args.out_png else None
         )
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
-
-
 
 # # mask\_to\_matrix.py Usage
 
