@@ -50,15 +50,15 @@ def mask_to_matrix(plan_file: str,
         rows.append(row)
     matrix = np.vstack(rows)
 
-    # Trim columns to X in [-47.5, 47.5]
-    col_mask = (x_positions >= -47.5) & (x_positions <= 47.5)
+    # Trim columns to X in [-45.3, 45.3]
+    col_mask = (x_positions >= -45.3) & (x_positions <= 45.3)
     x_trim = x_positions[col_mask]
     matrix = matrix[:, col_mask]
 
     # Trim to central 36 rows
     total_rows = matrix.shape[0]
-    start_row = max((total_rows - 28)//2, 0)
-    matrix = matrix[start_row:start_row+28, :]
+    start_row = max((total_rows - 26)//2, 0)
+    matrix = matrix[start_row:start_row+26, :]
 
     # Create Polars DataFrame
     df = pl.DataFrame(
@@ -78,7 +78,7 @@ def mask_to_matrix(plan_file: str,
     # Save CSV (no header)
     if out_csv:
         df_int.write_csv(out_csv, include_header=False)
-        df_int.write_ipc(out_csv+'out.feather', compression='lz4')
+        # df_int.write_ipc(out_csv+'out.feather', compression='lz4')
         logger.info(f"Saved CSV: {out_csv}")
 
     # Save NPY array
@@ -86,44 +86,69 @@ def mask_to_matrix(plan_file: str,
         np.save(out_pickle, matrix)
         logger.info(f"Saved NPY: {out_pickle}")
 
-    # Save PNG plot (blocks + overlay)
+
+
     if out_png:
-        fig, ax = plt.subplots()
         nrows, ncols = matrix.shape
-        # Draw each row block-wise
+        total_h = nrows * 2.5   
+        half_h = total_h / 2   
+
+        fig = plt.figure(figsize=(6, 6))
+        ax_mm = fig.add_axes([0.1, 0.1, 0.85, 0.85])
+        ax_mm.patch.set_visible(False)
+
+
         for r in range(nrows):
             row = matrix[r]
             indices = np.where(row == 1)[0]
             x0 = x_trim[0]
             x1 = x_trim[indices[0]] if indices.size else x_trim[-1]
-            ax.add_patch(plt.Rectangle((x0, r), x1 - x0, 1,
-                                       facecolor='white', edgecolor=None))
+            y0_mm = r * 2.5 - half_h
+            h_mm  = 2.5
             if indices.size:
                 xs = x_trim[indices]
-                ax.add_patch(plt.Rectangle((xs[0], r), xs[-1] - xs[0], 1,
-                                           facecolor='pink', alpha=0.95, edgecolor=None))
-                ax.add_patch(plt.Rectangle((xs[-1], r), x_trim[-1] - xs[-1], 1,
-                                           facecolor='white', edgecolor=None))
-        # Central overlay: 26 rows, X [-32.5,32.5]
-        ostart = (nrows - 26)//2
-        overlay = plt.Rectangle((-32.5, ostart), 65.0, 26,
-                                fill=False, edgecolor='red', linewidth=0.95)
-        ax.add_patch(overlay)
-        overlay = plt.Rectangle((-45.1, ostart), 90.2, 26,
-                        fill=False, edgecolor='blue', linewidth=0.75)
-        ax.add_patch(overlay)
-        overlay = plt.Rectangle((-47.5, ostart-1), 95.0, 28,
-                        fill=False, edgecolor='green', linewidth=1.75)
-        ax.add_patch(overlay)
-        ax.set_xlim(x_trim[0]-2.5, x_trim[-1]+2.5)
-        ax.set_ylim(0-1, nrows+1)
-        ax.set_aspect('2.5')
-        ax.set_xlabel('X position')
-        ax.set_ylabel('Row index')
-        fig.tight_layout()
-        fig.savefig(out_png, dpi=450)
+                # różowy środek
+                ax_mm.add_patch(plt.Rectangle(
+                    (xs[0], y0_mm), xs[-1] - xs[0], h_mm,
+                    facecolor='pink', alpha=0.95, edgecolor=None, clip_on=False
+                ))
+
+
+        red_box = plt.Rectangle(
+            (-32.5, -half_h),
+            65.0, total_h,
+            fill=False, edgecolor='red', linewidth=0.95, clip_on=False
+        )
+        ax_mm.add_patch(red_box)
+
+        nums = [-23, -11, 1, 13]
+
+        for a in nums:
+            for b in nums:
+                blue_box = plt.Rectangle(
+                    (a, b),  #
+                    10, 10,             
+                    fill=False, edgecolor='blue',
+                    linewidth=0.5, linestyle='--', clip_on=False
+                )
+                ax_mm.add_patch(blue_box)
+
+
+        # 4) Limity osi na centr. ±32.5 mm
+        ax_mm.set_xlim(x_trim[0] - 2.5, x_trim[-1] + 2.5)
+        ax_mm.set_ylim(-half_h-2.5, half_h+2.5)
+
+        # 5) Etykiety i proporcje
+        ax_mm.set_xlabel('X position (mm)')
+        ax_mm.set_ylabel('Y position (mm)')
+        ax_mm.set_aspect('equal', anchor='C')
+
+        # 6) Zapis do pliku
+        fig.savefig(out_png, dpi=450, bbox_inches='tight')
         plt.close(fig)
         logger.info(f"Saved PNG: {out_png}")
+
+
 
     return df
 
@@ -158,9 +183,9 @@ def main():
         os.makedirs(odir, exist_ok=True)
         mask_to_matrix(
             fpath,
-            out_csv=os.path.join(odir, base + '.csv') if args.out_csv else None,
-            out_pickle=os.path.join(odir, base + '.npy') if args.out_pickle else None,
-            out_png=os.path.join(odir, base + '.png') if args.out_png else None
+            out_csv=os.path.join(odir, base + '_mask.csv') if args.out_csv else None,
+            out_pickle=os.path.join(odir, base + '_mask.npy') if args.out_pickle else None,
+            out_png=os.path.join(odir, base + '_mask.png') if args.out_png else None
         )
 
 if __name__ == '__main__':
