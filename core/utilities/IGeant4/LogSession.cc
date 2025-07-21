@@ -1,28 +1,28 @@
 #include "LogSession.hh"
-#include <iostream>
+#include "LogSvc.hh"
+#include <sstream>
 
-
-LogSession::LogSession():G4UIsession(),Logable("G4Cout") {
-    // auto UI = G4UImanager::GetUIpointer();
-    // UI->SetCoutDestination(this);
-};
+LogSession::LogSession() : G4UIsession() {
+    auto UI = G4UImanager::GetUIpointer();
+    UI->SetCoutDestination(this);
+}
 
 G4int LogSession::ReceiveG4cout(const G4String& coutString) {
-//    std::cout << "!!!MySeesin!!!!" << coutString << std::flush;
-    auto msg = (std::ostringstream{} << coutString).str();
-    msg.pop_back();
+    std::string msg = coutString;
+    if (!msg.empty() && msg.back() == '\n') msg.pop_back();
+
     if (msg.find("[DEBUG]") != std::string::npos) {
-        LOGSVC_DEBUG("{}", msg);
-    }
-    else {
-        LOGSVC_INFO("{}", msg);
+        LOGSVC_DEBUG_RAW("G4Cout", "{}", msg);
+    } else {
+        LOGSVC_INFO_RAW("G4Cout", "{}", msg);
     }
     return 0;
-};
+}
+
 G4int LogSession::ReceiveG4cerr(const G4String& cerrString) {
-    // std::cout << "!!!MySeesinErr!!!!" << cerrString << std::flush;
-    auto msg = (std::ostringstream{} << cerrString).str();
-    msg.pop_back();
-    LOGSVC_ERROR("{}", msg);
+    std::string msg = cerrString;
+    if (!msg.empty() && msg.back() == '\n') msg.pop_back();
+
+    LOGSVC_ERROR_RAW("G4Cerr", "{}", msg);
     return 0;
-};
+}

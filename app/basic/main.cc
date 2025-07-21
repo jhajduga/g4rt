@@ -1,23 +1,18 @@
-/**
-*
-* \file main_setup_run_from_TOML.cc
-* \author 
-* \date 
-* \brief 
-*
-*/
-
 #include <cstdlib>
 #include "Services.hh"
 #include "cxxopts.h"
 #include <pybind11/embed.h>
 #include "toml.hh"
 #include "colors.hh"
-#include "LogSvc.hh"
 #include "WorldConstruction.hh"
+#include "LogSvc.hh"
 #include <locale.h>
 
 int main(int argc, const char *argv[]) {
+  // Force POSIX "C" locale to ensure consistent scientific notation (e.g., 1.23e-12).
+  // In some locales (e.g., pl_PL.UTF-8), numerical formatting functions may emit
+  // invalid or locale-specific formats that ROOT or GDML parsers can't read.
+  // This fixes cases where exponent notation is lost or misformatted.
   setenv("LC_ALL", "C", 1);
 
 
@@ -25,12 +20,10 @@ int main(int argc, const char *argv[]) {
   py::module sys = py::module::import("sys");
   sys.attr("path").attr("append")(std::string(PROJECT_PY_PATH));
 
-  SPDLOG_DEBUG("Initialize services");
+  LogSvc::Init(argc, argv, "build/tmp_logs/app_main.log", loguru::Verbosity_MAX, 100);
+
   auto configSvc = Service<ConfigSvc>();  // initialize ConfigSvc for TOML parsing
   auto runSvc = Service<RunSvc>();        // get RunSvc for general App run configuration
-  SPDLOG_DEBUG("End of initialize services");
-
-  SPDLOG_INFO("Wellcome G4RT!");
 
   if (argc > 1) {
   cxxopts::Options options(argv[0], "Text UI mode - command line options");
@@ -59,7 +52,6 @@ int main(int argc, const char *argv[]) {
       std::cout << options.help({"", "Application run mode"}) << std::endl;
       std::exit(EXIT_SUCCESS);
     }
-
     auto cmdopts = std::move(results);
 
     // GENERAL
@@ -71,7 +63,14 @@ int main(int argc, const char *argv[]) {
 
     if (cmdopts.count("d")) {
       auto logLevelStr = cmdopts["d"].as<std::string>();
-      LogSvc::DefaulLogLevel(logLevelStr);
+      auto verbosity = LogSvc::ParseVerbosityLevel(logLevelStr);
+
+      if (verbosity == loguru::Verbosity_INVALID) {
+          std::cerr << "Invalid log level: " << logLevelStr << "\n"
+                    << "Valid values: OFF, FATAL, ERROR, WARNING, INFO, DEBUG, or integer 0–9\n";
+          return 1;
+      }
+      LogSvc::SetTerminalLogLevel(verbosity); 
     }
 
       // OPERATION
@@ -129,8 +128,13 @@ int main(int argc, const char *argv[]) {
     } 
     auto world = WorldConstruction::GetInstance();
     runSvc->Initialize(world);
+    LOG_INFO( "Program startuje.");
     runSvc->Run();
+    LOG_DEBUG( "Debug log testowy.");
     runSvc->Finalize();
+    LOG_INFO( "Program kończy działanie. Zwyciestwo! Ten Log też kiedyś zmienię, obiecuję.");
+    loguru::shutdown();  // Zamknięcie loggera
+
   } else {
     G4cout << "[ERROR]:: Command line options missing (use '" << argv[0] << " --help' if needed)" << G4endl;
   }

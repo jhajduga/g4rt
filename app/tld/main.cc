@@ -4,8 +4,9 @@
 #include "cxxopts.h"
 #include <pybind11/embed.h>
 #include "toml.hh"
-#include "LogSvc.hh"
 #include "TLDWorldConstruction.hh"
+#include "LogSvc.hh"
+#include <locale.h>
 
 int main(int argc, const char *argv[]) {
   // Force POSIX "C" locale to ensure consistent scientific notation (e.g., 1.23e-12).
@@ -15,15 +16,14 @@ int main(int argc, const char *argv[]) {
   setenv("LC_ALL", "C", 1);
 
 
-  pybind11::scoped_interpreter guard{};
-  pybind11::module sys = pybind11::module::import("sys");
+  py::initialize_interpreter();
+  py::module sys = py::module::import("sys");
   sys.attr("path").attr("append")(std::string(PROJECT_PY_PATH));
   
-  SPDLOG_DEBUG("Initialize services");
+  LogSvc::Init(argc, argv, "build/tmp_logs/app_main.log", loguru::Verbosity_MAX, 100);
+
   auto configSvc = Service<ConfigSvc>();  // initialize ConfigSvc for TOML parsing
   auto runSvc = Service<RunSvc>();        // get RunSvc for general App run configuration
-
-  SPDLOG_INFO("Wellcome G4RT!");
 
   if (argc > 1) {
   cxxopts::Options options(argv[0], "Text UI mode - command line options");
@@ -53,7 +53,14 @@ int main(int argc, const char *argv[]) {
     // --------------------------------------------------------------------
     if (cmdopts.count("d")) {
       auto logLevelStr = cmdopts["d"].as<std::string>();
-      LogSvc::DefaulLogLevel(logLevelStr);
+      auto verbosity = LogSvc::ParseVerbosityLevel(logLevelStr);
+
+      if (verbosity == loguru::Verbosity_INVALID) {
+          std::cerr << "Invalid log level: " << logLevelStr << "\n"
+                    << "Valid values: OFF, FATAL, ERROR, WARNING, INFO, DEBUG, or integer 0–9\n";
+          return 1;
+      }
+      LogSvc::SetTerminalLogLevel(verbosity); 
     }
 
       // OPERATION
@@ -94,6 +101,7 @@ int main(int argc, const char *argv[]) {
       std::exit(EXIT_FAILURE);
     } 
     runSvc->Initialize(TLDWorldConstruction::GetInstance());
+    LOG_INFO( "Symulacja startuje.");
     runSvc->Run();
     runSvc->Finalize();
   } else {

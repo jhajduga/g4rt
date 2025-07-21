@@ -2,17 +2,28 @@
 JobName = "gps_RMPS_emstandard_upgrade"
 BeamType = "gps"
 GpsMacFileName = "gps/gpsCLinac.mac" # gets file from data/ in this repo
-PrintProgressFrequency = 0.01
-NTupleAnalysis = true
-# Physics = "LowE_Penelope" #"LowE_Penelope"
-# FieldType = "Rectangular" # "Elipsoidal", "RTPlan"
-FieldType = "Elipsoidal"
-FieldSizeA = 25 # mm
-FieldSizeB = 25 # mm
+PhspEvtVrtxMultiplicityTreshold = 20
+PrintProgressFrequency = 0.05
+Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
+
+GenerateCT = false
+PrimariesAnalysis = false
+NTupleAnalysis = false
+RunAnalysis = true
+
+WriteFieldMaskToCsv = true
+
+StoreTracks= false
+StorePositions= false
+StoreEnergies = false
+StorePrimaries = false
+StoreRunInfo= false
+MinimalMode= true
 
 [GeoSvc]
 BuildLinac = true
 BuildPatient = true
+MlcModel="Simplified"
 
 [PatientGeometry]
 Type = "D3DDetector"
@@ -28,10 +39,6 @@ EnviromentMedium = "G4_Galactic"
 TranslationInLocalFrame = [0.0,0.0,-60.0] # In mm
 Voxelization = [1,1,10] # Number of cels in every direction
 
-[D3DDetector_Layer]
-MRowShift = false
-MLayerShift = false
-
 [D3DDetector_Cell]
 Medium = "RMPS470"
 Voxelization = [2,2,2]
@@ -39,7 +46,10 @@ TracksAnalysis = true
 CellScorer = true
 CellVoxelisedScorer = true
 
-[RunSvc_Plan]
-Control_Points_In_Treatment_Plan = 1
-Gantry_Angle_Per_Control_Point = [0.0,30.0]
-Particle_Counter_Per_Control_Point = [1e5,2e6]
+[RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
+nControlPoints = 1      # This will limit number of ctrl points defined below!
+BeamRotation = 0       # This will overwrite Rotation value for all below plan files!
+nParticles = 1000     # This will overwrite Rotation value for all below plan files!
+PlanInputFile = [
+        "plan/custom/cp5x5.dat"
+]

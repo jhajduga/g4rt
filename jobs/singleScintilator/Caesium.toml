@@ -23,7 +23,6 @@ BuildLinac = true
 BuildPatient = true
 MlcModel = "Simplified"
 
-
 [PatientGeometry]
 Type = "WaterPhantom"
 EnviromentPositionX = 0.0

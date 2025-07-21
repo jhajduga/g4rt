@@ -8,6 +8,10 @@ project(Externals)
 # NOTE: The order matters! The most independent ones should go first.
 #----------------------------------------------------------------------------
 
+# 
+set(LOGURU_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/externals/loguru)
+
+
 # cmd for building text user interface
 add_subdirectory(cmd)
 

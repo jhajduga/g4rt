@@ -5,12 +5,13 @@
 #include "PrimaryGenerationAction.hh"
 #include "LogSession.hh"
 #include "LinacGeometry.hh"
+#include "LogSvc.hh"
 ////////////////////////////////////////////////////////////////////////////////
 ///
 UIManager::UIManager()
     : UIG4Manager(G4UImanager::GetUIpointer()), m_isG4kernelInitialized(false) {
-      LogSession * LoggedSession = new LogSession();
-      UIG4Manager->SetCoutDestination(LoggedSession);
+      auto log_session = new LogSession(); // Utworzenie sesji
+      G4UImanager::GetUIpointer()->SetCoutDestination(log_session);
     }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,7 +122,7 @@ void UIManager::UserRunInitialization() {
     InitializeG4kernel();
     for (auto ic : PreBeamOnCommands) 
       ApplyCommand(ic);
-    LOGSVC_DEBUG("UIManager::BeamOn({})",cp.GetNEvts());
+      LOG_DEBUG("UIManager::BeamOn({})",cp.GetNEvts());
     runSvc->G4RunManagerPtr()->BeamOn(cp.GetNEvts());
   }
 

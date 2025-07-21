@@ -22,7 +22,6 @@ BuildLinac = true
 BuildPatient = true
 MlcModel = "Simplified"
 
-
 [PatientGeometry]
 Type = "WaterPhantom"
 EnviromentPositionX = 0.0
@@ -41,8 +40,6 @@ Medium = "RMPS470" #G4_WATER, PMMA
 [WaterPhantom_Scoring]
 FullVolume = true
 FarmerDoseCalibration = false
-
-
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 nControlPoints = 1      # This will limit number of ctrl points defined below!

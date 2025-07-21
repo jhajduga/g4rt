@@ -1,25 +1,34 @@
 [RunSvc]
 JobName = "fsf_training"
 BeamType = "IAEA"
+PhspInputFileName = "/mnt/data/PHSP/TB_20X20_Merged"
 # PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
-# PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH Dell-XPS location
 # PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
-# PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_10x10s2-f0" # AGH LHCBD2 location
 # PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
-PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location
-# PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
-# PhspInputFileName = "/mnt/e/phsp/TNSIM157_3x3s2-f0" # JH Home File
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location 
+
 PhspEvtVrtxMultiplicityTreshold = 20
 PrintProgressFrequency = 0.05
+Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
+
 GenerateCT = false
 PrimariesAnalysis = false
 NTupleAnalysis = false
 RunAnalysis = true
 
+WriteFieldMaskToCsv = true
+
+StoreTracks= false
+StorePositions= false
+StoreEnergies = false
+StorePrimaries = false
+StoreRunInfo= false
+MinimalMode= true
+
 [GeoSvc]
 BuildLinac = true
 BuildPatient = true
-
+MlcModel="Simplified"
 [PatientGeometry]
 Type = "D3DDetector"
 EnviromentPositionX = 0.0
@@ -33,10 +42,6 @@ EnviromentMedium = "Usr_G4AIR20C"
 [D3DDetector_Detector]
 TopPositionInEnv = [0.0,1.0,0.0] # In mm
 Voxelization = [4,4,2] # Number of cels in every direction
-
-[D3DDetector_Layer]
-MRowShift = false
-MLayerShift = false
 
 [D3DDetector_Cell]
 Medium = "RMPS470"

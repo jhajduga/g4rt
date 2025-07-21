@@ -13,15 +13,14 @@
 #include "G4VSensitiveDetector.hh"
 #include "globals.hh"
 #include "G4Box.hh"
-#include "Logable.hh"
 
 class G4HCofThisEvent;
 class G4Step;
 class G4Box;
 
-class VPatientSD : public G4VSensitiveDetector, public Logable {
+class VPatientSD : public G4VSensitiveDetector{
     public:
-      class ScoringVolume: public Logable {
+      class ScoringVolume {
         private:
           ///
           G4bool IsInsideFarmer30013(const G4ThreeVector& position) const;
@@ -29,7 +28,7 @@ class VPatientSD : public G4VSensitiveDetector, public Logable {
           ///
 
         public:
-          ScoringVolume():Logable("GeoAndScoring"){}
+          ScoringVolume(){}
           /// 
           G4int m_nVoxelsX = 0;
           G4int m_nVoxelsY = 0;

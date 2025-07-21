@@ -11,7 +11,6 @@
 #include "G4VUserDetectorConstruction.hh"
 #include "IPhysicalVolume.hh"
 #include "Configurable.hh"
-#include "Logable.hh"
 
 class G4Run;
 class PatientGeometry;
@@ -23,8 +22,7 @@ class BeamMonitoring;
 ///\brief The top level world volume construction factory. Geant4 app manner.
 class WorldConstruction : public G4VUserDetectorConstruction,
                           public IPhysicalVolume,
-                          public Configurable,
-                          public Logable {
+                          public Configurable{
   public:
   ///
   void Destroy() override;

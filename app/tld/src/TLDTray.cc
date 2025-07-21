@@ -83,12 +83,12 @@ void TLDTray::ParseTomlConfig(){
     SetTomlConfigFile(); // it set the job main file for searching this configuration
     auto configFile = GetTomlConfigFile();
     if (!svc::checkIfFileExist(configFile)) {
-        LOGSVC_CRITICAL("TLDTray::TConfigurarable::ParseTomlConfig::File {} not fount.", configFile);
+        FATAL_GEO("TLDTray::TConfigurarable::ParseTomlConfig::File {} not fount.", configFile);
         exit(1);
     }
     auto config = toml::parse_file(configFile);
     auto configPrefix = GetTomlConfigPrefix();
-    LOGSVC_INFO("TLDTray::Importing configuration from: {}:{}",configFile,configPrefix);
+    INFO_GEO("TLDTray::Importing configuration from: {}:{}",configFile,configPrefix);
 
     m_global_centre.setX(config[configPrefix]["Position"][0].value_or(0.0));
     m_global_centre.setY(config[configPrefix]["Position"][1].value_or(0.0));

@@ -9,7 +9,6 @@
 #define Dose3D_GEOSVC_H
 
 #include "Types.hh"
-#include "Logable.hh"
 #include "TomlConfigurable.hh"
 
 class WorldConstruction;
@@ -23,7 +22,7 @@ class VMlc;
 ///\brief The geometry management service.
 /// It is a singleton type the pointer of which can be asses trough the templated method:
 /// Service<GeoSvc>()
-class GeoSvc : public TomlConfigurable, Logable {
+class GeoSvc : public TomlConfigurable{
   private:
   GeoSvc();
 

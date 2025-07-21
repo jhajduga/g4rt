@@ -24,7 +24,7 @@ G4bool TLDSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   auto theTouchable = dynamic_cast<const G4TouchableHistory *>(aStep->GetPreStepPoint()->GetTouchable());
   auto volumeName = theTouchable->GetVolume()->GetName();
   if ( ! G4StrUtil::contains(volumeName, "TLD"))
-    LOGSVC_DEBUG("ProcessHits volume name ", volumeName);
+    DEBUG_GEO("ProcessHits volume name ", volumeName);
   
   // ____________________________________________________________________________
   if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "StoreTracks")) {

@@ -8,8 +8,12 @@ set(CMAKE_COLOR_MAKEFILE   ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_DEFAULT 17)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
-# Force Python from conda
-set(Python_EXECUTABLE "$ENV{CONDA_PREFIX}/bin/python" CACHE FILEPATH "" FORCE)
+add_compile_definitions(LOGURU_USE_FMTLIB=1
+                        LOGURU_FILENAME_WIDTH=32
+                        LOGURU_THREADNAME_WIDTH=16
+                        LOGURU_SCOPE_TEXT_SIZE=256)
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 
 #----------------------------------------------------------------------------
 # prevent for in-source building
@@ -43,7 +47,7 @@ add_definitions(-DPROJECT_BINARY_PATH=\"${PROJECT_BINARY_DIR}\")
 #----------------------------------------------------------------------------
 option(BUILD_G4RT "Build the g4rt executable" ON)
 option(BUILD_BG4RT "Build the g4rt_bworld executable" OFF)
-option(BUILD_DCM2DAT "Build the g4rt_bworld executable" OFF)
+option(BUILD_DCM2DAT "Build the g4rt_bworld executable" ON)
 option(BUILD_TLD "Build the tld executable" ON)
 
 #----------------------------------------------------------------------------
@@ -60,7 +64,6 @@ include(CTest)
 #       if you specify full path to the include directlry
 add_subdirectory(externals)
 add_subdirectory(core)
-# add_subdirectory(executables)
 add_subdirectory(app)
 
 #----------------------------------------------------------------------------

@@ -10,7 +10,6 @@
 
 #include "RunSvc.hh"
 #include "GeoSvc.hh"
-#include "LogSvc.hh"
 #include "ConfigSvc.hh"
 #include "MaterialsSvc.hh"
 #include "DicomSvc.hh"

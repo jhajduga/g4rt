@@ -6,7 +6,7 @@
 #include "cxxopts.h"
 #include <pybind11/embed.h>
 #include "LogSvc.hh"
-
+#include <locale.h>
 // Helper functions to parse a pair from a string
 std::pair<float, float> convertPair(const std::pair<std::string, std::string>& input) {
     try {
@@ -29,16 +29,22 @@ std::pair<float, float> parsePair(const std::string& input) {
 }
 
 int main(int argc, const char *argv[]) {
+  // Force POSIX "C" locale to ensure consistent scientific notation (e.g., 1.23e-12).
+  // In some locales (e.g., pl_PL.UTF-8), numerical formatting functions may emit
+  // invalid or locale-specific formats that ROOT or GDML parsers can't read.
+  // This fixes cases where exponent notation is lost or misformatted.
+  setenv("LC_ALL", "C", 1);
+
 
   pybind11::scoped_interpreter guard{};
   pybind11::module sys = pybind11::module::import("sys");
   sys.attr("path").attr("append")(std::string(PROJECT_PY_PATH));
 
-  SPDLOG_DEBUG("Initialize services");
-  auto dicomSvc = Service<DicomSvc>();    //
-  SPDLOG_DEBUG("End of initialize services");
+  // In order to capture G4cout and G4err before the kernel UI manager launches -> I initialize loggSession at the beginning of Main.`  
 
-  SPDLOG_INFO("Wellcome G4RT!");
+  LogSvc::Init(argc, argv, "build/tmp_logs/app_main.log", loguru::Verbosity_MAX, 100);
+
+  auto dicomSvc = Service<DicomSvc>();    //
 
   if (argc > 1) {
   cxxopts::Options options(argv[0], "Text UI mode - command line options");
@@ -70,7 +76,7 @@ int main(int argc, const char *argv[]) {
     // GENERAL
     // --------------------------------------------------------------------
     if (cmdopts.count("version")) {
-      SPDLOG_INFO("Geant-RT verson v 1.0.0");
+
       std::exit(EXIT_SUCCESS);
       }
 
@@ -212,7 +218,7 @@ int main(int argc, const char *argv[]) {
                                       std::vector<G4double>& mlc_a, 
                                       std::vector<G4double>& mlc_b) {
         if(mlc_a.empty() || mlc_b.empty()){
-          SPDLOG_ERROR("MLC data is empty!");
+        LOG_ERROR("MLC data is empty!");
         }
         std::ofstream outFile(dat_plan_file);
         if (outFile.is_open()) {
@@ -228,10 +234,10 @@ int main(int argc, const char *argv[]) {
 
           // Close file
           outFile.close();
-          SPDLOG_INFO("Plan data written into file: {}", dat_plan_file);
+          LOG_INFO("Plan data written into file: {}", dat_plan_file);
 
-      } else 
-          SPDLOG_ERROR("Unable to open file: {}", dat_plan_file);
+      } else std::cout << "Unable to open file: " << dat_plan_file << std::endl;
+          LOG_ERROR("Unable to open file: {}", dat_plan_file);
       };
 
 

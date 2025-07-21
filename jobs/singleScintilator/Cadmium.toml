@@ -41,7 +41,6 @@ Medium = "RMPS470" #G4_WATER, PMMA
 FullVolume = true
 FarmerDoseCalibration = false
 
-
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
 nControlPoints = 1      # This will limit number of ctrl points defined below!
 BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
