@@ -25,7 +25,7 @@
 #ifndef LOGURU_HAS_BEEN_IMPLEMENTED
 #define LOGURU_HAS_BEEN_IMPLEMENTED
 
-#define LOGURU_PREAMBLE_WIDTH (53 + LOGURU_THREADNAME_WIDTH + LOGURU_FILENAME_WIDTH)
+#define LOGURU_PREAMBLE_WIDTH (63 + LOGURU_THREADNAME_WIDTH + LOGURU_FILENAME_WIDTH)
 
 #undef min
 #undef max
@@ -1287,13 +1287,13 @@ namespace loguru
 			}
 		}
 		if (g_preamble_verbose && pos < out_buff_size) {
-			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "   v");
+			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "       v");
 			if (bytes > 0) {
 				pos += bytes;
 			}
 		}
-		if (g_preamble_pipe && pos < out_buff_size) {
-			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "| ");
+		if (g_preamble_pipe && pos < (out_buff_size-2)) {
+			int bytes = snprintf(out_buff + pos, out_buff_size - pos, " | ");
 			if (bytes > 0) {
 				pos += bytes;
 			}
@@ -1320,7 +1320,7 @@ namespace loguru
 			file = filename(file);
 		}
 
-		char level_buff[6];
+		char level_buff[7];
 		const char* custom_level_name = get_verbosity_name(verbosity);
 		if (custom_level_name) {
 			snprintf(level_buff, sizeof(level_buff) - 1, "%s", custom_level_name);
@@ -1368,14 +1368,14 @@ namespace loguru
 			}
 		}
 		if (g_preamble_verbose && pos < out_buff_size) {
-			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "%4s",
+			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "[%6s]",
 			                     level_buff);
 			if (bytes > 0) {
 				pos += bytes;
 			}
 		}
-		if (g_preamble_pipe && pos < out_buff_size) {
-			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "| ");
+		if (g_preamble_pipe && (pos < (out_buff_size - 2))) {
+			int bytes = snprintf(out_buff + pos , out_buff_size - pos, " | ");
 			if (bytes > 0) {
 				pos += bytes;
 			}

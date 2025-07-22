@@ -1,0 +1,31 @@
+MIT License
+
+Copyright (c) \[20??–2025] \[Dose3D-Future]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+This project includes the use of the Geant4 simulation toolkit.
+Geant4 is distributed under the Geant4 Software License (G4SL),
+available at: [https://geant4.web.cern.ch/license](https://geant4.web.cern.ch/license)
+
+Use of Geant4 within this project does not imply endorsement by CERN or the Geant4 Collaboration.
+The authors of this project make no warranty with regard to the accuracy or fitness for purpose
+of the simulation results generated through the use of Geant4.

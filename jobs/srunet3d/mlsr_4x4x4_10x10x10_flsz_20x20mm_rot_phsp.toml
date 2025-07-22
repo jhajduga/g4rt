@@ -1,40 +1,48 @@
 [RunSvc]
 JobName = "mlsr_4x4x4_10x10x10_flsz-ellipse_20x20mm_2e4"
 BeamType = "IAEA"
+PhspInputFileName = "/mnt/data/PHSP/TB_20X20_Merged"
 # PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
 # PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
 # PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
-PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location
-# PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
-# PhspInputFileName = "/mnt/e/phsp/TNSIM157_3x3s2-f0" # JH Home File
-PhspEvtVrtxMultiplicityTreshold = 10
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location 
+
+PhspEvtVrtxMultiplicityTreshold = 20
 PrintProgressFrequency = 0.05
-GenerateCT = true
+Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
+
+GenerateCT = false
 PrimariesAnalysis = false
-NTupleAnalysis = true
+NTupleAnalysis = false
 RunAnalysis = true
+
+WriteFieldMaskToCsv = true
+
+StoreTracks= false
+StorePositions= false
+StoreEnergies = false
+StorePrimaries = false
+StoreRunInfo= false
+MinimalMode= true
 
 [GeoSvc]
 BuildLinac = true
 BuildPatient = true
+MlcModel="Simplified"
 
 [PatientGeometry]
 Type = "D3DDetector"
-EnviromentPositionX = 0.0
-EnviromentPositionY = 0.0
-EnviromentPositionZ = 0.0
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 0.0
 EnviromentSizeX = 70.0
 EnviromentSizeY = 70.0
 EnviromentSizeZ = 70.0
 EnviromentMedium = "Usr_G4AIR20C"
 
 [D3DDetector_Detector]
-TopPositionInEnv = [0.0,0.0,-29.8] # In mm
+TranslationInLocalFrame = [0.0,0.0,-29.8] # In mm
 Voxelization = [4,4,4] # Number of cels in every direction
-
-[D3DDetector_Layer]
-MRowShift = false
-MLayerShift = false
 
 [D3DDetector_Cell]
 Medium = "Usr_G4AIR20C"
@@ -43,13 +51,9 @@ TracksAnalysis = false
 CellVoxelisedScorer = true
 
 [RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
+nControlPoints = 1      # This will limit number of ctrl points defined below!
+BeamRotation = 0       # This will overwrite Rotation value for all below plan files!
+nParticles = 1000     # This will overwrite Rotation value for all below plan files!
 PlanInputFile = [
-    # "plan/custom/rot00deg_10x10.dat"
-    "/home/geant4/workspace/github/g4rt/output/dat/prostate_imrt_beam0_cp0.dat"
+        "plan/custom/cp5x5.dat"
 ]
-# nControlPoints = 1
-# BeamRotation = [0.0] # Per Control Point
-# nParticles = [1e4] # Per Control Point
-# FieldMask = [
-#     {Type = "Elipsoidal", SizeA = 25.0, SizeB = 25.0 }
-# ]

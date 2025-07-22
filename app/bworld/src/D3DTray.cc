@@ -47,20 +47,14 @@ void D3DTray::LoadConfiguration(){
     
     m_global_centre = G4ThreeVector(0.0,0.0,0.0);
 
-    m_det_config.m_top_position_in_env = G4ThreeVector(0.0,0.0,0.0);
-
     m_det_config.m_cell_nX_voxels = 4;
     m_det_config.m_cell_nY_voxels = 4;
     m_det_config.m_cell_nZ_voxels = 4;
 
-    m_det_config.m_mrow_shift = false;
-    m_det_config.m_mlayer_shift = false;
-
     m_det_config.m_cell_medium = "RMPS470";
-    m_det_config.m_in_layer_positioning_module = "dose3d/geo/Tray/4x5x1_tray.csv";
+    m_det_config.m_stl_positioning_file_path = "dose3d/geo/Tray/4x5x1_tray.csv";
     m_det_config.m_stl_geometry_file_path = "dose3d/geo/Tray/tray.stl";
 
-    m_det_config.m_top_position_in_env = G4ThreeVector(-85.,0.0,-7.0); // "centre" of the trey is not in the geometrical centre
 
     // Any config value is being replaced by the one existing in TOML config 
     ParseTomlConfig();
@@ -75,12 +69,12 @@ void D3DTray::ParseTomlConfig(){
     SetTomlConfigFile(); // it set the job main file for searching this configuration
     auto configFile = GetTomlConfigFile();
     if (!svc::checkIfFileExist(configFile)) {
-        // // LOGSVC_CRITICAL("D3DTray::TConfigurarable::ParseTomlConfig::File {} not fount.", configFile);
+        FATAL_GEO("D3DTray::TConfigurarable::ParseTomlConfig::File {} not fount.", configFile);
         exit(1);
     }
     auto config = toml::parse_file(configFile);
     auto configPrefix = GetTomlConfigPrefix();
-    // // LOGSVC_INFO("D3DTray::Importing configuration from: {}:{}",configFile,configPrefix);
+    INFO_GEO("D3DTray::Importing configuration from: {}:{}",configFile,configPrefix);
 
     m_global_centre.setX(config[configPrefix]["Position"][0].value_or(0.0));
     m_global_centre.setY(config[configPrefix]["Position"][1].value_or(0.0));

@@ -1,0 +1,25 @@
+[RunSvc]
+JobName = "tld_basic_gps"
+BeamType = "gps"
+GpsMacFileName = "gps/gps_gamma_70keV.mac"
+PrintProgressFrequency = 0.05
+PrimariesAnalysis = false
+NTupleAnalysis = true
+RunAnalysis = true
+
+[GeoSvc]
+BuildLinac = false
+BuildPatient = false
+ExportGeometryToGDML = true
+
+[TLDTray]
+Position = [0.0,0.0,0.0]
+Rotation = [0.0,0.0,0.0]
+TLDVoxelization = [5,5,5]
+TLDMedium = "LiF:Mg,Ti"
+
+[RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
+nControlPoints = 1
+nParticles = 10000
+BeamRotation = 0.0
+# TODO: Type

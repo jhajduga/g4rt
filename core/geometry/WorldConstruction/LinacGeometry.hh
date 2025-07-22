@@ -41,6 +41,10 @@ class LinacGeometry : public Configurable, public IPhysicalVolume {
   ///
   void DefineSensitiveDetector();
 
+
+  static void SetIsocentreDistance(double distance_cm);
+  static double GetIsocentreDistance();
+
   private:
   LinacGeometry();
 
@@ -76,6 +80,9 @@ class LinacGeometry : public Configurable, public IPhysicalVolume {
 
   ///
   IPhysicalVolume* m_epidInstance = nullptr;
+
+
+  static inline double s_isocentre_distance_cm = 0.0;
 };
 
 #endif  // Dose3D_HEADCONSTUCTION_HH

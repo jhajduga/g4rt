@@ -11,7 +11,6 @@
 #include "G4VUserDetectorConstruction.hh"
 #include "IPhysicalVolume.hh"
 #include "Configurable.hh"
-// #include "Logable.hh"
 
 class G4Run;
 class PatientGeometry;
@@ -24,8 +23,6 @@ class BeamMonitoring;
 class WorldConstruction : public G4VUserDetectorConstruction,
                           public IPhysicalVolume,
                           public Configurable{
-                          // public Logable {
-                          
   public:
   ///
   void Destroy() override;

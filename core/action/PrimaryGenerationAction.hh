@@ -39,6 +39,9 @@ class PrimaryGenerationAction : public G4VUserPrimaryGeneratorAction {
     ///
     static void SetRotation(G4RotationMatrix* rotMatrix) { m_rotation_matrix = rotMatrix; }
 
+    ///
+    static void SetSID(G4double distance) { m_source_isocentre_distance = distance; }
+
   private:
 
     ///
@@ -55,6 +58,9 @@ class PrimaryGenerationAction : public G4VUserPrimaryGeneratorAction {
 
     ///
     static G4RotationMatrix* m_rotation_matrix;
+
+    ///
+    static G4double m_source_isocentre_distance;
 
     ///
     int m_min_p_vrtx_vec_size = 1;

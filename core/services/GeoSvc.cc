@@ -17,7 +17,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-// GeoSvc::GeoSvc() : TomlConfigurable("GeoSvc"), Logable("GeoAndScoring") {
 GeoSvc::GeoSvc() : TomlConfigurable("GeoSvc"){
   Configure();
 }
@@ -45,7 +44,7 @@ void GeoSvc::Configure() {
   //G4cout << "[INFO]:: GeoSvc :: Service default configuration " << G4endl;
 
   DefineUnit<G4String>("HeadModel");
-  DefineUnit<G4String>("MlcModel");
+  DefineUnit<std::string>("MlcModel");
   DefineUnit<G4double>("isoCentre");
   DefineUnit<std::string>("SavePhspRequest");
   DefineUnit<VecG4doubleSPtr>("SavePhSpHead");
@@ -86,7 +85,7 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
   if (unit.compare("MlcModel") == 0){
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig:   " << unit << G4endl;
     // m_config->SetValue(unit, G4String("Varian-HD120")); 
-    m_config->SetValue(unit, G4String("Simplified")); 
+    thisConfig()->SetTValue<std::string>(unit, std::string("None")); 
     // G4cout << "[DEBUG]:: GeoSvc::DefaultConfig value seted:  " << unit << G4endl;
   }
 
@@ -149,7 +148,8 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
 ///
 void GeoSvc::Initialize() {
   if (!m_isInitialized) {
-    // LOGSVC_INFO("Service initialization...");
+    
+      INFO_GEO("Service initialization...");
     PrintConfig();
 
     if (m_configSvc->GetValue<bool>("RunSvc", "SavePhSp")) 
@@ -334,7 +334,7 @@ EHeadModel GeoSvc::GetHeadModel() const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 EMlcModel GeoSvc::GetMlcModel() const {
-  auto mlcName = m_configSvc->GetValue<G4String>("GeoSvc", "MlcModel");
+  auto mlcName = m_configSvc->GetValue<std::string>("GeoSvc", "MlcModel");
   if (mlcName.compare("Varian-Millennium") == 0) {
     return EMlcModel::Millennium;
   } else if (mlcName.compare("Varian-HD120") == 0) {
@@ -352,6 +352,8 @@ EMlcModel GeoSvc::GetMlcModel() const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 VPatient* GeoSvc::Patient(){
+  if (m_patient)
+    return m_patient;
   if(World()->PatientEnvironment())
     return World()->PatientEnvironment()->GetPatient();
   return nullptr;
@@ -396,9 +398,6 @@ void GeoSvc::PerformRequestedExport() {
     ExportToGateGenericRepeater();
   if(thisConfig()->GetValue<bool>("ExportGeometryToGDML"))
     WriteWorldToGdml();
-  auto patient = Service<ConfigSvc>()->GetValue<std::string>("PatientGeometry","Type");
-  if(patient.find("D3DDetector")!=std::string::npos)
-    ExportDose3DLayerPads();
 }
 
 
@@ -416,7 +415,8 @@ void GeoSvc::ExportToGateGenericRepeater() const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void GeoSvc::WriteScoringComponentsPositioningToCsv() const {
-  // LOGSVC_INFO("Writing Scroing Components to CSV...");
+  
+      INFO_GEO("Writing Scroing Components to CSV...");
   std::string output_dir = GetOutputDir();
   for(const auto& gc : m_scoring_components){
       // Generic geometry export
@@ -429,30 +429,21 @@ void GeoSvc::WriteScoringComponentsPositioningToCsv() const {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void GeoSvc::WriteScoringComponentsPositioningToTFile() const {
-  // LOGSVC_INFO("Writing Scroing Components to TFile...");
+  
+      INFO_GEO("Writing Scroing Components to TFile...");
   std::string output_dir = GetOutputDir();
   for(const auto& gc : m_scoring_components){
-      // LOGSVC_INFO("Implement me ...");
+      
+      INFO_GEO("Implement me ...");
       // gc->ExportPositioningToTFile(output_dir); to be repaired to new scoring maps scheme
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void GeoSvc::ExportDose3DLayerPads() const{
-  // TODO!!!: Remove me in future!
-  std::cout << "[INFO] GeoSvc:: ExportDose3DLayerPads..." <<std::endl;
-  std::string output_dir = Service<ConfigSvc>()->GetValue<std::string>("RunSvc","OutputDir");
-  for(const auto& gc : m_scoring_components){
-    if(auto d3d = dynamic_cast<const D3DDetector*>(gc))
-      d3d->ExportLayerPads(output_dir);
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write geometry as TGeometry object in TFile
 void GeoSvc::WriteWorldToTFile() {
-  // LOGSVC_DEBUG("Writing World Geometry To TFile...");
+  
+      DEBUG_GEO("Writing World Geometry To TFile...");
   auto output_dir = GetOutputDir();
   if(!m_is_gdml_exported){
     WriteWorldToGdml();
@@ -507,16 +498,20 @@ void GeoSvc::WriteWorldToTFile() {
   setNodesVisByMaterial("G4_WATER",38,50);
   setNodesVisByMaterial("BaritesConcrete",12,50);
   // setNodesVisByMaterial("PMMA",12,30);
-  setNodesVisByMaterial("PMMA",38,50);
+  setNodesVisByMaterial("PMMA",95,90);
+  setNodesVisByMaterial("PLA",57,70);
+  setNodesVisByMaterial("RW3",83,30);
+  setNodesVisByMaterial("Rubber",156,30);
 
   // Dose3D visibility 
   setNodesVisByName("D3D",49);
-  setNodesVisByName("Stl",12,50);
+  setNodesVisByName("Stl",12,10);
 
   // Final export
   geo_dir->WriteTObject(tgeom,"World_Geometry");
   tgeom->UnlockGeometry();
-  // LOGSVC_INFO("Writing to {} - done!",geo_tfile);
+  
+      INFO_GEO("Writing to {} - done!",geo_tfile);
   m_is_tfile_exported = true;
 }
 
@@ -541,7 +536,8 @@ void GeoSvc::WritePatientToDicomCT(){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 void GeoSvc::WriteWorldToGdml(){
-  // LOGSVC_DEBUG("Writing World Geometry To GDML...");
+  
+      DEBUG_GEO("Writing World Geometry To GDML...");
   World()->ExportToGDML(GetOutputDir(),m_world_file_name+".gdml");
   m_is_gdml_exported = true;
 }

@@ -1,478 +1,486 @@
 //
 // Created by brachwal on 30.05.2020.
 //
+// Updated and refactored for clarity by jhajduga
+// 26.06.2025
 
 #include "NTupleEventAnalisys.hh"
-#include "VPatient.hh"
+
+#include <algorithm>
+#include <iostream>
+#include <vector>
+
+#include "G4AnalysisManager.hh"
 #include "G4Event.hh"
 #include "G4Run.hh"
 #include "G4SDManager.hh"
-#include "G4AnalysisManager.hh"
-#include "VoxelHit.hh"
 #include "G4Threading.hh"
 #include "Services.hh"
-#include "D3DCell.hh"
-#include <algorithm>
-#include <vector>
+#include "VPatient.hh"
+#include "VoxelHit.hh"
 
-
-std::vector<NTupleEventAnalisys::TTreeCollection> NTupleEventAnalisys::m_ttree_collection = std::vector<TTreeCollection>();
+G4Cache<std::vector<NTupleEventAnalisys::TTreeCollection>> NTupleEventAnalisys::m_ttree_collection;
+AnalysisFlagRegistry* NTupleEventAnalisys::m_analysis_reg = AnalysisFlagRegistry::Instance();
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-NTupleEventAnalisys *NTupleEventAnalisys::GetInstance() {
-  static NTupleEventAnalisys instance = NTupleEventAnalisys();
+NTupleEventAnalisys* NTupleEventAnalisys::GetInstance() {
+  static NTupleEventAnalisys instance;
   return &instance;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
-void NTupleEventAnalisys::DefineTTree(const G4String& treeName, bool cellVoxelisation, const G4String& hcName, const G4String& treeDescription){
-  if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis") == false)
-    return;
+/// DefineTTree rewritten to preserve logic: single/multi HC registration
+void NTupleEventAnalisys::DefineTTree(const G4String& treeName, bool cellVoxelisation, const G4String& hcName, const G4String& treeDescription) {
+  if (!Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis")) return;
 
-  if(hcName.empty()){
-    // LOGSVC_INFO("Defining TTree: {}",treeName);
-    // Given tree is related to single scoring volume (hits collection)
-    m_ttree_collection.emplace_back(NTupleEventAnalisys::TTreeCollection());
-    m_ttree_collection.back().m_name = treeName;
-    m_ttree_collection.back().m_hc_names.emplace_back(treeName);
-    m_ttree_collection.back().m_description = treeDescription;
-    m_ttree_collection.back().m_voxel_tree_structure = cellVoxelisation;
-  }
-  else {
-    // Given tree is related to many scoring volume (hits collection)
+  std::vector<TTreeCollection>& ttreeVec = m_ttree_collection.Get();
+
+  if (hcName.empty()) {
+    ANA_INFO("Defining TTree: {} (single scoring volume)", treeName);
+
+    // Create new entry for single-scoring-volume case
+    ttreeVec.emplace_back();
+    auto& tree = ttreeVec.back();
+    tree.m_name = treeName;
+    tree.m_description = treeDescription;
+    tree.m_hc_names.emplace_back(treeName);
+
+    if (cellVoxelisation) {
+      m_analysis_reg->SetFlag(AnalysisFlag::Voxelized, true);
+    }
+
+  } else {
+    // Multi-volume TTree (shared structure across HC)
     G4int treeIdx = -1;
     G4bool treeExists = false;
-    for(const auto& tree : m_ttree_collection){
-      if (tree.m_name==treeName){
+    for (const auto& tree : ttreeVec) {
+      ++treeIdx;
+      if (tree.m_name == treeName) {
         treeExists = true;
-        ++treeIdx;
         break;
       }
-      else 
-        ++treeIdx;
     }
-    if (!treeExists){
-      // LOGSVC_INFO("Defining TTree: {}",treeName);
-      m_ttree_collection.emplace_back(NTupleEventAnalisys::TTreeCollection());
-      m_ttree_collection.back().m_name = treeName;
-      m_ttree_collection.back().m_description = treeDescription;
-      m_ttree_collection.back().m_hc_names.emplace_back(hcName);
-      m_ttree_collection.back().m_voxel_tree_structure = cellVoxelisation;
+
+    if (!treeExists) {
+      ANA_INFO("Defining TTree: {} (new shared tree)", treeName);
+      ttreeVec.emplace_back();
+      auto& tree = ttreeVec.back();
+      tree.m_name = treeName;
+      tree.m_description = treeDescription;
+      tree.m_hc_names.emplace_back(hcName);
+
+      if (cellVoxelisation) {
+        m_analysis_reg->SetFlag(AnalysisFlag::Voxelized, true);
+      }
+
     } else {
-      m_ttree_collection.at(treeIdx).m_hc_names.emplace_back(hcName);
+      // Append HC name to existing tree
+      ttreeVec.at(treeIdx).m_hc_names.emplace_back(hcName);
     }
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
-void NTupleEventAnalisys::SetTracksAnalysis(const G4String& treeName, bool flag){
-  if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis") == false)
-    return;
-  for(auto& tree : m_ttree_collection){
-    if (tree.m_name==treeName){
-      //G4cout<< "[INFO]:: NTupleEventAnalisys:: Set Tracks Analysis for " << treeName << " to:" << flag << G4endl;
-      tree.m_tracks_analysis = flag;
-    }
-  }
-}
+/// BeginOfRun: initialize flags and create Ntuples if missing
+void NTupleEventAnalisys::BeginOfRun(const G4Run* runPtr, G4bool /*isMaster*/) {
 
-////////////////////////////////////////////////////////////////////////////////
-///
-void NTupleEventAnalisys::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
-  if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis") == false)
-    return;
-  // Book Voxel data Ntuple for all HitsColletions
-  //------------------------------------------
+  auto setAnalysisFlag = [](AnalysisFlag which, bool enable) {
+      NTupleEventAnalisys::m_analysis_reg->SetFlag(which, enable);
+  };
+
+  if (!Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis")) return;
+
+  setAnalysisFlag(AnalysisFlag::StoreRunInfo, Service<ConfigSvc>()->GetValue<bool>("RunSvc", "StoreRunInfo"));
+  setAnalysisFlag(AnalysisFlag::StorePositions, Service<ConfigSvc>()->GetValue<bool>("RunSvc", "StorePositions"));
+  setAnalysisFlag(AnalysisFlag::StoreEnergies, Service<ConfigSvc>()->GetValue<bool>("RunSvc", "StoreEnergies"));
+  setAnalysisFlag(AnalysisFlag::StoreTracks, Service<ConfigSvc>()->GetValue<bool>("RunSvc", "StoreTracks"));
+  setAnalysisFlag(AnalysisFlag::StorePrimaries, Service<ConfigSvc>()->GetValue<bool>("RunSvc", "StorePrimaries"));
+  setAnalysisFlag(AnalysisFlag::MinimalMode, Service<ConfigSvc>()->GetValue<bool>("RunSvc", "MinimalMode"));
+
   m_runId = runPtr->GetRunID();
-  auto runSvc = Service<RunSvc>();
-  auto control_point = runSvc->CurrentControlPoint();
-  m_degree_rotation = control_point->GetDegreeRotation();
-  for(const auto& tree : NTupleEventAnalisys::m_ttree_collection){
-    if(GetNTupleId(tree.m_name+m_treeNamePostfix) == -1){ // not created yet
+  m_degree_rotation = Service<RunSvc>()->CurrentControlPoint()->GetDegreeRotation();
+
+  for (const auto& tree : m_ttree_collection.Get()) {
+    const auto fullName = tree.m_name + m_treeNamePostfix;
+    if (GetNTupleId(fullName) == -1) {
+      std::cout << "Creating NTuple for: " << fullName << std::endl;
       CreateNTuple(tree);
+      std::cout << "NTuple created successfully." << std::endl;
     }
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
-// void NTupleEventAnalisys::CreateNTuple(const G4String& treeName, const G4String& treeDescription){
-void NTupleEventAnalisys::CreateNTuple(const TTreeCollection& treeColl){
-  auto treeName = treeColl.m_name+m_treeNamePostfix;
-  auto treeDescription = treeColl.m_description;
-  // G4cout << "[DEUBG]:: NTupleEventAnalisys::Creating TTree: "<< treeName << ":"  << treeDescription << G4endl;
-  auto analysisManager =  G4AnalysisManager::Instance();
-  m_ntuple_collection.Insert(treeName,TTreeEventCollection());
+/// Refactored CreateNTuple to use AnalysisFlags instead of legacy bools
+void NTupleEventAnalisys::CreateNTuple(const TTreeCollection& treeColl) {
+  const auto treeName = treeColl.m_name + m_treeNamePostfix;
+
+  const auto& treeDescription = treeColl.m_description;
+
+  auto analysisManager = G4AnalysisManager::Instance();
+  m_ntuple_collection.Insert(treeName, TTreeEventCollection());
   auto& evtNTupleColl = m_ntuple_collection.Get(treeName);
-  auto ntupleId = analysisManager->CreateNtuple(treeName,treeDescription);
-  evtNTupleColl.m_ntupleId = ntupleId;
-  evtNTupleColl.m_tracks_analysis = treeColl.m_tracks_analysis;
-  evtNTupleColl.m_minimalistic_ttree = treeColl.m_minimalistic;
-  evtNTupleColl.m_voxel_tree_structure = treeColl.m_voxel_tree_structure;
+  evtNTupleColl.m_ntupleId = analysisManager->CreateNtuple(treeName, treeDescription);
 
-  /* NOTE:
-    The G4AnalysisManager CreateNtuple(X)Column creates each column with unique ID,
-    being inremented in each method call. Once we want to call FillNtuple(X)Column
-    in order to set value explicitly we have to know ID matched to the defined column.
-    Here it's why we create the map of ID to each column...
-  */
-  auto createNtupleIColumn = [&](const char* name){
-    evtNTupleColl.m_colId[name] = analysisManager->CreateNtupleIColumn(ntupleId, name); 
-  };
-  auto createNtupleDColumn = [&](const char* name){
-    evtNTupleColl.m_colId[name] = analysisManager->CreateNtupleDColumn(ntupleId, name); 
-  };
+  auto createI = [&](const char* name) { evtNTupleColl.m_colId[name] = analysisManager->CreateNtupleIColumn(evtNTupleColl.m_ntupleId, name); };
+  auto createD = [&](const char* name) { evtNTupleColl.m_colId[name] = analysisManager->CreateNtupleDColumn(evtNTupleColl.m_ntupleId, name); };
+  auto createVecI = [&](const char* name, std::vector<G4int>& vec) { evtNTupleColl.m_colId[name] = analysisManager->CreateNtupleIColumn(evtNTupleColl.m_ntupleId, name, vec); };
+  auto createVecD = [&](const char* name, std::vector<G4double>& vec) { evtNTupleColl.m_colId[name] = analysisManager->CreateNtupleDColumn(evtNTupleColl.m_ntupleId, name, vec); };
 
-  auto createNtupleVecIColumn = [&](const char* name,std::vector<G4int>& vec){
-    evtNTupleColl.m_colId[name] = analysisManager->CreateNtupleIColumn(ntupleId, name, vec); 
-  };
-
-  auto createNtupleVecDColumn = [&](const char* name,std::vector<G4double>& vec){
-    evtNTupleColl.m_colId[name] = analysisManager->CreateNtupleDColumn(ntupleId, name, vec); 
-  };
-  
-  // General TTree branches
-  if(!treeColl.m_minimalistic){
-    createNtupleIColumn("ThreadId");
-    createNtupleIColumn("G4EvtId");
-    createNtupleIColumn("G4RunId");
-    createNtupleDColumn("G4EvtGlobalTime");
-    createNtupleVecDColumn("G4EvtPrimaryE",evtNTupleColl.m_G4EvtPrimaryEnergy);
-    createNtupleIColumn("G4EvtPrimaryN");
-    createNtupleDColumn("GantryAngle");
+  // General data that are always stored
+  createI("CellIdX");
+  createI("CellIdY");
+  createI("CellIdZ");
+  createD("CellDose");
+  if (m_analysis_reg->IsEnabled(AnalysisFlag::Voxelized)) {
+    createI("VoxelIdX");
+    createI("VoxelIdY");
+    createI("VoxelIdZ");
+    createD("VoxelDose");
   }
 
-  // Dose-3D cell level scoring
-  if(evtNTupleColl.m_cell_tree_structure){
-    createNtupleIColumn("CellIdX");
-    createNtupleIColumn("CellIdY");
-    createNtupleIColumn("CellIdZ");
-    if(!treeColl.m_minimalistic){
-      createNtupleDColumn("CellPositionX");
-      createNtupleDColumn("CellPositionY");
-      createNtupleDColumn("CellPositionZ");
-      createNtupleDColumn("CellEDeposit");
-      createNtupleDColumn("CellMeanEDeposit");
+  if (!m_analysis_reg->IsEnabled(AnalysisFlag::MinimalMode)) {
+    createI("G4EvtId");
+    createD("G4EvtGlobalTime");
+
+    // General per-event branches (only in detailed mode)
+    if (m_analysis_reg->IsEnabled(AnalysisFlag::StoreRunInfo)) {
+      createI("ThreadId");
+      createI("G4RunId");
+      createD("GantryAngle");
     }
-    createNtupleDColumn("CellDose");
+
+    // Cell-level scoring info
+    if (m_analysis_reg->IsEnabled(AnalysisFlag::StorePositions)) {
+      createD("CellPositionX");
+      createD("CellPositionY");
+      createD("CellPositionZ");
+      if (m_analysis_reg->IsEnabled(AnalysisFlag::Voxelized)) {
+        createD("VoxelPositionX");
+        createD("VoxelPositionY");
+        createD("VoxelPositionZ");
+      }
+    }
+
+    if (m_analysis_reg->IsEnabled(AnalysisFlag::StoreEnergies)) {
+      createD("CellEDeposit");
+      createD("CellMeanEDeposit");
+      if (m_analysis_reg->IsEnabled(AnalysisFlag::Voxelized)) {
+        createD("VoxelEDeposit");
+        createD("VoxelMeanEDeposit");
+      }
+    }
+
+    // Voxel-level branches
+    if (m_analysis_reg->IsEnabled(AnalysisFlag::StoreTracks)) {
+      createVecI("VoxelTrkId", evtNTupleColl.m_VoxelTrkId);
+      createVecI("VoxelTrkTypeId", evtNTupleColl.m_VoxelTrkTypeId);
+      createVecI("ProcessTypeId", evtNTupleColl.m_ProcessTypeId);
+      createVecI("ElectronOriginTypeId", evtNTupleColl.m_ElectronOriginTypeId);
+      createVecD("VoxelTrkE", evtNTupleColl.m_VoxelTrkEnergy);
+      createVecD("VoxelTrkTheta", evtNTupleColl.m_VoxelTrkTheta);
+      createVecD("VoxelTrkLength", evtNTupleColl.m_VoxelTrkLength);
+      createVecD("VoxelTrkPositionX", evtNTupleColl.m_VoxelTrkPositionX);
+      createVecD("VoxelTrkPositionY", evtNTupleColl.m_VoxelTrkPositionY);
+      createVecD("VoxelTrkPositionZ", evtNTupleColl.m_VoxelTrkPositionZ);
+    }
+    if (m_analysis_reg->IsEnabled(AnalysisFlag::StorePrimaries)) {
+      createD("G4EvtPrimaryE");
+      createI("G4EvtPrimaryN");
+    }
+  }
+  analysisManager->FinishNtuple(evtNTupleColl.m_ntupleId);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Refactored FillEventCollection to match final AnalysisFlags layout
+void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4Event* evt, VoxelHitsCollection* hitsColl) {
+  auto isoToSim = Service<ConfigSvc>()->GetValue<G4ThreeVector>("WorldConstruction", "IsoToSimTransformation");
+  auto analysisManager = G4AnalysisManager::Instance();
+  auto ntplId = GetNTupleId(treeName);
+
+  if (ntplId == -1) {
+    G4cout << " [WARNING]::FillEventCollection:: given TTree (" << treeName << ") collection doesn't exist!" << G4endl;
+    return;
   }
 
-  // Any voxel-like scoring (+ Dose-3D scope)
-  if(evtNTupleColl.m_voxel_tree_structure){
-    createNtupleIColumn("VoxelIdX");
-    createNtupleIColumn("VoxelIdY");
-    createNtupleIColumn("VoxelIdZ");
-    if(!treeColl.m_minimalistic){
-      createNtupleDColumn("VoxelPositionX");
-      createNtupleDColumn("VoxelPositionY");
-      createNtupleDColumn("VoxelPositionZ");
-      createNtupleDColumn("VoxelEDeposit");
-      createNtupleDColumn("VoxelMeanEDeposit");
+  auto& evtColl = m_ntuple_collection.Get(treeName);
+  const G4int nHits = hitsColl->entries();
+  if (nHits == 0) return;
+
+  evtColl.m_evtId = evt->GetEventID();
+  std::vector<G4double> hits_evt_global_time;
+
+  for (int i = 0; i < nHits; ++i) {
+    auto hit = dynamic_cast<VoxelHit*>(hitsColl->GetHit(i));
+    const auto eDep = hit->GetEnergyDeposit() / keV;
+    const auto meanEDep = hit->GetMeanEnergyDeposit() / keV;
+    const auto dose = hit->GetDose();
+    const auto cellVolume = Service<GeoSvc>()->Patient()->GetCellVolume();
+    const auto cell = hit->GetGlobalCentre() - isoToSim;
+    const auto center = hit->GetCentre() + hit->GetGlobalCentre();
+
+    // Always stored
+    evtColl.m_CellIdX.push_back(hit->GetGlobalID(0));
+    evtColl.m_CellIdY.push_back(hit->GetGlobalID(1));
+    evtColl.m_CellIdZ.push_back(hit->GetGlobalID(2));
+    evtColl.m_CellIDose.push_back(dose * hit->GetVolume() / cellVolume);
+
+    if (m_analysis_reg->IsEnabled(AnalysisFlag::Voxelized)) {
+      evtColl.m_VoxelIdX.push_back(hit->GetID(0));
+      evtColl.m_VoxelIdY.push_back(hit->GetID(1));
+      evtColl.m_VoxelIdZ.push_back(hit->GetID(2));
+      evtColl.m_VoxelHitDose.push_back(dose);
     }
-    createNtupleDColumn("VoxelDose");
-    
-    if(evtNTupleColl.m_tracks_analysis){
-      createNtupleVecIColumn("VoxelTrkId",evtNTupleColl.m_VoxelTrkId);
-      createNtupleVecIColumn("VoxelTrkTypeId",evtNTupleColl.m_VoxelTrkTypeId);
-      createNtupleVecDColumn("VoxelTrkE",evtNTupleColl.m_VoxelTrkEnergy);
-      createNtupleVecDColumn("VoxelTrkTheta",evtNTupleColl.m_VoxelTrkTheta);
-      createNtupleVecDColumn("VoxelTrkLength",evtNTupleColl.m_VoxelTrkLength);
-      createNtupleVecDColumn("VoxelTrkPositionX",evtNTupleColl.m_VoxelTrkPositionX);
-      createNtupleVecDColumn("VoxelTrkPositionY",evtNTupleColl.m_VoxelTrkPositionY);
-      createNtupleVecDColumn("VoxelTrkPositionZ",evtNTupleColl.m_VoxelTrkPositionZ);
+
+    if (!m_analysis_reg->IsEnabled(AnalysisFlag::MinimalMode)) {
+      if (m_analysis_reg->IsEnabled(AnalysisFlag::StorePositions)) {
+        evtColl.m_CellPositionX.push_back(cell.x());
+        evtColl.m_CellPositionY.push_back(cell.y());
+        evtColl.m_CellPositionZ.push_back(cell.z());
+        if (m_analysis_reg->IsEnabled(AnalysisFlag::Voxelized)) {
+          evtColl.m_VoxelPositionX.push_back(center.x());
+          evtColl.m_VoxelPositionY.push_back(center.y());
+          evtColl.m_VoxelPositionZ.push_back(center.z());
+        }
+      }
+
+      if (m_analysis_reg->IsEnabled(AnalysisFlag::StoreEnergies)) {
+        evtColl.m_VoxelHitEDeposit.push_back(eDep);
+        evtColl.m_VoxelHitMeanEDeposit.push_back(meanEDep);
+      }
+
+      if (m_analysis_reg->IsEnabled(AnalysisFlag::StorePrimaries)) {
+        const auto& primE = hit->GetEvtPrimariesEnergy();
+        evtColl.m_G4EvtPrimaryEnergy.assign(primE.begin(), primE.end());
+        evtColl.m_EvtPrimariesN = hit->GetEvtNPrimaries();
+      }
+
+      if (m_analysis_reg->IsEnabled(AnalysisFlag::StoreTracks)) {
+        const auto& trkMap = hit->GetTrackIdTypeMappingList();
+        const auto& procMap = hit->GetTrkIdProcessTypeMappingList();
+        const auto& origMap = hit->GetTrkIdElectronOriginTypeMappingList();
+
+        std::vector<G4int> trkType, trkTypeId;
+        for (const auto& [id, type] : trkMap) {
+          trkType.push_back(id);
+          trkTypeId.push_back(type);
+        }
+        evtColl.m_VoxelHitsTrkId.push_back(trkType);
+        evtColl.m_VoxelHitsTrkTypeId.push_back(trkTypeId);
+
+        std::vector<G4int> procTypeId;
+        for (const auto& [_, proc] : procMap) procTypeId.push_back(proc);
+        evtColl.m_VoxelHitsProcessTypeId.push_back(procTypeId);
+
+        std::vector<G4int> origTypeId;
+        for (const auto& [_, org] : origMap) origTypeId.push_back(org);
+        evtColl.m_VoxelHitsElectronOriginTypeId.push_back(origTypeId);
+
+        std::vector<G4double> eList, thetaList, lenList;
+        std::vector<G4double> xList, yList, zList;
+        for (const auto& [_, val] : hit->GetTrkIdEnergyMappingList()) eList.push_back(val / keV);
+        for (const auto& [_, val] : hit->GetTrkIdThetaMappingList()) thetaList.push_back(val);
+        for (const auto& [_, val] : hit->GetTrkIdLengthMappingList()) lenList.push_back(val);
+        for (const auto& [_, pos] : hit->GetTrkIdPositionMappingList()) {
+          xList.push_back(pos.x() - isoToSim.x());
+          yList.push_back(pos.y() - isoToSim.y());
+          zList.push_back(pos.z() - isoToSim.z());
+        }
+
+        evtColl.m_VoxelHitsTrkEnergy.push_back(eList);
+        evtColl.m_VoxelHitsTrkTheta.push_back(thetaList);
+        evtColl.m_VoxelHitsTrkLength.push_back(lenList);
+        evtColl.m_VoxelHitsTrkPosX.push_back(xList);
+        evtColl.m_VoxelHitsTrkPosY.push_back(yList);
+        evtColl.m_VoxelHitsTrkPosZ.push_back(zList);
+      }
+      hits_evt_global_time.push_back(hit->GetGlobalTime());
     }
   }
-  analysisManager->FinishNtuple(ntupleId);
+
+  if (m_analysis_reg->IsEnabled(AnalysisFlag::StorePrimaries) && !hits_evt_global_time.empty()) {
+    evtColl.m_global_time = *std::max_element(hits_evt_global_time.begin(), hits_evt_global_time.end());
+  }
+}
+////////////////////////////////////////////////////////////////////////////////
+/// Refactored FillNTupleEvent to use AnalysisFlags instead of legacy flags
+void NTupleEventAnalisys::FillNTupleEvent() {
+  auto analysisManager = G4AnalysisManager::Instance();
+
+  for (auto coll = m_ntuple_collection.Begin(); coll != m_ntuple_collection.End(); ++coll) {
+    const auto& treeName = coll->first;
+
+    auto& treeEvtColl = coll->second;
+    const auto ntupleId = treeEvtColl.m_ntupleId;
+    const G4int nHits = treeEvtColl.m_CellIdX.size();
+
+    if (nHits == 0) continue;  // empty event
+
+    auto fillI = [&](const char* name, G4int val) { analysisManager->FillNtupleIColumn(ntupleId, treeEvtColl.m_colId[name], val); };
+    auto fillD = [&](const char* name, G4double val) { analysisManager->FillNtupleDColumn(ntupleId, treeEvtColl.m_colId[name], val); };
+
+    for (int i = 0; i < nHits; ++i) {
+      fillI("CellIdX", treeEvtColl.m_CellIdX.at(i));
+      fillI("CellIdY", treeEvtColl.m_CellIdY.at(i));
+      fillI("CellIdZ", treeEvtColl.m_CellIdZ.at(i));
+      fillD("CellDose", treeEvtColl.m_CellIDose.at(i));
+      if (m_analysis_reg->IsEnabled(AnalysisFlag::Voxelized)) {
+        fillI("VoxelIdX", treeEvtColl.m_VoxelIdX.at(i));
+        fillI("VoxelIdY", treeEvtColl.m_VoxelIdY.at(i));
+        fillI("VoxelIdZ", treeEvtColl.m_VoxelIdZ.at(i));
+        fillD("VoxelDose", treeEvtColl.m_VoxelHitDose.at(i));
+      }
+
+      if (!m_analysis_reg->IsEnabled(AnalysisFlag::MinimalMode)) {
+        fillI("G4EvtId", treeEvtColl.m_evtId);
+        fillD("G4EvtGlobalTime", treeEvtColl.m_global_time);
+        if (m_analysis_reg->IsEnabled(AnalysisFlag::StoreRunInfo)) {
+          fillI("ThreadId", G4Threading::G4GetThreadId());
+          fillI("G4RunId", m_runId);
+          fillD("GantryAngle", m_degree_rotation);
+        }
+        if (m_analysis_reg->IsEnabled(AnalysisFlag::StorePositions)) {
+          fillD("CellPositionX", treeEvtColl.m_CellPositionX.at(i));
+          fillD("CellPositionY", treeEvtColl.m_CellPositionY.at(i));
+          fillD("CellPositionZ", treeEvtColl.m_CellPositionZ.at(i));
+          if (m_analysis_reg->IsEnabled(AnalysisFlag::Voxelized)) {
+            fillD("VoxelPositionX", treeEvtColl.m_VoxelPositionX.at(i));
+            fillD("VoxelPositionY", treeEvtColl.m_VoxelPositionY.at(i));
+            fillD("VoxelPositionZ", treeEvtColl.m_VoxelPositionZ.at(i));
+          }
+        }
+        if (m_analysis_reg->IsEnabled(AnalysisFlag::StoreEnergies)) {
+          fillD("CellEDeposit", treeEvtColl.m_VoxelHitEDeposit.at(i));
+          fillD("CellMeanEDeposit", treeEvtColl.m_VoxelHitMeanEDeposit.at(i));
+          if (m_analysis_reg->IsEnabled(AnalysisFlag::Voxelized)) {
+            fillD("VoxelEDeposit", treeEvtColl.m_VoxelHitEDeposit.at(i));
+            fillD("VoxelMeanEDeposit", treeEvtColl.m_VoxelHitMeanEDeposit.at(i));
+          }
+        }
+        if (m_analysis_reg->IsEnabled(AnalysisFlag::StoreTracks)) {
+          treeEvtColl.m_VoxelTrkId.clear();
+          treeEvtColl.m_VoxelTrkId = treeEvtColl.m_VoxelHitsTrkId.at(i);
+
+          treeEvtColl.m_VoxelTrkTypeId.clear();
+          treeEvtColl.m_VoxelTrkTypeId = treeEvtColl.m_VoxelHitsTrkTypeId.at(i);
+
+          treeEvtColl.m_ProcessTypeId.clear();
+          treeEvtColl.m_ProcessTypeId = treeEvtColl.m_VoxelHitsProcessTypeId.at(i);
+
+          treeEvtColl.m_ElectronOriginTypeId.clear();
+          treeEvtColl.m_ElectronOriginTypeId = treeEvtColl.m_VoxelHitsElectronOriginTypeId.at(i);
+
+          treeEvtColl.m_VoxelTrkEnergy.clear();
+          treeEvtColl.m_VoxelTrkEnergy = treeEvtColl.m_VoxelHitsTrkEnergy.at(i);
+
+          treeEvtColl.m_VoxelTrkTheta.clear();
+          treeEvtColl.m_VoxelTrkTheta = treeEvtColl.m_VoxelHitsTrkTheta.at(i);
+
+          treeEvtColl.m_VoxelTrkLength.clear();
+          treeEvtColl.m_VoxelTrkLength = treeEvtColl.m_VoxelHitsTrkLength.at(i);
+
+          treeEvtColl.m_VoxelTrkPositionX.clear();
+          treeEvtColl.m_VoxelTrkPositionX = treeEvtColl.m_VoxelHitsTrkPosX.at(i);
+
+          treeEvtColl.m_VoxelTrkPositionY.clear();
+          treeEvtColl.m_VoxelTrkPositionY = treeEvtColl.m_VoxelHitsTrkPosY.at(i);
+
+          treeEvtColl.m_VoxelTrkPositionZ.clear();
+          treeEvtColl.m_VoxelTrkPositionZ = treeEvtColl.m_VoxelHitsTrkPosZ.at(i);
+        }
+      }
+      analysisManager->AddNtupleRow(ntupleId);
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
-G4int NTupleEventAnalisys::GetNTupleId(const G4String& treeName){
+/// Refactored ClearEventCollections to respect flag logic
+void NTupleEventAnalisys::ClearEventCollections() {
+  for (auto coll = m_ntuple_collection.Begin(); coll != m_ntuple_collection.End(); ++coll) {
+    const auto& treeName = coll->first;
+
+    auto& evt = coll->second;
+
+    evt.m_evtId = -1;
+    evt.m_global_time = 0.;
+    evt.m_G4EvtPrimaryEnergy.clear();
+    evt.m_EvtPrimariesN = 0;
+    evt.m_CellIdX.clear();
+    evt.m_CellIdY.clear();
+    evt.m_CellIdZ.clear();
+    evt.m_CellIDose.clear();
+    evt.m_CellPositionX.clear();
+    evt.m_CellPositionY.clear();
+    evt.m_CellPositionZ.clear();
+    evt.m_VoxelHitEDeposit.clear();
+    evt.m_VoxelIdX.clear();
+    evt.m_VoxelIdY.clear();
+    evt.m_VoxelIdZ.clear();
+    evt.m_VoxelHitDose.clear();
+    evt.m_VoxelPositionX.clear();
+    evt.m_VoxelPositionY.clear();
+    evt.m_VoxelPositionZ.clear();
+    evt.m_VoxelHitsTrkId.clear();
+    evt.m_VoxelHitsTrkTypeId.clear();
+    evt.m_VoxelHitsTrkEnergy.clear();
+    evt.m_VoxelHitsProcessTypeId.clear();
+    evt.m_VoxelHitsElectronOriginTypeId.clear();
+    evt.m_VoxelHitsTrkTheta.clear();
+    evt.m_VoxelHitsTrkLength.clear();
+    evt.m_VoxelHitsTrkPosX.clear();
+    evt.m_VoxelHitsTrkPosY.clear();
+    evt.m_VoxelHitsTrkPosZ.clear();
+    evt.m_VoxelTrkId.clear();
+    evt.m_VoxelTrkTypeId.clear();
+    evt.m_ProcessTypeId.clear();
+    evt.m_ElectronOriginTypeId.clear();
+    evt.m_VoxelTrkEnergy.clear();
+    evt.m_VoxelTrkTheta.clear();
+    evt.m_VoxelTrkLength.clear();
+    evt.m_VoxelTrkPositionX.clear();
+    evt.m_VoxelTrkPositionY.clear();
+    evt.m_VoxelTrkPositionZ.clear();
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+G4int NTupleEventAnalisys::GetNTupleId(const G4String& treeName) {
   auto exists = m_ntuple_collection.Has(treeName);
-  if(exists){
+  if (exists) {
     auto evtCollection = m_ntuple_collection.Get(treeName);
     return evtCollection.m_ntupleId;
   }
   return -1;
 }
-
 ////////////////////////////////////////////////////////////////////////////////
-///
-void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4Event *evt, VoxelHitsCollection* hitsColl){
-  auto isoToSim = Service<ConfigSvc>()->GetValue<G4ThreeVector>("WorldConstruction", "IsoToSimTransformation");
-  auto analysisManager = G4AnalysisManager::Instance();
-  auto ntplId = GetNTupleId(treeName);
-  if (ntplId==-1){
-    G4cout << " [WARNING]::FillEventCollection:: given TTree ("<< treeName <<") collection doesn't exists! " << G4endl;
-    return;
-  }
-  auto& evtColl = m_ntuple_collection.Get(treeName); // Note: once the treeName is wrong this gives undefined beheviour!!
-  int nHits = hitsColl->entries();
-  // // LOGSVC_INFO("nHist: {}",nHits);
-  if(nHits==0){
-   return; // no hits in this event
-  }
-  evtColl.m_evtId = evt->GetEventID();
-  G4double totalEnergyDeposit = 0;
-  G4double totalDose = 0;
-
-  // std::cout << "EvtId: " << evt->GetEventID() << std::endl;
-  std::vector<G4double> hits_evt_global_time;
-  for (int i=0;i<nHits;i++){ // a.k.a. voxel loop
-
-    auto hit = dynamic_cast<VoxelHit*>(hitsColl->GetHit(i));
-    auto hitEDeposit = hit->GetEnergyDeposit() / keV;
-    auto hitMeanEDeposit = hit->GetMeanEnergyDeposit() / keV;
-
-    evtColl.m_CellIdX.push_back(hit->GetGlobalID(0));
-    evtColl.m_CellIdY.push_back(hit->GetGlobalID(1));
-    evtColl.m_CellIdZ.push_back(hit->GetGlobalID(2));
-    
-    if(!evtColl.m_minimalistic_ttree){
-      auto cell_centre = hit->GetGlobalCentre() - isoToSim;
-      evtColl.m_CellPositionX.push_back(cell_centre.x());
-      evtColl.m_CellPositionY.push_back(cell_centre.y());
-      evtColl.m_CellPositionZ.push_back(cell_centre.z());
-    }
-
-    auto voxelDose = hit->GetDose(); // note: it's in gray already;
-    auto size = D3DCell::SIZE;
-    double cellVolume = pow(size,3);
-    auto cellDose = voxelDose * hit->GetVolume() / cellVolume;
-    evtColl.m_CellIDose.emplace_back( cellDose );
-
-    // G4cout << hitsColl->GetName() << " dose: " << cellDose << G4endl;
-
-
-    evtColl.m_VoxelIdX.push_back(hit->GetID(0));
-    evtColl.m_VoxelIdY.push_back(hit->GetID(1));
-    evtColl.m_VoxelIdZ.push_back(hit->GetID(2));
-
-    if(!evtColl.m_minimalistic_ttree){
-      auto hitCentre = (hit->GetCentre()) + hit->GetGlobalCentre();
-      evtColl.m_VoxelPositionX.push_back(hitCentre.x());
-      evtColl.m_VoxelPositionY.push_back(hitCentre.y());
-      evtColl.m_VoxelPositionZ.push_back(hitCentre.z());
-    }
-
-    totalEnergyDeposit+=hitEDeposit;
-    if(!evtColl.m_minimalistic_ttree){
-      evtColl.m_VoxelHitEDeposit.emplace_back(hitEDeposit);
-      evtColl.m_VoxelHitMeanEDeposit.emplace_back(hitMeanEDeposit);
-    }
-    evtColl.m_VoxelHitDose.emplace_back( voxelDose );
-
-    if(!evtColl.m_minimalistic_ttree){
-      auto evtPE = hit->GetEvtPrimariesEnergy();
-      evtColl.m_G4EvtPrimaryEnergy.assign(evtPE.begin(),evtPE.end());
-      evtColl.m_EvtPrimariesN = hit->GetEvtNPrimaries();
-      hits_evt_global_time.emplace_back( hit->GetGlobalTime() );
-    }
-
-
-    if (evtColl.m_tracks_analysis){
-      std::vector<G4int> trkType;
-      std::vector<G4int> trkTypeId;
-      for(const auto& iTrkType : hit->GetTrkType()){
-        trkType.emplace_back(iTrkType.first);
-        trkTypeId.emplace_back(iTrkType.second);
-      }
-      evtColl.m_VoxelHitsTrkId.emplace_back(trkType);
-      evtColl.m_VoxelHitsTrkTypeId.emplace_back(trkTypeId);
-
-      std::vector<G4double> trkEnergy;
-      for(const auto& iTrkE : hit->GetTrkEnergy()){
-        trkEnergy.emplace_back(iTrkE.second / MeV);
-      }
-      evtColl.m_VoxelHitsTrkEnergy.emplace_back(trkEnergy);
-
-      std::vector<G4double> trkTheta;
-      for(const auto& iTrkTheta : hit->GetTrkTheta()){
-        trkTheta.emplace_back(iTrkTheta.second);
-      }
-      evtColl.m_VoxelHitsTrkTheta.emplace_back(trkTheta);
-
-      std::vector<G4double> trkPosX;
-      std::vector<G4double> trkPosY;
-      std::vector<G4double> trkPosZ;
-      for(const auto& iTrkPos : hit->GetTrkPosition()){
-        trkPosX.emplace_back(iTrkPos.second.getX()-isoToSim.x());
-        trkPosY.emplace_back(iTrkPos.second.getY()-isoToSim.y());
-        trkPosZ.emplace_back(iTrkPos.second.getZ()-isoToSim.z());
-      }
-      evtColl.m_VoxelHitsTrkPosX.emplace_back(trkPosX);
-      evtColl.m_VoxelHitsTrkPosY.emplace_back(trkPosY);
-      evtColl.m_VoxelHitsTrkPosZ.emplace_back(trkPosZ);
-
-      std::vector<G4double> trkLength;
-      for(const auto& iTrkLength : hit->GetTrkLength()){
-        trkLength.emplace_back(iTrkLength.second);
-      }
-      evtColl.m_VoxelHitsTrkLength.emplace_back(trkLength);
-    }
-
-  }
-  if(!evtColl.m_minimalistic_ttree){
-    evtColl.m_global_time = *std::max_element(hits_evt_global_time.begin(), hits_evt_global_time.end());
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void NTupleEventAnalisys::FillNTupleEvent(){
-  auto analysisManager = G4AnalysisManager::Instance();
-  
-  for(auto coll = m_ntuple_collection.Begin(); coll != m_ntuple_collection.End(); ++coll){
-    auto minimalistic_ttree = coll->second.m_minimalistic_ttree;
-    auto nHits = coll->second.m_CellIdX.size();
-    if(nHits > 0){ // otheriwse empty event
-      auto& treeEvtColl = coll->second;
-      auto ntupleId = treeEvtColl.m_ntupleId;
-
-      auto fillNtupleIColumn = [&](const char* name, G4int val){
-        // TODO: utilize G4 utilities: G4GenericFileManager::GetFileManager->G4RootAnalysisManager...
-        // if(analysisManager->GetNtupleIColumn(ntupleId, treeEvtColl.m_colId[name])) 
-          analysisManager->FillNtupleIColumn(ntupleId,treeEvtColl.m_colId[name], val);
-      };
-
-      auto fillNtupleDColumn = [&](const char* name, G4double val){
-        analysisManager->FillNtupleDColumn(ntupleId,treeEvtColl.m_colId[name], val);
-      };
-
-      for (int i=0;i<nHits;++i){ // a.k.a. voxel loop => creates nEvents=nHits in the NTuple
-        // ThreadId: -1 for the master thread, and -2 if it is used in the sequential mode.
-        // std::string doseMapName;
-        // // doseMapName.clear();
-        if(!minimalistic_ttree){
-          fillNtupleIColumn("ThreadId",G4Threading::G4GetThreadId());
-          fillNtupleIColumn("G4EvtId",treeEvtColl.m_evtId);
-          fillNtupleDColumn("G4EvtGlobalTime",treeEvtColl.m_global_time);
-          fillNtupleIColumn("G4EvtPrimaryN",treeEvtColl.m_EvtPrimariesN);
-          fillNtupleIColumn("G4RunId",m_runId);
-          fillNtupleDColumn("GantryAngle",m_degree_rotation);
-        }
-
-        if(treeEvtColl.m_cell_tree_structure){
-          fillNtupleIColumn("CellIdX",treeEvtColl.m_CellIdX.at(i));
-          fillNtupleIColumn("CellIdY",treeEvtColl.m_CellIdY.at(i));
-          fillNtupleIColumn("CellIdZ",treeEvtColl.m_CellIdZ.at(i));
-          if(!minimalistic_ttree){
-            fillNtupleDColumn("CellPositionX",treeEvtColl.m_CellPositionX.at(i));
-            fillNtupleDColumn("CellPositionY",treeEvtColl.m_CellPositionY.at(i));
-            fillNtupleDColumn("CellPositionZ",treeEvtColl.m_CellPositionZ.at(i));
-            fillNtupleDColumn("CellEDeposit",treeEvtColl.m_VoxelHitEDeposit.at(i));         // take value from voxel (vox volume==cell)
-            fillNtupleDColumn("CellMeanEDeposit",treeEvtColl.m_VoxelHitMeanEDeposit.at(i)); // take value from voxel (vox volume==cell)
-          }
-          fillNtupleDColumn("CellDose",treeEvtColl.m_CellIDose.at(i));
-
-        }
-        if(treeEvtColl.m_voxel_tree_structure){
-          fillNtupleIColumn("VoxelIdX",treeEvtColl.m_VoxelIdX.at(i));
-          fillNtupleIColumn("VoxelIdY",treeEvtColl.m_VoxelIdY.at(i));
-          fillNtupleIColumn("VoxelIdZ",treeEvtColl.m_VoxelIdZ.at(i));
-          if(!minimalistic_ttree){
-            fillNtupleDColumn("VoxelPositionX",treeEvtColl.m_VoxelPositionX.at(i));
-            fillNtupleDColumn("VoxelPositionY",treeEvtColl.m_VoxelPositionY.at(i));
-            fillNtupleDColumn("VoxelPositionZ",treeEvtColl.m_VoxelPositionZ.at(i));
-            fillNtupleDColumn("VoxelEDeposit",treeEvtColl.m_VoxelHitEDeposit.at(i));
-            fillNtupleDColumn("VoxelMeanEDeposit",treeEvtColl.m_VoxelHitMeanEDeposit.at(i));
-          }
-          fillNtupleDColumn("VoxelDose",treeEvtColl.m_VoxelHitDose.at(i));
-        }
-
-        if(treeEvtColl.m_tracks_analysis){
-          treeEvtColl.m_VoxelTrkId.clear();
-          treeEvtColl.m_VoxelTrkId = treeEvtColl.m_VoxelHitsTrkId.at(i);
-          treeEvtColl.m_VoxelTrkTypeId.clear();
-          treeEvtColl.m_VoxelTrkTypeId = treeEvtColl.m_VoxelHitsTrkTypeId.at(i);
-          treeEvtColl.m_VoxelTrkEnergy.clear();
-          treeEvtColl.m_VoxelTrkEnergy = treeEvtColl.m_VoxelHitsTrkEnergy.at(i);
-          treeEvtColl.m_VoxelTrkTheta.clear();
-          treeEvtColl.m_VoxelTrkTheta = treeEvtColl.m_VoxelHitsTrkTheta.at(i);
-          treeEvtColl.m_VoxelTrkLength.clear();
-          treeEvtColl.m_VoxelTrkLength = treeEvtColl.m_VoxelHitsTrkLength.at(i);
-          treeEvtColl.m_VoxelTrkPositionX.clear();
-          treeEvtColl.m_VoxelTrkPositionX = treeEvtColl.m_VoxelHitsTrkPosX.at(i);
-          treeEvtColl.m_VoxelTrkPositionY.clear();
-          treeEvtColl.m_VoxelTrkPositionY = treeEvtColl.m_VoxelHitsTrkPosY.at(i);
-          treeEvtColl.m_VoxelTrkPositionZ.clear();
-          treeEvtColl.m_VoxelTrkPositionZ = treeEvtColl.m_VoxelHitsTrkPosZ.at(i);
-        }
-
-        analysisManager->AddNtupleRow(ntupleId);
-      }
-    }
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// This member is called at the end of every event from EventAction::EndOfEventAction
-void NTupleEventAnalisys::EndOfEventAction(const G4Event *evt){
-  // G4cout << "NTupleEventAnalisys::EndOfEventAction" << G4endl;
+/// This member is called at the end of every event from
+/// EventAction::EndOfEventAction
+void NTupleEventAnalisys::EndOfEventAction(const G4Event* evt) {
   auto hCofThisEvent = evt->GetHCofThisEvent();
-  if(hCofThisEvent){
-    auto nColl = hCofThisEvent->GetNumberOfCollections();
-    ClearEventCollections();
-  for(const auto& tree : NTupleEventAnalisys::m_ttree_collection){
-    for(const auto& hc : tree.m_hc_names){
-      //G4cout << "NTupleEventAnalisys::filling: " << tree.m_name+m_treeNamePostfix << " / " << hc << G4endl;
+  if (!hCofThisEvent) return;
 
-      // Related SensitiveDetector collection ID (Geant4 architecture)
-      // collID==-1 the collection is not found
-      // collID==-2 the collection name is ambiguous
+  ClearEventCollections();
+
+  for (const auto& tree : m_ttree_collection.Get()) {
+    for (const auto& hc : tree.m_hc_names) {
+      const auto fullName = tree.m_name + m_treeNamePostfix;
+
       auto collection_id = G4SDManager::GetSDMpointer()->GetCollectionID(hc);
-      if(collection_id<0)
-          G4cout<< "[ERROR]:: NTupleEventAnalisys::EndOfEventAction TTree: " << tree.m_name+m_treeNamePostfix << "G4SDManager err: " << collection_id  << G4endl;
-      else{
-        auto hitsColl = dynamic_cast<VoxelHitsCollection*>(hCofThisEvent->GetHC(collection_id));
-        FillEventCollection(tree.m_name+m_treeNamePostfix,evt,hitsColl);
+      if (collection_id < 0) {
+        G4cout << "[ERROR]:: NTupleEventAnalisys::EndOfEventAction TTree: " << fullName << " G4SDManager err: " << collection_id << G4endl;
+        continue;
+      }
+
+      auto hitsColl = dynamic_cast<VoxelHitsCollection*>(hCofThisEvent->GetHC(collection_id));
+      if (hitsColl) {
+        FillEventCollection(fullName, evt, hitsColl);
       }
     }
   }
+
   FillNTupleEvent();
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-void NTupleEventAnalisys::ClearEventCollections(){
-  for(auto coll = m_ntuple_collection.Begin(); coll != m_ntuple_collection.End(); ++coll){
-    coll->second.m_evtId = -1;
-    coll->second.m_global_time= 0.;
-    coll->second.m_G4EvtPrimaryEnergy.clear();
-    coll->second.m_EvtPrimariesN = 0;
-
-    coll->second.m_CellIdX.clear();
-    coll->second.m_CellIdY.clear();
-    coll->second.m_CellIdZ.clear();
-    coll->second.m_CellPositionX.clear();
-    coll->second.m_CellPositionY.clear();
-    coll->second.m_CellPositionZ.clear();
-
-    coll->second.m_VoxelIdX.clear();
-    coll->second.m_VoxelIdY.clear();
-    coll->second.m_VoxelIdZ.clear();
-    coll->second.m_VoxelPositionX.clear();
-    coll->second.m_VoxelPositionY.clear();
-    coll->second.m_VoxelPositionZ.clear();
-
-    coll->second.m_VoxelHitEDeposit.clear();
-    coll->second.m_VoxelHitMeanEDeposit.clear();
-    coll->second.m_VoxelHitDose.clear();
-
-    coll->second.m_VoxelHitsTrkId.clear();
-    coll->second.m_VoxelHitsTrkTypeId.clear();
-    coll->second.m_VoxelHitsTrkEnergy.clear();
-    coll->second.m_VoxelHitsTrkTheta.clear();
-    coll->second.m_VoxelHitsTrkLength.clear();
-    coll->second.m_VoxelHitsTrkPosX.clear();
-    coll->second.m_VoxelHitsTrkPosY.clear();
-    coll->second.m_VoxelHitsTrkPosZ.clear();
-    
-    coll->second.m_CellIDose.clear();
-
-  }
 }

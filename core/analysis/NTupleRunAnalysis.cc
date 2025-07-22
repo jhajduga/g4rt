@@ -30,7 +30,7 @@ void NTupleRunAnalysis::WriteFieldMaskToTFile(const G4Run* runPtr){
         }
     }
     file->Close();
-    // LOGSVC_INFO("Writing Field Mask to file: {} - done!",file->GetName()); // // LOGSVC_DEBUG
+    ANA_INFO("Writing Field Mask to file: {} - done!",file->GetName()); 
 }
 
 
@@ -43,9 +43,9 @@ void NTupleRunAnalysis::WriteDoseToTFile(const G4Run* runPtr){
     auto file = IO::CreateOutputTFile(fname,dir_name);
     auto cp_dir = file->GetDirectory(dir_name.c_str());
     const auto& scoring_maps = cp->GetRun()->GetScoringCollections();
-    // LOGSVC_INFO("NTupleRunAnalysis::WriteDoseToTFile #{} collections:",scoring_maps.size());
+    ANA_INFO("NTupleRunAnalysis::WriteDoseToTFile #{} collections:",scoring_maps.size());
     for(auto& scoring_map: scoring_maps){
-        // LOGSVC_INFO("NTupleRunAnalysis::WriteDoseToTFile::Processing {} run collection:",scoring_map.first);
+        ANA_INFO("NTupleRunAnalysis::WriteDoseToTFile::Processing {} run collection:",scoring_map.first);
         for(auto& scoring: scoring_map.second){
             auto scoring_type = scoring.first;
             auto& data = scoring.second;
@@ -71,7 +71,7 @@ void NTupleRunAnalysis::WriteDoseToTFile(const G4Run* runPtr){
         }
     }
     file->Close();
-    // LOGSVC_INFO("Writing Dose Volume Data to TFile {} - done!",file->GetName());
+    ANA_INFO("Writing Dose Volume Data to TFile {} - done!",file->GetName());
 }
 
 

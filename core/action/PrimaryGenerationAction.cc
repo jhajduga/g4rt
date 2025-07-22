@@ -15,6 +15,7 @@ namespace {
 }
 
 G4RotationMatrix* PrimaryGenerationAction::m_rotation_matrix=nullptr;
+G4double PrimaryGenerationAction::m_source_isocentre_distance = 0.0;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -108,8 +109,8 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
         BeamCollimation::FilterPrimaries(read_p_vrtx);
         primary_vrtx.insert(primary_vrtx.end(),read_p_vrtx.begin(),read_p_vrtx.end());
         auto nVrtx = primary_vrtx.size();
-        if(nVrtx < m_min_p_vrtx_vec_size && n_reader_calls > 99){ // in order to avoid infinit loop
-          // LOGSVC_WARN("Maximum number of reader calls to reach Evt Vtrx Multiplicity treshold reached!: #Vrtx({}/{}), #Calls:{}",nVrtx,m_min_p_vrtx_vec_size,n_reader_calls);
+        if(nVrtx < m_min_p_vrtx_vec_size && n_reader_calls > 199){ // in order to avoid infinit loop
+          //   LOGSVC_WARN("Maximum number of reader calls to reach Evt Vtrx Multiplicity treshold reached!: #Vrtx({}/{}), #Calls:{}",nVrtx,m_min_p_vrtx_vec_size,n_reader_calls);
           break;
         }
     }
@@ -120,24 +121,30 @@ void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
   }
 
 
-  // IDEA:: Implement Origin/Frame switch (See: IAEAPrimaryGenerator, l. 27-30)
-  G4ThreeVector new_centre;
-
-  // PERFORM BEAM ROTATION ADD VTRXES TO CURRENT EVENT
-  for (const auto& vrtx : primary_vrtx){
-    if(m_rotation_matrix){
-      new_centre=(*m_rotation_matrix)*(vrtx->GetPosition());
+G4ThreeVector new_centre;
+// PERFORM BEAM ROTATION ADD VTRXES TO CURRENT EVENT
+for (const auto& vrtx : primary_vrtx){
+    G4ThreeVector position = vrtx->GetPosition();
+    
+    if (m_source_isocentre_distance > 0) {
+        position.setZ(m_source_isocentre_distance * cm);
     }
-    vrtx->SetPosition(new_centre.x(),new_centre.y(),new_centre.z());
-
+    
+    if (m_rotation_matrix) {
+        new_centre = (*m_rotation_matrix) * position;
+        vrtx->SetPosition(new_centre.x(), new_centre.y(), new_centre.z());
+    } else {
+        vrtx->SetPosition(position.x(), position.y(), position.z());
+    }
+    
     auto momentum = (vrtx->GetPrimary()->GetMomentum());
     if(m_rotation_matrix){
-      momentum = (*m_rotation_matrix)*(momentum);
+        momentum = (*m_rotation_matrix) * (momentum);
     }
-    vrtx->GetPrimary()->SetMomentum(momentum.x(),momentum.y(),momentum.z());
+    vrtx->GetPrimary()->SetMomentum(momentum.x(), momentum.y(), momentum.z());
     if( dynamic_cast<IaeaPrimaryGenerator*>(m_primaryGenerator) )
-      anEvent->AddPrimaryVertex(vrtx);
-  }
+        anEvent->AddPrimaryVertex(vrtx);
+}
   // FILL PRIMARYPARTICLEINFO
   auto nVrtx = anEvent->GetNumberOfPrimaryVertex();
   for(int i =0; i<nVrtx; ++i ){

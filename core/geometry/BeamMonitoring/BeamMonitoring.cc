@@ -77,7 +77,7 @@ void BeamMonitoring::Construct(G4VPhysicalVolume *parentWorld) {
     G4int id = 0;
     // add scoring position just above the PatientEnvZPosition
     auto patientEnvZSize = configSvc()->GetValue<double>("PatientGeometry", "EnviromentSizeZ");
-    auto patientEnvZPos = configSvc()->GetValue<double>("PatientGeometry", "EnviromentPositionZ");
+    auto patientEnvZPos = configSvc()->GetValue<double>("PatientGeometry", "PatientIsocentreZ");
     scoringZPositionSPtr->push_back( patientEnvZPos - patientEnvZSize/2. - 1);
     for (const auto &iPlaneZPosition : *scoringZPositionSPtr) {
       G4cout << "[INFO]:: WorldConstruction:: adding  beam monitoring plane at :"

@@ -1,0 +1,3 @@
+[submodule "submodules/d3df-patients"]
+	path = submodules/d3df-patients
+	url = git@github.com:Dose3D-Future/d3df-patients.git

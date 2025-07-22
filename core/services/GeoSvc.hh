@@ -9,7 +9,6 @@
 #define Dose3D_GEOSVC_H
 
 #include "Types.hh"
-// #include "Logable.hh"
 #include "TomlConfigurable.hh"
 
 class WorldConstruction;
@@ -23,8 +22,7 @@ class VMlc;
 ///\brief The geometry management service.
 /// It is a singleton type the pointer of which can be asses trough the templated method:
 /// Service<GeoSvc>()
-// class GeoSvc : public TomlConfigurable, Logable {
-class GeoSvc : public TomlConfigurable {
+class GeoSvc : public TomlConfigurable{
   private:
   GeoSvc();
 
@@ -53,6 +51,9 @@ class GeoSvc : public TomlConfigurable {
   ///
   std::vector<const GeoComponet*> m_scoring_components;
 
+  ///
+  VPatient* m_patient = nullptr;
+
   ///\brief Virtual method implementation defining the list of configuration units for this module.
   void Configure() override;
 
@@ -64,9 +65,6 @@ class GeoSvc : public TomlConfigurable {
 
   ///
   void ExportToGateGenericRepeater() const;
-
-  ///
-  void ExportDose3DLayerPads() const;
 
   public:
   ///\brief Static method to get instance of this singleton object.
@@ -91,6 +89,9 @@ class GeoSvc : public TomlConfigurable {
   /// 
   void SetWorld(WorldConstruction *world) { my_world = world; }
 
+  ///
+  void RegisterPatient(VPatient* patient) { m_patient = patient; }
+  
   ///
   VPatient* Patient();
 

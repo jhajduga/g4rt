@@ -1,0 +1,39 @@
+#############################
+# Flat Pill Source          #
+# Americ 241                #
+# Emission in -Z Hemisphere #
+#############################
+
+# Am 5.486 MeV
+################################################################
+/gps/particle alpha
+/gps/source/intensity 1
+/gps/pos/type Plane
+/gps/pos/shape Circle
+/gps/pos/centre 0 0 -0.6 cm
+/gps/pos/radius 0.4 cm
+/gps/ang/type iso
+/gps/ang/mintheta 0 deg
+/gps/ang/maxtheta 90 deg
+/gps/ang/minphi 0 deg
+/gps/ang/maxphi 360 deg
+/gps/ene/type Gauss
+/gps/ene/mono 5.39 MeV
+/gps/ene/sigmae 0.5 keV
+
+# Am 5.443 MeV
+################################################################
+/gps/source/add 0.14 # intensity
+/gps/particle alpha
+/gps/pos/type Plane
+/gps/pos/shape Circle
+/gps/pos/centre 0 0 -0.6 cm
+/gps/pos/radius 0.4 cm
+/gps/ang/type iso
+/gps/ang/mintheta 0 deg
+/gps/ang/maxtheta 90 deg
+/gps/ang/minphi 0 deg
+/gps/ang/maxphi 360 deg
+/gps/ene/type Gauss
+/gps/ene/mono 5.39 MeV
+/gps/ene/sigmae 0.5 keV

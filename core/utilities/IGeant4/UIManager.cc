@@ -4,14 +4,14 @@
 #include "toml.hh"
 #include "PrimaryGenerationAction.hh"
 #include "LogSession.hh"
+#include "LinacGeometry.hh"
+#include "LogSvc.hh"
 ////////////////////////////////////////////////////////////////////////////////
 ///
 UIManager::UIManager()
     : UIG4Manager(G4UImanager::GetUIpointer()), m_isG4kernelInitialized(false) {
       auto log_session = new LogSession(); // Utworzenie sesji
       G4UImanager::GetUIpointer()->SetCoutDestination(log_session);
-      // UIG4Manager->ApplyCommand("/control/verbose 2");
-      // UIG4Manager->ApplyCommand("/run/verbose 2");
     }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,12 +117,12 @@ void UIManager::UserRunInitialization() {
     runSvc->CurrentControlPoint(&cp);
     runSvc->LoadSimulationPlan();
     runSvc->G4RunManagerPtr()->SetRunIDCounter(cp.GetId());
-    G4cout << "DEBUG:: UIManager::UserRunInitialization:: rotation_matrix:\n" << *cp.GetRotation() << G4endl;
     PrimaryGenerationAction::SetRotation(cp.GetRotation());
+    PrimaryGenerationAction::SetSID(LinacGeometry::GetIsocentreDistance());
     InitializeG4kernel();
     for (auto ic : PreBeamOnCommands) 
       ApplyCommand(ic);
-    // LOGSVC_DEBUG("UIManager::BeamOn({})",cp.GetNEvts());
+      LOG_DEBUG("UIManager::BeamOn({})",cp.GetNEvts());
     runSvc->G4RunManagerPtr()->BeamOn(cp.GetNEvts());
   }
 

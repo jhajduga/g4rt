@@ -9,24 +9,22 @@
 #include "StepAnalysis.hh"
 #include "NTupleEventAnalisys.hh"
 #include "colors.hh"
-#include<map>
-#include<fstream>
-#include<iostream>
+#include <map>
+#include <fstream>
+#include <iostream>
 
 // NOTE:
 // It is recommended, but not necessary, to create the analysis manager in the user
 // run action constructor and delete it in its destructor. This guarantees correct
 // behavior in multi-threading mode.
-
 /////////////////////////////////////////////////////////////////////////////
 ///
-RunAction::RunAction():G4UserRunAction(){
-  auto analysisManager = G4AnalysisManager::Instance();
-  // auto numberOfThreads = Service<ConfigSvc>()->GetValue<int>("RunSvc", "NumberOfThreads");
-  if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis")  )
-    analysisManager->SetNtupleMerging(false); // we do manual merge, see RunSvc::MergeOutput
-  analysisManager->SetVerboseLevel(0);
-  //analysisManager->SetNtupleRowWise(true); // TODO: revise this functionality...
+RunAction::RunAction() : G4UserRunAction(), fAnalysisManager(nullptr) {
+  fAnalysisManager = G4AnalysisManager::Instance();
+
+  if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis"))
+    fAnalysisManager->SetNtupleMerging(false);  
+  fAnalysisManager->SetVerboseLevel(0);
   if (Service<ConfigSvc>()->GetValue<bool>("RunSvc", "RunAnalysis"))
     m_run_scoring = true;
 }
@@ -34,7 +32,11 @@ RunAction::RunAction():G4UserRunAction(){
 /////////////////////////////////////////////////////////////////////////////
 ///
 RunAction::~RunAction(){
-  delete G4AnalysisManager::Instance();
+  if (IsMaster()) {
+    delete fAnalysisManager;
+    fAnalysisManager = nullptr;
+  }
+
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -43,28 +45,23 @@ G4Run* RunAction::GenerateRun(){
   auto control_point = Service<RunSvc>()->CurrentControlPoint();
   if (IsMaster()){
     // control_point->InitializeRun();
-    G4cout << FGRN("[INFO]")<<":: " << FBLU("GENERATING NEW RUN... ") << G4endl;
-    G4cout << FGRN("[INFO]")<<":: NEvents: " << control_point->GetNEvts() << G4endl;
+    G4cout << FGRN("[INFO]") << ":: " << FBLU("GENERATING NEW RUN... ") << G4endl;
+    G4cout << FGRN("[INFO]") << ":: NEvents: " << control_point->GetNEvts() << G4endl;
     auto rot = control_point->GetRotation();
-    if(rot)
-      G4cout << FGRN("[INFO]")<<":: Rotation: " << *control_point->GetRotation() << G4endl;
+    if (rot)
+      G4cout << FGRN("[INFO]") << ":: Rotation: " << *control_point->GetRotation() << G4endl;
   }
   return control_point->GenerateRun(m_run_scoring);
 }
-
-
 /////////////////////////////////////////////////////////////////////////////
 ///
 void RunAction::BeginOfRunAction(const G4Run* aRun) {
   auto configSvc = Service<ConfigSvc>();
   auto runSvc = Service<RunSvc>();
-  
-  // For the single run only one file can be created
-  auto analysisManager =  G4AnalysisManager::Instance();
-  auto runId= std::to_string(aRun->GetRunID());
-  analysisManager->SetFileName(runSvc->CurrentControlPoint()->GetSimOutputTFileName(true));
-  analysisManager->OpenFile();
-  //Master mode or sequential
+
+  fAnalysisManager->SetFileName(runSvc->CurrentControlPoint()->GetSimOutputTFileName(true));
+  fAnalysisManager->OpenFile();
+
   if (IsMaster())
     G4cout << "### Run " << aRun->GetRunID() << " starts (master)." << G4endl;
   else
@@ -89,7 +86,7 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
 
   if (configSvc->GetValue<bool>("RunSvc", "StepAnalysis"))
     StepAnalysis::GetInstance()->BeginOfRun(aRun, IsMaster());
-  
+
   if (configSvc->GetValue<bool>("RunSvc", "NTupleAnalysis") && NTupleEventAnalisys::IsAnyTTreeDefined() ) 
     NTupleEventAnalisys::GetInstance()->BeginOfRun(aRun, IsMaster());
 
@@ -112,10 +109,8 @@ void RunAction::EndOfRunAction(const G4Run* aRun) {
   else
     G4cout << "Local-loop elapsed time [s] : " << loopRealElapsedTime << G4endl;
 
-
-  auto analysisManager = G4AnalysisManager::Instance();
-  analysisManager->Write();
-  analysisManager->CloseFile();
+  fAnalysisManager->Write();
+  fAnalysisManager->CloseFile();
 
   //___________________________________________________________________________
   auto configSvc = Service<ConfigSvc>();
@@ -124,4 +119,3 @@ void RunAction::EndOfRunAction(const G4Run* aRun) {
 
   // Service<RunSvc>()->EndOfRun();
 }
-

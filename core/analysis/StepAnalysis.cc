@@ -89,7 +89,7 @@ void StepAnalysis::FillTrack(G4Track* aTrack){
 
   //__
   auto trkEnergy = aTrack->GetKineticEnergy();
-  m_trkE.Push_back(trkEnergy/MeV);
+  m_trkE.Push_back(trkEnergy/keV);
 
   //__
   m_trkTheta.Push_back(aTrack->GetMomentum().theta());
@@ -137,7 +137,7 @@ void StepAnalysis::FillHit(G4Step* aStep){
 
   //__
   auto eDeposit = aStep->GetTotalEnergyDeposit();
-  m_hitsEDeposit.Push_back(eDeposit/MeV);
+  m_hitsEDeposit.Push_back(eDeposit/keV);
 
   //__
   auto postStepDefProcess = aStep->GetPostStepPoint()->GetProcessDefinedStep();
