@@ -1,0 +1,35 @@
+[RunSvc]
+JobName = "WP GPS"
+BeamType = "gps" 
+GpsMacFileName = "gps/gpsCLinac.mac" # gets file from data/ in this repo
+PrintProgressFrequency = 0.005
+NTupleAnalysis = true 
+FieldType = "Elipsoidal"  # "Rectangular" # "Elipsoidal", "RTPlan"
+FieldSizeA = 40 # mm
+FieldSizeB = 40 # mm
+
+[PatientGeometry]
+Type = "WaterPhantom"
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 200.0
+EnviromentSizeX = 400.0
+EnviromentSizeY = 400.0
+EnviromentSizeZ = 400.0
+EnviromentMedium = "G4_WATER"
+
+[WaterPhantom_Detector]
+TranslationFromCentre = [0.0,0.0,-200.0] # In mm
+Voxelization = [1,1,10] # Number of cels in every direction
+Size = [400.0,400.0,400.0]
+Medium = "G4_WATER" #G4_WATER, PMMA
+
+[WaterPhantom_Scoring]
+FullVolume = true
+FarmerDoseCalibration = true
+TracksAnalysis = true
+
+[RunSvc_Plan]
+Control_Points_In_Treatment_Plan = 2
+Gantry_Angle_Per_Control_Point = [0.0,90.0]
+Particle_Counter_Per_Control_Point = [2e5,2e5]

@@ -8,14 +8,20 @@
 #ifndef Dose3D_RUNSVC_H
 #define Dose3D_RUNSVC_H
 
-// #include "Logable.hh"
 #include "TomlConfigurable.hh"
 #include "Types.hh"
 #include "G4RunManager.hh"
 #include "ControlPoint.hh"
 #include "VoxelHit.hh"
-#include "LogSvc.hpp"
+#include "LogSvc.hh"
 
+#define RUNSVC_MODULE "RunSvc"
+
+#define RUNSVC_DEBUG(msg, ...)   LOGSVC_DEBUG(RUNSVC_MODULE, msg, ##__VA_ARGS__)
+#define RUNSVC_INFO(msg, ...)    LOGSVC_INFO(RUNSVC_MODULE, msg, ##__VA_ARGS__)
+#define RUNSVC_WARNING(msg, ...) LOGSVC_WARN(RUNSVC_MODULE, msg, ##__VA_ARGS__)
+#define RUNSVC_ERROR(msg, ...)   LOGSVC_ERROR(RUNSVC_MODULE, msg, ##__VA_ARGS__)
+#define RUNSVC_FATAL(msg, ...)   LOGSVC_FATAL(RUNSVC_MODULE, msg, ##__VA_ARGS__)
 /// TODO 1: TpFractionCounter (double evtTotalEnergy); // return EvtFractionId
 /// TODO 2: DaqTimeCounter(); // based on the global timer, returns EvtTimeId
 
@@ -36,20 +42,10 @@ enum class OperationalMode {
 ///\brief The application run management service.
 /// It is a singleton type the pointer of which can be asses trough the templated method:
 /// Service<RunSvc>()
-// class RunSvc : public TomlConfigurable, Logable {
 class RunSvc : public TomlConfigurable {
   private:
-  
-  // Nadpisanie makr logujących dla modułu `RunSvc`
 
 
-#define DEFAULT_MODULE "RunSvc"
-
-#define RUNSVC_DEBUG(msg, ...)   LOGSVC_DEBUG(DEFAULT_MODULE, msg, ##__VA_ARGS__)
-#define RUNSVC_INFO(msg, ...)    LOGSVC_INFO(DEFAULT_MODULE, msg, ##__VA_ARGS__)
-#define RUNSVC_WARNING(msg, ...) LOGSVC_WARNING(DEFAULT_MODULE, msg, ##__VA_ARGS__)
-#define RUNSVC_ERROR(msg, ...)   LOGSVC_ERROR(DEFAULT_MODULE, msg, ##__VA_ARGS__)
-#define RUNSVC_FATAL(msg, ...)   LOGSVC_FATAL(DEFAULT_MODULE, msg, ##__VA_ARGS__)
 
   RunSvc();
 

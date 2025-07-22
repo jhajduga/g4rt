@@ -1,6 +1,6 @@
 
 #ifndef PGEO_TEST_H
-#define PGEOT_EST_H
+#define PGEO_TEST_H
 
 #include <memory>
 #include "Services.hh"
@@ -34,4 +34,4 @@ protected:
     G4PVPlacement* m_testWorld; // TODO make std::unique
 };
 
-#endif // PGEOT_EST_H
+#endif // PGEO_TEST_H

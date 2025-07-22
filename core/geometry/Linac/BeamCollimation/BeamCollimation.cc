@@ -101,7 +101,7 @@ void BeamCollimation::SetRunConfiguration(const ControlPoint* control_point){
     m_physicalVolume[name]->SetRotation(cRotation);
   };
 
-  if((inputType=="CustomPlan" && (model != EMlcModel::Simplified))){
+  if((inputType=="CustomPlan" && (model != EMlcModel::Simplified && model != EMlcModel::None))){
     setCustomPositioning("Jaw1X");
     setCustomPositioning("Jaw2X");
     setCustomPositioning("Jaw1Y");
@@ -127,7 +127,6 @@ void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
       continue;
     } 
     if(model == EMlcModel::Simplified){
-      BeamCollimation::ShiftParticleToCollimationCentre(p_vrtx.at(i));
         if(!m_mlc->IsInField(vrtx)) {
           delete vrtx;
           p_vrtx.at(i) = nullptr;
@@ -135,28 +134,9 @@ void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
     } else {
       BeamCollimation::SetParticlePositionBeforeCollimators(p_vrtx.at(i), BeforeJaws);
     }
-  }
+  } 
   p_vrtx.erase(std::remove_if(p_vrtx.begin(), p_vrtx.end(), [](G4PrimaryVertex* ptr) { return ptr == nullptr; }), p_vrtx.end());
   Service<RunSvc>()->CurrentControlPoint()->FillSimFieldMask(p_vrtx);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-///
-G4ThreeVector BeamCollimation::ShiftParticleToCollimationCentre(G4PrimaryVertex* vrtx){
-  G4ThreeVector position = vrtx->GetPosition();
-  G4double x = position.getX();
-  G4double y = position.getY();
-  G4double z = position.getZ();
-  static G4ThreeVector maskCentre;
-  static int currentCPointId{-1};
-  if ( currentCPointId != Service<RunSvc>()->CurrentControlPoint()->Id() ){
-    currentCPointId = Service<RunSvc>()->CurrentControlPoint()->Id();
-    maskCentre = m_mlc->GetMaskCentre();
-    G4cout << "[INFO]::BeamCollimation::ShiftParticleToCollimationCentre:: Got mask centre: " << maskCentre << G4endl;
-  }
-  vrtx->SetPosition(x+maskCentre.getX(), y+maskCentre.getY(), z);
-  return G4ThreeVector(x+maskCentre.getX(), y+maskCentre.getY(), z);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -255,7 +235,7 @@ bool BeamCollimation::MLC(G4VPhysicalVolume *parentWorld) {
         dynamic_cast<MlcHd120*>(m_mlc)->IPhysicalVolume::Construct(this);
         break;
       case EMlcModel::Simplified:
-        // LOGSVC_INFO("Using Simplified type of MLC");
+        INFO_GEO("Using Simplified type of MLC");
         m_mlc = new MlcSimplified;
         break;
     }
@@ -274,7 +254,7 @@ bool BeamCollimation::MLC(G4VPhysicalVolume *parentWorld) {
         break;
       case EMlcModel::Simplified:
         delete m_mlc;
-        // LOGSVC_INFO("Using Simplified type of MLC");
+        INFO_GEO("Using Simplified type of MLC");
         m_mlc = new MlcSimplified();
         break;
     }

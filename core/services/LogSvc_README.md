@@ -19,10 +19,11 @@
 ## 🔧 Integration and Configuration
 
 ### Initialization
+
 Initialize `LogSvc` at application startup to establish a centralized logging system:
 
 ```cpp
-#include "LogSvc.hpp"
+#include "LogSvc.hh"
 
 int main(int argc, char* argv[]) {
     LogSvc::Init(argc, argv, "logs/simulation_main.log", loguru::Verbosity_MAX, 100);
@@ -31,12 +32,14 @@ int main(int argc, char* argv[]) {
 ```
 
 Parameters:
+
 - `argc`, `argv`: Command-line arguments.
 - `default_log_file`: Default log file path.
 - `verbosity`: Logging detail level (`loguru::Verbosity_INFO`, `loguru::Verbosity_ERROR`, etc.).
 - `flush_interval_ms`: Interval for flushing logs to disk.
 
 ### Module-Specific Logging
+
 To create individual log files for specific simulation modules:
 
 ```cpp
@@ -68,7 +71,7 @@ public:
 ```cpp
 // LogSession.cpp
 #include "LogSession.hh"
-#include "LogSvc.hpp"
+#include "LogSvc.hh"
 
 LogSession::LogSession() : G4UIsession() {
     auto UI = G4UImanager::GetUIpointer();
@@ -120,7 +123,7 @@ Using convenient macros provided by LogSvc:
 
 ```cpp
 LOGSVC_INFO("Physics", "Particle simulation started.");
-LOGSVC_WARNING("Detector", "Detector anomaly at energy: {} MeV", 13.37);
+LOGSVC_WARN("Detector", "Detector anomaly at energy: {} MeV", 13.37);
 LOGSVC_ERROR("Analysis", "Data analysis failed due to missing inputs.");
 ```
 
@@ -128,7 +131,7 @@ Define custom macros for readability and module-specific logging:
 
 ```cpp
 #define PHYSIC_INFO(msg, ...)    LOGSVC_INFO("PhysicsModule", msg, ##__VA_ARGS__)
-#define DETECTOR_WARN(msg, ...)  LOGSVC_WARNING("DetectorModule", msg, ##__VA_ARGS__)
+#define DETECTOR_WARN(msg, ...)  LOGSVC_WARN("DetectorModule", msg, ##__VA_ARGS__)
 #define ANALYSIS_ERROR(msg, ...) LOGSVC_ERROR("AnalysisModule", msg, ##__VA_ARGS__)
 
 // Example Usage:
@@ -142,6 +145,7 @@ These macros enhance clarity and simplify logging calls.
 ---
 
 ## 🚦 Dynamic Verbosity
+
 Adjust console logging verbosity dynamically at runtime:
 
 ```cpp
@@ -151,6 +155,7 @@ LogSvc::SetTerminalLogLevel(loguru::Verbosity_ERROR);
 ---
 
 ## ⚙️ Custom Callbacks
+
 Custom callbacks allow developers to define special actions triggered by specific log events, enabling integration with external systems, such as monitoring dashboards, alerts, or event-driven frameworks.
 
 Example of a custom callback to send critical errors to an external alerting service:
@@ -190,17 +195,20 @@ Callbacks can filter messages based on verbosity and perform custom logic beyond
 ## 📂 Example Log Outputs
 
 **logs/physics.log:**
-```
+
+```bash
 2025-03-21 09:00:01.123 (  0.001s) [main thread] physics.cpp:24      ERROR| Quantum chaos formula exceeded stability threshold!
 ```
 
 **logs/G4Cout.log:**
-```
+
+```bash
 2025-03-21 09:05:45.789 (345.667s) [main thread] G4Cout.cpp:12 INFO| Geant4: Simulation completed successfully.
 ```
 
 **logs/G4Cerr.log:**
-```
+
+```bash
 2025-03-21 09:07:21.543 (441.421s) [worker-thread] G4Cerr.cpp:30 ERROR| Geant4: Critical geometry overlap detected!
 ```
 
@@ -219,5 +227,28 @@ Callbacks can filter messages based on verbosity and perform custom logic beyond
 ---
 
 ## 🔑 Summary
+
 LogSvc provides a robust, structured, and thread-safe logging mechanism specifically tailored for complex scientific applications. Its modular approach, dynamic verbosity adjustment, and seamless integration capabilities, including with external streams like Geant4’s `G4cout` and `G4cerr`, make LogSvc indispensable for simulation projects. Additionally, its extensible callback system empowers users to integrate logging seamlessly into broader monitoring, alerting, and event-driven architectures, significantly benefiting developers and researchers.
 
+## TEMP
+
+W tym momencie debug jest ustawiony w LogSvc jako najwyższy poziom logowania.
+Ale możemy dodać inną systematykę w przyszłości.
+
+### Proposal
+
+| Nazwa   | Verbosity (int) | Opis                                                                 |
+|---------|-----------------|----------------------------------------------------------------------|
+| FATAL   | -3              | Krytyczny błąd, kończy program (ABORT_F/ABORT_S)                     |
+| ERROR   | -2              | Błąd krytyczny, ale możliwy do przechwycenia                         |
+| WARNING | -1              | Ostrzeżenie – potencjalny problem lub zachowanie niestandardowe       |
+| INFO    | 0               | Standardowe logi użytkownika (starty, parametry, postępy)             |
+| NOTICE  | +1              | Dodatkowe szczegóły (np. komunikaty o konfiguracji)                   |
+| STATUS  | +2              | Regularne statusy, np. cykle symulacji, aktualizacja %                |
+| DETAIL  | +3              | Szczegóły działania (np. który plik jest aktualnie przetwarzany)      |
+| DEBUG   | +5              | Techniczne informacje pomocne przy debugowaniu                        |
+| VERBOSE | +7              | Szczegółowe informacje dla zaawansowanych użytkowników                |
+| TRACE   | +9 (MAX)        | Najniższy poziom – każdy szczegół, np. każda iteracja, zmienne        |
+
+Ale to jakieś usprawnienie/dodatkowy feature na przyszłość.
+(Temp Debug jest na 9 ustawiony...)

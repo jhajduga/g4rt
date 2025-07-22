@@ -20,7 +20,7 @@ class RunAction : public G4UserRunAction {
 
   ~RunAction();
 
-  void BeginOfRunAction(const G4Run *aRun) override ;
+  void BeginOfRunAction(const G4Run *aRun) override;
 
   void EndOfRunAction(const G4Run *aRun) override;
 
@@ -28,7 +28,9 @@ class RunAction : public G4UserRunAction {
 
   private:
     G4Timer m_timer;
-    G4bool m_run_scoring = false;  
+    G4bool m_run_scoring = false;
+    
+    G4AnalysisManager* fAnalysisManager;
 };
 
 #endif // Dose3D_RUNACTION_HH

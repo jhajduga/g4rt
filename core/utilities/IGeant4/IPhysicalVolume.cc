@@ -149,7 +149,6 @@ G4LogicalVolume* IPhysicalVolume::GetLogicalVolume(const std::string& name ) con
 void IPhysicalVolume::Construct(IPhysicalVolume* parent, const G4ThreeVector& position){
   m_position = position;
   m_parent = parent;                           // logical structure
-  auto thisPV = GetPhysicalVolume();
   auto parentPV = parent->GetPhysicalVolume(); // physical structure
   if(!parentPV){
     G4cout << "[INFO]:: IPhysicalVolume::Construct: No direct pv to link..." << G4endl;
@@ -166,6 +165,9 @@ void IPhysicalVolume::Construct(IPhysicalVolume* parent, const G4ThreeVector& po
       parent = next_parent;
     }
     G4cout << "[INFO]:: Link logical "<< GetName() << " with G4PV: " << parentPV->GetName() << G4endl;
+  } else{
+    G4cout << "[INFO]:: Link G4PV "<< GetName() << " with G4PV: " << parentPV->GetName() << G4endl;
   }
+
   Construct(parentPV);
 }

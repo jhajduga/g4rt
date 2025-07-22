@@ -13,6 +13,7 @@ namespace {
   G4Mutex headConstructionMutex = G4MUTEX_INITIALIZER;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 LinacGeometry::LinacGeometry() 
@@ -128,6 +129,16 @@ void LinacGeometry::WriteInfo() {
 ///
 void LinacGeometry::ResetHead() {
   if (m_headInstance) m_headInstance->Reset();
+}
+
+
+
+void LinacGeometry::SetIsocentreDistance(double distance_cm) {
+  s_isocentre_distance_cm = distance_cm;
+}
+
+double LinacGeometry::GetIsocentreDistance() {
+  return s_isocentre_distance_cm;
 }
 
 // ////////////////////////////////////////////////////////////////////////////////

@@ -52,21 +52,28 @@ void MaterialsSvc::Configure() {
   DefineUnit<G4MaterialSPtr>("steel2");
   DefineUnit<G4MaterialSPtr>("steel3");
   DefineUnit<G4MaterialSPtr>("tungstenAlloy1");
-  DefineUnit<G4MaterialSPtr>("PMMA");
-  DefineUnit<G4MaterialSPtr>("PLA");
-  DefineUnit<G4MaterialSPtr>("Z-FLEX");
   DefineUnit<G4MaterialSPtr>("RW3");
-
+  
+  DefineUnit<G4MaterialSPtr>("PMMA");
   DefineUnit<G4MaterialSPtr>("PMMA03");
-  DefineUnit<G4MaterialSPtr>("PLA05");
-  DefineUnit<G4MaterialSPtr>("Z-FLEX05");
-
   DefineUnit<G4MaterialSPtr>("PMMA075");
+
+  DefineUnit<G4MaterialSPtr>("PLA");
+  DefineUnit<G4MaterialSPtr>("PLA05");
   DefineUnit<G4MaterialSPtr>("PLA075");
+  
+  DefineUnit<G4MaterialSPtr>("Z-FLEX");
+  DefineUnit<G4MaterialSPtr>("Z-FLEX05");
   DefineUnit<G4MaterialSPtr>("Z-FLEX075");
 
+  //  LiF doped with Mg and Ti - > Thermoluminescent dosimeter material
+  //  LiF:Mg,Ti
+  DefineUnit<G4MaterialSPtr>("LiF:Mg,Ti");
+  DefineUnit<G4MaterialSPtr>("LiF:Cu,Mg,P");
 
   DefineUnit<G4MaterialSPtr>("RMPS470");
+  DefineUnit<G4MaterialSPtr>("EPS"); // Expanded Polystyrene
+  DefineUnit<G4MaterialSPtr>("Rubber"); 
   
   DefineUnit<G4MaterialSPtr>("TiO2");
 
@@ -210,6 +217,30 @@ void MaterialsSvc::DefaultConfig(const std::string &unit) {
       thisConfig()->SetValue(unit, std::shared_ptr<G4Material>(zflex));
   }
 
+  if (unit.compare("LiF:Mg,Ti") == 0) {
+
+      G4Material* temp_mat = G4NISTManager->FindOrBuildMaterial("G4_LITHIUM_FLUORIDE");
+      d = 2.635 * g / cm3;
+      G4Material* lif = new G4Material("LiF:Mg,Ti", d, 3);
+      lif->AddMaterial(temp_mat, 0.99983);
+      lif->AddElement(G4NISTManager->FindOrBuildElement("Mg"), 0.00005);
+      lif->AddElement(G4NISTManager->FindOrBuildElement("Ti"), 0.00012);
+      lif->GetIonisation()->SetMeanExcitationEnergy(94.0 * eV);
+      thisConfig()->SetValue(unit, std::shared_ptr<G4Material>(lif));
+  }
+
+  if (unit.compare("LiF:Cu,Mg,P") == 0) {
+
+      G4Material* temp_mat = G4NISTManager->FindOrBuildMaterial("G4_LITHIUM_FLUORIDE");
+      d = 1.867 * g / cm3;
+      G4Material* lif = new G4Material("LiF:Cu,Mg,P", d, 4);
+      lif->AddMaterial(temp_mat, 0.99274);
+      lif->AddElement(G4NISTManager->FindOrBuildElement("Cu"), 0.00024);
+      lif->AddElement(G4NISTManager->FindOrBuildElement("Mg"), 0.00097);
+      lif->AddElement(G4NISTManager->FindOrBuildElement("P"), 0.00605);
+      lif->GetIonisation()->SetMeanExcitationEnergy(94.0 * eV);
+      thisConfig()->SetValue(unit, std::shared_ptr<G4Material>(lif));
+  }
 
   if (unit.compare("TiO2") == 0) {
       d = 4.23 * g / cm3;
@@ -219,7 +250,6 @@ void MaterialsSvc::DefaultConfig(const std::string &unit) {
       thisConfig()->SetValue(unit, std::shared_ptr<G4Material>(tio2));
   }
 
-
   if (unit.compare("RMPS470") == 0) {
       d = 1.21 * g / cm3;
       const std::vector<G4String> elements{"H","C","N","O"};
@@ -228,6 +258,22 @@ void MaterialsSvc::DefaultConfig(const std::string &unit) {
       auto rmps_470 = G4NISTManager->ConstructNewMaterial("RMPS470", elements, natoms, d, true, kStateSolid, 299.15);
       thisConfig()->SetValue(unit, std::shared_ptr<G4Material>(rmps_470));
   }
+
+  if (unit.compare("EPS") == 0) {
+    d = 0.02 * g / cm3;
+    const std::vector<G4String> elements{"H","C"};
+    const std::vector<G4int> natoms{8,8};
+    auto eps = G4NISTManager->ConstructNewMaterial("EPS", elements, natoms, d, true, kStateSolid, 299.15);
+    thisConfig()->SetValue(unit, std::shared_ptr<G4Material>(eps));
+}
+
+if (unit.compare("Rubber") == 0) {
+  d = 1.22 * g / cm3;
+  const std::vector<G4String> elements{"H","C"};
+  const std::vector<G4int> natoms{8,5};
+  auto rubber = G4NISTManager->ConstructNewMaterial("Rubber", elements, natoms, d, true, kStateSolid, 299.15);
+  thisConfig()->SetValue(unit, std::shared_ptr<G4Material>(rubber));
+}
 
   if (unit.compare("BaritesConcrete") == 0) {
       d = 3.3 * g / cm3;

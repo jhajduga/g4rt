@@ -1,0 +1,43 @@
+[RunSvc]
+JobName = "tld_basic"
+BeamType = "gps"
+GpsMacFileName = "gps/gps_x_ray_tube_40_kev_molybdenum.mac" # BR AGH pc location
+PhspEvtVrtxMultiplicityTreshold = 10
+PrintProgressFrequency = 0.05
+
+PrimariesAnalysis = true
+NTupleAnalysis = true
+StepAnalysis = true
+RunAnalysis = true
+EnableExtraProcesses = true
+
+StoreTracks= true
+StorePositions= true
+StoreEnergies = true
+StorePrimaries = true
+StoreRunInfo= true
+MinimalMode= false
+
+[GeoSvc]
+BuildLinac = true
+BuildPatient = false
+ExportGeometryToGDML = true
+MlcModel = "Simplified"
+
+[TLDTray]
+Position = [0.0,0.0,0.0] 
+Rotation = [0.0,0.0,0.0]
+World_Size = [250.0,250.0,20.0]
+TLDGrid = [1,1] # X, Y
+TLDVoxelization = [33,33,1]
+# TLDMedium = "LiF:Mg,Ti"
+TLDMedium = "LiF:Cu,Mg,P"
+TLD_Geometry_File_Path = "tldGeometry/testBoard.stl"
+
+[RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
+nParticles = 100000
+BeamRotation = 80.0
+BeamSID = 100.0 # (Obecne pole naświetlania koło o średnicy 16 cm (x od -8 cm do +8 cm/ y od -8 cm do +8 cm)
+PlanInputFile = [
+    "plan/custom/cp10x10.dat"
+]

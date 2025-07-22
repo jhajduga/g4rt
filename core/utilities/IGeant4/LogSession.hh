@@ -1,6 +1,6 @@
 
-//#ifndef Dose3D_LOGSESSION_H
-//#define Dose3D_LOGSESSION_H
+#ifndef Dose3D_LOGSESSION_H
+#define Dose3D_LOGSESSION_H
 #include "G4UImanager.hh"
 #include "G4UIsession.hh"
 
@@ -15,5 +15,5 @@ public:
     G4int ReceiveG4cout(const G4String& coutString) override;
     G4int ReceiveG4cerr(const G4String& cerrString) override;
 };
-//#endif
+#endif
 

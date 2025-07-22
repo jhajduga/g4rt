@@ -1,25 +1,24 @@
 #----------------------------------------------------------------------------
 # Setup the project
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 project(Externals)
 
 #----------------------------------------------------------------------------
-# Konfiguracja komponentów (podprojektów)
-# UWAGA: Kolejność ma znaczenie! Najbardziej niezależne komponenty powinny być dodane jako pierwsze.
-
+# Configure the components (subprojects)
+# NOTE: The order matters! The most independent ones should go first.
 #----------------------------------------------------------------------------
-# Dodanie ścieżek dla Loguru (loguru.cpp będzie dołączany tylko w projekcie Core)
+
+# 
 set(LOGURU_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/externals/loguru)
 
-#----------------------------------------------------------------------------
-# Dodanie podprojektów
 
-# Podprojekt cmd (interfejs użytkownika tekstowego)
+# cmd for building text user interface
 add_subdirectory(cmd)
 
-# Podprojekt IAEA
+#----------------------------------------------------------------------------
+# iaea
 add_subdirectory(iaea)
 
-# Podprojekt ConfigSvc (biblioteka konfiguracji)
+#----------------------------------------------------------------------------
+# ConfigSvc
 add_subdirectory(config/library)
-
