@@ -11,21 +11,44 @@ namespace py = pybind11;
 
 std::vector<GeometryDBReader::CellInfo> GeometryDBReader::m_db_cells_positioning;
 
+/**
+ * @brief Constructs a GeometryDBReader and imports the geometry parser Python module.
+ *
+ * Initializes the internal Python parser module used for loading and parsing geometry data.
+ */
 GeometryDBReader::GeometryDBReader()
   : m_parser(py::module::import("xmlx_geometry_parser"))
 {}
 
+/**
+ * @brief Performs manual finalization for the GeometryDBReader.
+ *
+ * Currently, this method only outputs a debug message and does not release resources or perform cleanup.
+ */
 void GeometryDBReader::Finalize() {
     std::cout << "[DEBUG]:: GeometryDBReader manual finalizer\n";
     
 }
 
+/**
+ * @brief Returns the singleton instance of the GeometryDBReader.
+ *
+ * Ensures that only one instance of GeometryDBReader exists throughout the application.
+ *
+ * @return Reference to the singleton GeometryDBReader instance.
+ */
 GeometryDBReader& GeometryDBReader::Instance() {
     static GeometryDBReader instance;
     return instance;
 }
 
-// Load and parse geometry data from Excel/CSV
+/**
+ * @brief Loads and parses geometry data from Excel and CSV files into internal structures.
+ *
+ * Reads geometry definitions from specified Excel and CSV files using a Python parser module. Extracts component names, body identifiers, material names, scintillator IDs, center of mass positions (with coordinate transformations), nodes, vertices, and normals for each geometry entry. Populates internal storage with parsed geometry data and updates the static cell positioning vector with valid scintillator IDs and their positions.
+ *
+ * @param path Directory path containing the geometry Excel and CSV files.
+ */
 void GeometryDBReader::LoadDataBase(const std::string& path)
 {
     std::cout << "Loading geoemtry data from: "<< path << std::endl;

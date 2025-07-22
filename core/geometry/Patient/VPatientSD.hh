@@ -28,7 +28,12 @@ class VPatientSD : public G4VSensitiveDetector{
           ///
 
         public:
-          ScoringVolume(){}
+          /**
+ * @brief Default constructor for ScoringVolume.
+ *
+ * Initializes a ScoringVolume instance with default parameters.
+ */
+ScoringVolume(){}
           /// 
           G4int m_nVoxelsX = 0;
           G4int m_nVoxelsY = 0;
@@ -55,12 +60,30 @@ class VPatientSD : public G4VSensitiveDetector{
           /// This is raw ptr since it's being managed by G4HCofThisEvent
           VoxelHitsCollection*  m_voxelHCollectionPtr = nullptr;
 
-          ///
+          /**
+ * @brief Returns the full size of the scoring volume along the X axis.
+ *
+ * @return G4double The length of the scoring volume in the X direction.
+ */
           G4double GetSizeX() const { return 2.*m_envelopeBoxPtr->GetXHalfLength(); }
-          G4double GetSizeY() const { return 2.*m_envelopeBoxPtr->GetYHalfLength(); }
-          G4double GetSizeZ() const { return 2.*m_envelopeBoxPtr->GetZHalfLength(); }
+          /**
+ * @brief Returns the full size of the scoring volume along the Y axis.
+ *
+ * @return G4double The total length of the envelope box in the Y direction.
+ */
+G4double GetSizeY() const { return 2.*m_envelopeBoxPtr->GetYHalfLength(); }
+          /**
+ * @brief Returns the full size of the scoring volume along the Z axis.
+ *
+ * @return G4double The total length of the envelope box in the Z direction.
+ */
+G4double GetSizeZ() const { return 2.*m_envelopeBoxPtr->GetZHalfLength(); }
 
-          ///
+          /**
+ * @brief Returns the total volume of the scoring volume.
+ *
+ * @return The product of the envelope box dimensions along X, Y, and Z axes.
+ */
           G4double GetVolume() const { return GetSizeX()*GetSizeY()*GetSizeZ(); }
           // G4double GetVoxelVolume() const { return (GetSizeX()/m_nVoxelsX)*(GetSizeY()/m_nVoxelsY)*(GetSizeZ()/m_nVoxelsZ); }
           G4double GetVoxelVolume() const;
@@ -140,7 +163,11 @@ class VPatientSD : public G4VSensitiveDetector{
       ///
       VPatientSD(const G4String& sdName, const G4ThreeVector& centre);
 
-      ///
+      /**
+ * @brief Destroys the VPatientSD object.
+ *
+ * Default destructor; resources are managed automatically.
+ */
       ~VPatientSD() = default;
 
       ///

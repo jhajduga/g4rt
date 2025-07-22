@@ -30,7 +30,11 @@ class WaterPhantom : public VPatient {
   /// 
   G4bool Update() override;
 
-  /// 
+  /**
+ * @brief Placeholder for resetting the water phantom state.
+ *
+ * Currently not implemented; outputs a message indicating the need for implementation.
+ */
   void Reset() override { G4cout << "Implement me." << G4endl; }
 
   ///  

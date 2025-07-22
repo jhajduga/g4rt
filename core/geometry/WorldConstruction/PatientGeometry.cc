@@ -24,27 +24,45 @@ namespace {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+   * @brief Constructs a PatientGeometry object and initializes its configuration.
+   *
+   * Initializes the PatientGeometry instance, setting up configuration parameters required for patient geometry management within the simulation environment.
+   */
 PatientGeometry::PatientGeometry()
       :IPhysicalVolume("PatientGeometry"), Configurable("PatientGeometry"){
     Configure();
   }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Destructor for the PatientGeometry class.
+ *
+ * Unregisters the configuration associated with this PatientGeometry instance.
+ */
 PatientGeometry::~PatientGeometry() {
   configSvc()->Unregister(thisConfig()->GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the singleton instance of the PatientGeometry class.
+ *
+ * Ensures that only one instance of PatientGeometry exists throughout the application.
+ *
+ * @return Pointer to the singleton PatientGeometry instance.
+ */
 PatientGeometry* PatientGeometry::GetInstance() {
   static PatientGeometry instance;
   return &instance;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Defines and registers configuration parameters for patient geometry.
+ *
+ * Sets up configurable units for patient type, isocenter coordinates, environment size and medium, supplementary geometry, voxel sizes, and database paths. Initializes default values for all parameters.
+ */
 void PatientGeometry::Configure() {
   G4cout << "\n\n[INFO]::  Configuring the " << thisConfig()->GetName() << G4endl;
   DefineUnit<std::string>("Type");
@@ -74,7 +92,13 @@ void PatientGeometry::Configure() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Sets the default value for a given patient geometry configuration parameter.
+ *
+ * Assigns a default value to the specified configuration key if it matches a recognized patient geometry parameter, such as patient type, isocenter coordinates, environment size and medium, supplementary geometry, voxel sizes, or database paths.
+ *
+ * @param unit The configuration parameter name for which to set the default value.
+ */
 
 
 
@@ -164,7 +188,13 @@ void PatientGeometry::DefaultConfig(const std::string &unit) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Instantiates and configures the patient phantom based on the configured patient type.
+ *
+ * Selects and creates the appropriate patient phantom object (e.g., WaterPhantom, SciSlicePhantom, DishCubePhantom, D3DDetector) according to the configuration. If TOML configuration is enabled, loads the configuration file for the phantom. Loads patient geometry data from the specified database path if provided.
+ *
+ * @return true if a recognized patient type is instantiated; false if the patient type is unknown.
+ */
 bool PatientGeometry::design(void) {
   auto patientType = thisConfig()->GetValue<std::string>("Type");
   G4cout << "I'm building " << patientType << "  patient geometry" << G4endl;
@@ -207,7 +237,11 @@ bool PatientGeometry::design(void) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Destroys and deallocates the patient and supplementary geometry volumes.
+ *
+ * Deletes the patient phantom and supplementary geometry volumes if they exist, and resets the internal pointers to ensure proper cleanup of allocated resources.
+ */
 void PatientGeometry::Destroy() {
   auto pv = GetPhysicalVolume();
   if (pv) {
@@ -223,7 +257,13 @@ void PatientGeometry::Destroy() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs the patient environment and associated geometries within the simulation world.
+ *
+ * Sets up the patient envelope volume with the configured medium and dimensions, applies coordinate translations for specific envelope types, and places it relative to the parent physical volume. Instantiates and constructs the selected patient phantom and any supplementary geometries, such as a table or imported STL mesh, according to configuration parameters. Also configures production cuts and regions for the environment volume.
+ *
+ * @param parentPV The parent physical volume to which the patient environment and associated geometries are attached.
+ */
 void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
   PrintConfig();
   design(); // a call to select the right phantom
@@ -318,7 +358,13 @@ void PatientGeometry::Construct(G4VPhysicalVolume *parentPV) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Updates the patient phantom geometry if it exists.
+ *
+ * Calls the `Update()` method on the patient phantom, returning `false` if the update fails. Returns `true` if the update succeeds or if no patient phantom is present.
+ *
+ * @return `true` if the update is successful or no patient exists; `false` if the patient's update fails.
+ */
 G4bool PatientGeometry::Update() {
   // TODO:: Update this GetPhysicalVolume(); then the daughter
   if (m_patient) {
@@ -328,7 +374,11 @@ G4bool PatientGeometry::Update() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Outputs the coordinates of the phantom center based on the configured isocenter.
+ *
+ * Prints the phantom center position in centimeters to the standard output.
+ */
 void PatientGeometry::WriteInfo() {
   auto envPosX = thisConfig()->GetValue<double>("PatientIsocentreX");
   auto envPosY = thisConfig()->GetValue<double>("PatientIsocentreY");
@@ -339,7 +389,11 @@ void PatientGeometry::WriteInfo() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// NOTE: This method is called from WorldConstruction::ConstructSDandField
-///       which is being called in workers in MT mode
+/**
+ * @brief Defines the sensitive detector for the patient phantom if analysis is enabled.
+ *
+ * Checks if any analysis mode (step, run, or NTuple) is enabled in the configuration. If so, defines the sensitive detector for the patient phantom in a thread-safe manner. Logs a warning if no analysis is enabled and thus no sensitive detector is defined.
+ */
 void PatientGeometry::DefineSensitiveDetector() {
   if (m_patient){
     // check if there is any analysis switched on in patient:
@@ -359,15 +413,11 @@ void PatientGeometry::DefineSensitiveDetector() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /**
- * @brief Exports the patient geometry to CSV files.
- * 
- * This function exports the patient geometry to CSV files for CT imaging.
- * It creates a set of CSV files for each slice of the patient and saves
- * the position and material of each voxel in the CSV format. The CSV files
- * are saved in the specified output directory.
- * 
- * @param path_to_output_dir The path to the output directory where the CSV
- *                           files will be saved.
+ * @brief Exports patient geometry voxel data to CSV files for CT imaging.
+ *
+ * Generates a set of CSV files, one per slice, containing the position and material name of each voxel in the patient geometry. Also writes a metadata CSV file describing the spatial bounds, resolution, and voxel step sizes. Files are saved in the specified output directory.
+ *
+ * @param path_to_output_dir Directory where the CSV files will be saved.
  */
 void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const {
   // Get the patient environment and check if it exists
@@ -474,6 +524,13 @@ void PatientGeometry::ExportToCsvCT(const std::string& path_to_output_dir) const
 
 
 
+/**
+ * @brief Exports dose data mapped to patient geometry voxels and cells as CSV files for CT analysis.
+ *
+ * For the current control point and run, this function generates CSV files containing spatially mapped dose, scaling factors, and material information for each voxel and cell in the patient geometry. It writes both merged and per-slice CSV files, along with metadata describing the spatial bounds, resolution, and SSD. Dose data is matched to geometry positions using a configurable tolerance, and missing data is filled with zeros. Output files are organized by plan and control point for downstream analysis.
+ *
+ * @param runPtr Pointer to the Geant4 run containing scoring data to be exported.
+ */
 void PatientGeometry::ExportDoseToCsvCT(const G4Run* runPtr) const {
   auto patientEnv = Service<GeoSvc>()->World()->PatientEnvironment();
   if (!patientEnv) {

@@ -39,7 +39,11 @@ class PatientGeometry : public IPhysicalVolume,
   ///
   G4bool Update() override;
 
-  ///
+  /**
+ * @brief Resets the patient geometry state.
+ *
+ * This implementation is intentionally left empty to satisfy interface requirements.
+ */
   void Reset() override {}
 
   ///
@@ -51,7 +55,11 @@ class PatientGeometry : public IPhysicalVolume,
   ///
   void DefaultConfig(const std::string &unit) override;
 
-  ///
+  /**
+ * @brief Returns a pointer to the patient model associated with the geometry.
+ *
+ * @return VPatient* Pointer to the current patient model.
+ */
   VPatient* GetPatient() const { return m_patient; }
 
   ///
@@ -65,14 +73,25 @@ class PatientGeometry : public IPhysicalVolume,
   ///
   ~PatientGeometry();
 
-  /// Delete the copy and move constructors
+  /**
+ * @brief Copy constructor is deleted to prevent copying of the singleton instance.
+ */
   PatientGeometry(const PatientGeometry &) = delete;
 
-  PatientGeometry &operator=(const PatientGeometry &) = delete;
+  /**
+ * @brief Deleted copy assignment operator to prevent copying of PatientGeometry instances.
+ */
+PatientGeometry &operator=(const PatientGeometry &) = delete;
 
-  PatientGeometry(PatientGeometry &&) = delete;
+  /**
+ * @brief Move constructor is deleted to prevent moving of PatientGeometry instances.
+ */
+PatientGeometry(PatientGeometry &&) = delete;
 
-  PatientGeometry &operator=(PatientGeometry &&) = delete;
+  /**
+ * @brief Deleted move assignment operator to prevent moving of PatientGeometry instances.
+ */
+PatientGeometry &operator=(PatientGeometry &&) = delete;
 
   ///
   bool design();
@@ -89,6 +108,16 @@ class PatientGeometry : public IPhysicalVolume,
   ///
   struct pair_hash {
       template <class T1, class T2>
+      /**
+       * @brief Computes a hash value for a pair of objects.
+       *
+       * Combines the hash values of the first and second elements of the pair using XOR.
+       *
+       * @tparam T1 Type of the first element in the pair.
+       * @tparam T2 Type of the second element in the pair.
+       * @param pair The pair to hash.
+       * @return std::size_t The combined hash value.
+       */
       std::size_t operator() (const std::pair<T1, T2> &pair) const {
           return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
       }

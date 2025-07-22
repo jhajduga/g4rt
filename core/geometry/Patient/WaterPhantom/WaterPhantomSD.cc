@@ -7,11 +7,22 @@
 #include "PrimaryParticleInfo.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs a WaterPhantomSD sensitive detector with the specified name.
+ *
+ * Initializes the sensitive detector by passing the name to the base VPatientSD class.
+ */
 WaterPhantomSD::WaterPhantomSD(const G4String& sdName):VPatientSD(sdName){}
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+   * @brief Constructs a WaterPhantomSD sensitive detector with a specified name and center position.
+   *
+   * Initializes the detector's internal coordinate IDs to zero.
+   *
+   * @param sdName Name of the sensitive detector.
+   * @param centre Center position of the detector in 3D space.
+   */
 WaterPhantomSD::WaterPhantomSD(const G4String& sdName, const G4ThreeVector& centre)
   : VPatientSD(sdName,centre){
     m_id_x = 0;
@@ -23,7 +34,14 @@ WaterPhantomSD::WaterPhantomSD(const G4String& sdName, const G4ThreeVector& cent
 /// This method is being called for each G4Step in sensitive volume
 /// Note: Handling the G4Step/Hits it's important that different logical volumes
 ///       cane share one SD object!
-///       In the WaterPhantomSD this is not the case!
+/**
+ * @brief Processes a Geant4 step within the water phantom sensitive detector.
+ *
+ * Handles hit processing for each step in the water phantom volume, including track information management, hit collection processing, and optional step analysis based on configuration settings.
+ *
+ * @param aStep The current Geant4 step to process.
+ * @return G4bool Always returns true to indicate successful processing.
+ */
 G4bool WaterPhantomSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   
   // The TouchableHistory is used to obtain the physical volume of the hit

@@ -4,7 +4,13 @@
 #include "IO.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the singleton instance of NTupleRunAnalysis.
+ *
+ * Ensures that only one instance of NTupleRunAnalysis exists throughout the application.
+ *
+ * @return Pointer to the singleton NTupleRunAnalysis instance.
+ */
 NTupleRunAnalysis *NTupleRunAnalysis::GetInstance() {
     static NTupleRunAnalysis instance = NTupleRunAnalysis();
     return &instance;
@@ -12,7 +18,11 @@ NTupleRunAnalysis *NTupleRunAnalysis::GetInstance() {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Writes the field mask data for each data type of the current control point to a ROOT file.
+ *
+ * Retrieves the current control point, constructs an output filename and directory, linearizes the 3D field mask vectors for each data type, and writes them as objects into the specified ROOT file directory. The output file is named with a "_field_mask.root" suffix.
+ */
 void NTupleRunAnalysis::WriteFieldMaskToTFile(const G4Run* runPtr){
     auto cp = Service<RunSvc>()->CurrentControlPoint();
     auto fname = cp->GetOutputFileName()+"_field_mask.root";
@@ -35,7 +45,11 @@ void NTupleRunAnalysis::WriteFieldMaskToTFile(const G4Run* runPtr){
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Writes dose volume data from the current control point to a ROOT file.
+ *
+ * For each scoring collection in the current control point's run, extracts position, field scaling factor, and dose values, linearizes the position data, and writes these vectors to a ROOT file under descriptive names. The output file is named based on the control point and suffixed with "_dose.root".
+ */
 void NTupleRunAnalysis::WriteDoseToTFile(const G4Run* runPtr){
     auto cp = Service<RunSvc>()->CurrentControlPoint();
     auto fname = cp->GetOutputFileName()+"_dose.root";

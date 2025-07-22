@@ -1,4 +1,3 @@
-
 #include <cstdlib>
 #include "Services.hh"
 #include "cxxopts.h"
@@ -8,6 +7,15 @@
 #include "LogSvc.hh"
 #include <locale.h>
 
+/**
+ * @brief Entry point for the simulation application, handling environment setup, configuration, and execution.
+ *
+ * Initializes the locale, embedded Python interpreter, logging, and core services. Parses command-line arguments to configure simulation parameters such as thread count, number of events, configuration file, output directory, and log level. Validates user input, loads configuration from a TOML file if specified, and manages the simulation lifecycle from initialization to finalization. Prints help or error messages as appropriate and exits with a success or failure code.
+ *
+ * @param argc Number of command-line arguments.
+ * @param argv Array of command-line argument strings.
+ * @return int Exit code indicating success or failure.
+ */
 int main(int argc, const char *argv[]) {
   // Force POSIX "C" locale to ensure consistent scientific notation (e.g., 1.23e-12).
   // In some locales (e.g., pl_PL.UTF-8), numerical formatting functions may emit

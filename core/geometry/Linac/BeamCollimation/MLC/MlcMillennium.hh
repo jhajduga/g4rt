@@ -9,13 +9,21 @@ class MlcMillennium {
   private:
 
   public:
-      ///
+      /**
+ * @brief Default constructor is deleted to prevent instantiation without a parent physical volume.
+ */
       MlcMillennium() = delete;
 
-      ///
+      /**
+ * @brief Constructs an MlcMillennium object associated with a parent physical volume.
+ *
+ * @param parentPV Pointer to the parent G4VPhysicalVolume to which this object is related.
+ */
       MlcMillennium(G4VPhysicalVolume* parentPV){};
 
-      ////
+      /**
+ * @brief Destroys the MlcMillennium instance.
+ */
       ~MlcMillennium() = default;
 
 };

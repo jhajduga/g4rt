@@ -22,32 +22,54 @@ G4double BeamCollimation::BeforeMLC  = -415.0;
 G4double BeamCollimation::BeforeJaws  = -1000;
 G4double BeamCollimation::ParticleAngleTreshold = 50.0; // [deg]
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs a BeamCollimation instance and registers it with the run service.
+ *
+ * Initializes the BeamCollimation component and ensures it is registered for run management within the simulation framework.
+ */
 BeamCollimation::BeamCollimation() : IPhysicalVolume("BeamCollimation"){
     AcceptRunVisitor(Service<RunSvc>());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Destructor for the BeamCollimation class.
+ *
+ * Cleans up allocated resources by calling Destroy().
+ */
 BeamCollimation::~BeamCollimation() {
   Destroy();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the singleton instance of the BeamCollimation class.
+ *
+ * Ensures only one instance of BeamCollimation exists throughout the application.
+ *
+ * @return Pointer to the singleton BeamCollimation instance.
+ */
 BeamCollimation *BeamCollimation::GetInstance() {
   static BeamCollimation instance;
   return &instance;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Registers this beam collimation component with the provided run service.
+ *
+ * Enables the run service to manage or interact with this component during simulation runs.
+ */
 void BeamCollimation::AcceptRunVisitor(RunSvc *visitor){
     visitor->RegisterRunComponent(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Outputs the nominal beam energy and current jaw aperture sizes to the console.
+ *
+ * Displays the nominal beam energy and the X and Y jaw apertures in centimeters for informational purposes.
+ */
 void BeamCollimation::WriteInfo() {
   G4cout << "\n\n\tnominal beam energy: " << Service<ConfigSvc>()->GetValue<int>("RunSvc", "idEnergy") << G4endl;
   G4cout << "\tJaw X aperture: 1) "
@@ -59,7 +81,11 @@ void BeamCollimation::WriteInfo() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Deletes all jaw physical volumes managed by this instance and resets their pointers.
+ *
+ * Frees memory for all jaw physical volumes stored in the internal map and sets their pointers to nullptr. The MLC instance pointer is set to nullptr but not deleted to avoid double deletion.
+ */
 void BeamCollimation::Destroy() {
   for (auto &ivolume : m_physicalVolume) {
     if (ivolume.second) {
@@ -72,17 +98,32 @@ void BeamCollimation::Destroy() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs the multi-leaf collimator (MLC) geometry within the specified parent world volume.
+ *
+ * @param parentWorld The parent Geant4 physical volume in which the MLC geometry will be placed.
+ */
 void BeamCollimation::Construct(G4VPhysicalVolume *parentWorld) {
   MLC(parentWorld);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Resets the state of the BeamCollimation component.
+ *
+ * This method is a placeholder for logic to reset internal state or geometry of the beam collimation system.
+ */
 void BeamCollimation::Reset() {
   // TODO
 }
 
+/**
+ * @brief Updates jaw aperture settings and positions based on the provided control point.
+ *
+ * Clears and sets jaw aperture values from the control point. For custom plan fields with a supported MLC model, recalculates and applies jaw positions and rotations according to the new apertures.
+ *
+ * @param control_point The control point containing field type and jaw aperture information.
+ */
 void BeamCollimation::SetRunConfiguration(const ControlPoint* control_point){
   auto inputType = control_point->GetFieldType();
   auto model = Service<GeoSvc>()->GetMlcModel();
@@ -112,7 +153,13 @@ void BeamCollimation::SetRunConfiguration(const ControlPoint* control_point){
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Filters and processes primary particle vertices based on angular and geometric collimation criteria.
+ *
+ * Removes primary vertices whose particle momentum exceeds the angular threshold or, for the simplified MLC model, are outside the MLC field. For other MLC models, adjusts particle positions to a plane before the jaws. Updates the simulation field mask with the filtered vertices.
+ *
+ * @param p_vrtx Vector of pointers to primary vertices to be filtered and processed. Modified in place.
+ */
 
 void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
   Service<RunSvc>()->CurrentControlPoint()->MLC();
@@ -140,7 +187,15 @@ void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Repositions a primary vertex to a specified Z-plane along its momentum direction.
+ *
+ * Calculates the intersection point of the particle's trajectory with a plane at the given Z-coordinate and updates the vertex position accordingly.
+ *
+ * @param vrtx The primary vertex to reposition.
+ * @param finalZ The Z-coordinate of the target plane.
+ * @return G4ThreeVector The new position of the vertex on the specified Z-plane.
+ */
 G4ThreeVector BeamCollimation::SetParticlePositionBeforeCollimators(G4PrimaryVertex* vrtx, G4double finalZ) {
   G4ThreeVector position = vrtx->GetPosition();
   G4double deltaZ = finalZ - position.getZ();
@@ -154,7 +209,16 @@ G4ThreeVector BeamCollimation::SetParticlePositionBeforeCollimators(G4PrimaryVer
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Adjusts the position, size, and rotation of a jaw based on its aperture and geometric configuration.
+ *
+ * Updates the provided center position, half-size dimensions, and rotation matrix for the specified jaw to reflect the current aperture setting and isocenter geometry. Supports four jaw names: "Jaw1X", "Jaw2X", "Jaw1Y", and "Jaw2Y".
+ *
+ * @param name The identifier of the jaw ("Jaw1X", "Jaw2X", "Jaw1Y", or "Jaw2Y").
+ * @param centre Reference to the jaw's center position, which will be updated.
+ * @param halfSize Reference to the jaw's half-size vector, which will be updated.
+ * @param cRotation Pointer to the jaw's rotation matrix, which will be updated.
+ */
 void BeamCollimation::SetJawAperture(const std::string& name, G4ThreeVector &centre, G4ThreeVector halfSize,
                                       G4RotationMatrix *cRotation) {
   G4double x = centre.getX();
@@ -186,7 +250,14 @@ void BeamCollimation::SetJawAperture(const std::string& name, G4ThreeVector &cen
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs and places jaw collimator volumes within the parent world volume.
+ *
+ * Creates four tungsten jaw collimators (Jaw1X, Jaw2X, Jaw1Y, Jaw2Y) as Geant4 box volumes, assigns them to logical and physical volumes, and sets up production cut regions for each jaw.
+ *
+ * @param parentWorld The parent Geant4 physical volume in which the jaws are placed.
+ * @return true upon successful construction and placement of all jaw volumes.
+ */
 bool BeamCollimation::Jaws(G4VPhysicalVolume *parentWorld) {
   auto jaw = [&](const std::string& name, G4ThreeVector centre, const G4ThreeVector& halfSize) {
     auto tungsten = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "G4_W");
@@ -214,7 +285,14 @@ bool BeamCollimation::Jaws(G4VPhysicalVolume *parentWorld) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs or resets the multi-leaf collimator (MLC) geometry based on the selected MLC model.
+ *
+ * Depending on the current MLC model configuration, this method instantiates and constructs the appropriate MLC geometry (Millennium, HD120, or Simplified) and ensures jaw collimators are present. If an MLC instance already exists, it is reset or replaced as needed. For the HD120 model, the geometry is explicitly constructed. If the model is set to None, the method returns immediately.
+ *
+ * @param parentWorld The parent physical volume in which the MLC and jaws are constructed.
+ * @return true Always returns true after construction or reset.
+ */
 bool BeamCollimation::MLC(G4VPhysicalVolume *parentWorld) {
 
   auto model = Service<GeoSvc>()->GetMlcModel();

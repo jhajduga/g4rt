@@ -16,20 +16,41 @@ class G4Step;
 class SavePhSpAnalysis {
 
   private:
-  ///
+  /**
+ * @brief Default constructor for the SavePhSpAnalysis singleton.
+ *
+ * This constructor is private to enforce the singleton pattern and prevent direct instantiation.
+ */
   SavePhSpAnalysis() = default;
 
-  ///
+  /**
+ * @brief Destroys the SavePhSpAnalysis singleton instance.
+ */
   ~SavePhSpAnalysis() = default;
 
-  /// Delete the copy and move constructors
+  /**
+ * @brief Deleted copy constructor to prevent copying of the singleton instance.
+ */
   SavePhSpAnalysis(const SavePhSpAnalysis &) = delete;
 
-  SavePhSpAnalysis &operator=(const SavePhSpAnalysis &) = delete;
+  /**
+ * @brief Deleted copy assignment operator to enforce the singleton pattern.
+ *
+ * Prevents copying of the SavePhSpAnalysis instance.
+ */
+SavePhSpAnalysis &operator=(const SavePhSpAnalysis &) = delete;
 
-  SavePhSpAnalysis(SavePhSpAnalysis &&) = delete;
+  /**
+ * @brief Move constructor is deleted to enforce the singleton pattern.
+ */
+SavePhSpAnalysis(SavePhSpAnalysis &&) = delete;
 
-  SavePhSpAnalysis &operator=(SavePhSpAnalysis &&) = delete;
+  /**
+ * @brief Deleted move assignment operator to enforce singleton behavior.
+ *
+ * Prevents moving assignment of SavePhSpAnalysis instances.
+ */
+SavePhSpAnalysis &operator=(SavePhSpAnalysis &&) = delete;
 
   ///
   G4int m_ntupleId = 0;

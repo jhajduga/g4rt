@@ -88,17 +88,35 @@ class DicomSvc {
     int m_rt_plan_n_beams = 0;
     std::vector<int> m_rtplan_beam_n_control_points;
 
-    ///
+    /**
+ * @brief Constructs a DicomSvc instance.
+ *
+ * This constructor is private to enforce the singleton pattern. Use GetInstance() to access the singleton.
+ */
     DicomSvc() = default;
 
-    ///
+    /**
+ * @brief Destroys the DicomSvc singleton instance.
+ */
     ~DicomSvc() = default;
 
-    /// Delete the copy and move constructors
+    /**
+ * @brief Deleted copy constructor to prevent copying of the DicomSvc singleton.
+ */
     DicomSvc(const DicomSvc &) = delete;
     DicomSvc &operator=(const DicomSvc &) = delete;
-    DicomSvc(DicomSvc &&) = delete;
-    DicomSvc &operator=(DicomSvc &&) = delete;
+    /**
+ * @brief Move constructor is deleted to enforce singleton pattern.
+ *
+ * Prevents moving of the DicomSvc instance to ensure only one instance exists.
+ */
+DicomSvc(DicomSvc &&) = delete;
+    /**
+ * @brief Move assignment operator is deleted to enforce singleton pattern.
+ *
+ * Prevents moving assignment of DicomSvc instances to ensure only one instance exists.
+ */
+DicomSvc &operator=(DicomSvc &&) = delete;
 
     ///
     ICtSvc m_ct_svc;
@@ -116,9 +134,18 @@ class DicomSvc {
     ///
     void SetPlanFile(const std::string& plan_file);
 
-     ///
+     /**
+ * @brief Checks if the plan has been initialized.
+ *
+ * @return true if a plan implementation is set; false otherwise.
+ */
     bool Initialized() const { return m_plan.get() ? true : false; }
 
+    /**
+     * @brief Returns a pointer to the current plan interface.
+     *
+     * @return IPlan* Pointer to the active plan implementation, or nullptr if not initialized.
+     */
     IPlan* GetPlan() const {
       return m_plan.get();
     }

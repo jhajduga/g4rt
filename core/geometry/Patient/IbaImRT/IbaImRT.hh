@@ -17,14 +17,29 @@ class IbaImRT: public IPhysicalVolume {
         ///
         IbaImRT();
 
-        ///
+        /**
+ * @brief Destroys the IbaImRT singleton instance.
+ */
         ~IbaImRT() = default;
 
-        /// Delete the copy and move constructors
+        /**********************************************************************************
+ * @brief Deleted copy constructor to prevent copying of the IbaImRT singleton.
+ *********************************************************************************/
         IbaImRT(const IbaImRT &) = delete;
-        IbaImRT &operator=(const IbaImRT &) = delete;
-        IbaImRT(IbaImRT &&) = delete;
-        IbaImRT &operator=(IbaImRT &&) = delete;
+        /**
+ * @brief Deleted copy assignment operator to prevent copying of the singleton instance.
+ */
+IbaImRT &operator=(const IbaImRT &) = delete;
+        /**
+ * @brief Move constructor is deleted to prevent moving of the singleton instance.
+ */
+IbaImRT(IbaImRT &&) = delete;
+        /**
+ * @brief Move assignment operator is deleted to enforce singleton behavior.
+ *
+ * Prevents moving assignment of the IbaImRT instance.
+ */
+IbaImRT &operator=(IbaImRT &&) = delete;
 
     public:
         /// 
@@ -33,13 +48,25 @@ class IbaImRT: public IPhysicalVolume {
         ///
         void Construct(G4VPhysicalVolume *parentPV) override;
 
-        ///
+        /**
+ * @brief Destroys the physical volume.
+ *
+ * This implementation does nothing.
+ */
         void Destroy() override {}
 
-        ///
+        /**
+ * @brief Indicates that the IbaImRT volume is always up to date.
+ *
+ * @return G4bool Always returns true.
+ */
         G4bool Update() override { return true; }
 
-        ///
+        /**
+ * @brief Resets the state of the IbaImRT volume.
+ *
+ * This implementation performs no action.
+ */
         void Reset() override {}
 
         ///

@@ -30,7 +30,11 @@ class DishCubePhantom : public VPatient {
     ///
     G4bool Update() override;
 
-    ///
+    /**
+ * @brief Resets the phantom to its initial state.
+ *
+ * Currently not implemented; outputs a placeholder message.
+ */
     void Reset() override { G4cout << "Implement me." << G4endl; }
 
     ///
@@ -39,7 +43,11 @@ class DishCubePhantom : public VPatient {
     ///
     void DefineSensitiveDetector() override;
 
-    ///
+    /**
+ * @brief Parses TOML configuration for the phantom.
+ *
+ * This implementation does nothing and is provided to fulfill the interface contract.
+ */
     void ParseTomlConfig() override {}
 
 

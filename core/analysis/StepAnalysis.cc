@@ -16,7 +16,13 @@
 
 #include "G4VProcess.hh"
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the singleton instance of the StepAnalysis class.
+ *
+ * Ensures only one StepAnalysis object exists throughout the application.
+ *
+ * @return Pointer to the singleton StepAnalysis instance.
+ */
 StepAnalysis *StepAnalysis::GetInstance() {
   static StepAnalysis instance = StepAnalysis();
   return &instance;
@@ -24,7 +30,11 @@ StepAnalysis *StepAnalysis::GetInstance() {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Initializes analysis ntuples for hits and tracks at the start of a simulation run.
+ *
+ * Defines the structure of two ntuples in the Geant4 analysis manager: one for storing per-step hit data and one for per-step track data. Each ntuple is configured with columns for relevant physical quantities such as positions, energy deposits, track IDs, particle types, and process IDs. This setup prepares the analysis framework to collect and store simulation data during the run.
+ */
 void StepAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
   // Extract from VPatient geometry information, and define NTuples structure
   //
@@ -66,7 +76,11 @@ void StepAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-//void StepAnalysis::FillStepTrack(G4int trkId, G4int trkTypeId, G4double trkEnergy, G4double trkTheta,G4int processId){
+/**
+ * @brief Extracts and stores track information from a G4Track object for analysis.
+ *
+ * Records the track ID, position (in cm), kinetic energy (in keV), momentum theta angle, particle type ID, and creator process ID. Particle and process types are mapped to integer IDs for downstream analysis.
+ */
 void StepAnalysis::FillTrack(G4Track* aTrack){
   //__
   m_trkId.Push_back(aTrack->GetTrackID());
@@ -123,7 +137,11 @@ void StepAnalysis::FillTrack(G4Track* aTrack){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-//void StepAnalysis::FillHit(const G4ThreeVector& position, G4double energyDeposit, G4int processId){
+/**
+ * @brief Records hit information from a simulation step.
+ *
+ * Extracts and stores the pre-step position (in cm), total energy deposit (in keV), and the process ID of the post-step process for the given step. Increments the hit count and appends the data to internal event containers. If the process name is unrecognized, outputs debug information.
+ */
 void StepAnalysis::FillHit(G4Step* aStep){
 
   //__
@@ -167,7 +185,13 @@ void StepAnalysis::FillHit(G4Step* aStep){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Records accumulated hit and track data for the current event into analysis ntuples.
+ *
+ * Stores the number of hits and total event energy deposit in the hits ntuple, and commits the current track data to the tracks ntuple.
+ *
+ * @param evtEnergyDeposit Total energy deposited in the event, in keV.
+ */
 void StepAnalysis::FillEvent(G4double evtEnergyDeposit) {
   auto analysisManager = G4AnalysisManager::Instance();
   auto ntupleId = m_hitsNtupleId.Get();
@@ -180,7 +204,11 @@ void StepAnalysis::FillEvent(G4double evtEnergyDeposit) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This member is called at the end of every event from EventAction::EndOfEventAction
+/**
+ * @brief Handles end-of-event data processing and storage.
+ *
+ * If any hits were recorded during the event, sums the total energy deposited, stores the event data, and clears all accumulated event data in preparation for the next event.
+ */
 void StepAnalysis::EndOfEventAction(const G4Event *evt){
   if(m_nHits.Get()>0) { // process info only if step hits exists
     G4double evtEnergyDeposit = 0;
@@ -192,7 +220,11 @@ void StepAnalysis::EndOfEventAction(const G4Event *evt){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Resets all stored event data for hits and tracks.
+ *
+ * Clears all internal containers and counters to prepare for the next event.
+ */
 void StepAnalysis::ClearEventData(){
   m_nHits.Put(0);
   m_hitsX.Clear();
@@ -211,7 +243,13 @@ void StepAnalysis::ClearEventData(){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Collects and stores both hit and track data for a simulation step.
+ *
+ * Calls the appropriate methods to extract and record hit information from the provided step and track information from the associated track.
+ *
+ * @param aStep Pointer to the Geant4 step object to process.
+ */
 void StepAnalysis::FillStep(G4Step* aStep){
   FillHit(aStep);
   FillTrack(aStep->GetTrack());

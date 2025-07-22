@@ -20,7 +20,11 @@
 G4ThreadLocal G4Allocator<VoxelHit>* VoxelHitAllocator = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Initializes or updates voxel hit data from a Geant4 step.
+ *
+ * If the voxel is new, sets its position, calculates mass, accumulates energy deposition, updates dose, records track information, and stores primary particle type and energy. If the voxel has already been initialized, updates its data with the new step.
+ */
 void VoxelHit::Fill(G4Step* aStep) {
   if (m_Voxel.m_primaryID < 0) {
     // Fill current position
@@ -59,7 +63,11 @@ void VoxelHit::Fill(G4Step* aStep) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Updates the voxel hit with new energy deposition and track information from a Geant4 step.
+ *
+ * Adds the energy deposited in the current step to the voxel, updates the dose if mass is set, recalculates the gravitational center, and records track information.
+ */
 void VoxelHit::Update(G4Step* aStep) {
   // Fill current position
   auto position = aStep->GetPreStepPoint()->GetPosition();  // in world volume frame
@@ -79,7 +87,20 @@ void VoxelHit::Update(G4Step* aStep) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns an integer code representing the particle type of the track in the given Geant4 step.
+ *
+ * The returned code is:
+ * - 1 for gamma
+ * - 2 for electron
+ * - 3 for positron
+ * - 4 for neutron
+ * - 5 for proton
+ * - 6 for alpha
+ * - -1 if the particle type is unknown or not one of the above.
+ *
+ * @return G4int Integer code for the particle type.
+ */
 G4int VoxelHit::GetTrackIdType(G4Step* aStep) const {
   auto dynamic = aStep->GetTrack()->GetDynamicParticle();
   auto trkDef = dynamic->GetDefinition();
@@ -99,7 +120,13 @@ G4int VoxelHit::GetTrackIdType(G4Step* aStep) const {
 /// including the handling of secondary processes (e.g., electrons ejected via the photoelectric effect).
 ///
 /// @param aStep – the current Geant4 simulation step.
-/// @return int – ID representing the type of physical process that occurred at this step.
+/**
+ * @brief Returns an integer code representing the physical process type that occurred at the given simulation step.
+ *
+ * The returned code identifies the main interaction or process (e.g., electromagnetic, nuclear, optical) that defined the step, based on the process name in Geant4. Returns -1 if no process is defined, or 99 if the process is unknown.
+ *
+ * @return G4int Integer code corresponding to the physical process type at this step.
+ */
 
 G4int VoxelHit::GetTrkIdProcessType(G4Step* aStep) const {
   auto proc = aStep->GetPostStepPoint()->GetProcessDefinedStep();
@@ -179,7 +206,24 @@ G4int VoxelHit::GetTrkIdProcessType(G4Step* aStep) const {
 /// Determines the origin of a secondary electron based on its creator process.
 ///
 /// @param aStep – the current Geant4 simulation step, to readout a track – the G4Track object representing the electron.
-/// @return int – an integer code representing the origin type of the secondary electron.
+/**
+ * @brief Returns an integer code indicating the origin process of a secondary electron in a Geant4 step.
+ *
+ * For electron tracks, identifies the physical process that created the electron, such as photoelectric effect, Compton scattering, pair production, Auger effect, fluorescence, ionization, or radioactive decay.
+ *
+ * @return G4int Code representing the electron's origin process:
+ *   - -1: Not an electron
+ *   - 0: Primary electron (no creator process)
+ *   - 1: Photoelectric effect
+ *   - 2: Compton scattering
+ *   - 3: Pair production
+ *   - 4: Auger electron
+ *   - 5: Fluorescent electron
+ *   - 6: Electron ionization
+ *   - 7: Ion-induced ionization
+ *   - 8: Radioactive decay
+ *   - 99: Other or unknown process
+ */
 
 G4int VoxelHit::GetTrkIdElectronOriginType(G4Step* aStep) const { // TODO: !!! Why only for electron this was created? All particles and all interactions should be stored here
   if (aStep->GetTrack()->GetDynamicParticle()->GetDefinition() != G4Electron::Definition()) return -1;  // Not an electron
@@ -203,7 +247,11 @@ G4int VoxelHit::GetTrkIdElectronOriginType(G4Step* aStep) const { // TODO: !!! W
 
 ////////////////////////////////////////////////////////////////////////////////
 /// 
-/// Fills the track information from a Geant4 step into the voxel hit.
+/**
+ * @brief Records track information from a Geant4 step into the voxel hit.
+ *
+ * If track storage is enabled, inserts the track ID from the current step. For new tracks, stores particle type, process type, electron origin type, kinetic energy, momentum angle, track length, and pre-step position. Updates the global event time from the track.
+ */
 void VoxelHit::FillTrack(G4Step* aStep) {
   if (m_store_tracks) {
     // TODO: !!! Store Parent ID or Primary ID -> for Purpose of a visualisation (OpenGL based for example)
@@ -231,7 +279,15 @@ void VoxelHit::FillTrack(G4Step* aStep) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Sets the local voxel indices if they have not been assigned.
+ *
+ * If the local voxel indices are already set and differ from the provided values, an error message is printed.
+ *
+ * @param xId Local voxel index along the x-axis.
+ * @param yId Local voxel index along the y-axis.
+ * @param zId Local voxel index along the z-axis.
+ */
 void VoxelHit::SetId(G4int xId, G4int yId, G4int zId) {
   if (m_Voxel.m_idx_x == -1 && m_Voxel.m_idx_y == -1 && m_Voxel.m_idx_z == -1) {
     m_Voxel.m_idx_x = xId;
@@ -247,7 +303,11 @@ void VoxelHit::SetId(G4int xId, G4int yId, G4int zId) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Sets the global voxel indices if unset; reports an error if attempting to change existing indices.
+ *
+ * Assigns the global voxel indices (x, y, z) if they have not been previously set. If the indices are already set and differ from the provided values, an error message is printed.
+ */
 void VoxelHit::SetGlobalId(G4int xId, G4int yId, G4int zId) {
   if (m_Voxel.m_global_idx_x == -1 && m_Voxel.m_global_idx_y == -1 && m_Voxel.m_global_idx_z == -1) {
     m_Voxel.m_global_idx_x = xId;
@@ -263,7 +323,13 @@ void VoxelHit::SetGlobalId(G4int xId, G4int yId, G4int zId) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Updates the voxel's gravitational center using a running half-average with the given position.
+ *
+ * The gravitational center is recalculated by averaging each coordinate with the new position, biasing toward recent updates. This is not a true arithmetic mean.
+ *
+ * @param position The position vector to incorporate into the gravitational center calculation.
+ */
 void VoxelHit::SetGravCentre(const G4ThreeVector& position) {
   // TODO: Replace running 1/2-average with true arithmetic mean.
   // Current implementation biases toward recent updates:
@@ -289,7 +355,12 @@ void VoxelHit::SetGravCentre(const G4ThreeVector& position) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the local voxel index for the specified axis.
+ *
+ * @param axisId Axis identifier: 0 for x, 1 for y, 2 for z.
+ * @return Local voxel index along the specified axis, or -1 if the axisId is invalid.
+ */
 G4int VoxelHit::GetID(G4int axisId) const {
   switch (axisId) {
     case 0:
@@ -305,7 +376,12 @@ G4int VoxelHit::GetID(G4int axisId) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the global voxel index for the specified axis.
+ *
+ * @param axisId Axis identifier: 0 for x, 1 for y, 2 for z.
+ * @return Global voxel index along the specified axis, or -1 if the axisId is invalid.
+ */
 G4int VoxelHit::GetGlobalID(G4int axisId) const {
   switch (axisId) {
     case 0:
@@ -321,18 +397,30 @@ G4int VoxelHit::GetGlobalID(G4int axisId) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Prints voxel hit information, including IDs, mass, and volume.
+ *
+ * Calls the non-const Print() method to output details about the voxel hit.
+ */
 void VoxelHit::Print() const { const_cast<VoxelHit*>(this)->Print(); }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Prints the voxel's global and local indices, mass, and volume.
+ *
+ * Outputs voxel identification and physical properties for debugging or logging purposes.
+ */
 void VoxelHit::Print() {INFO_GEO("Voxel ID ({},{},{})/({},{},{}) \n\tMass {}, Volume {}", 
                         m_Voxel.m_global_idx_x, m_Voxel.m_global_idx_y, m_Voxel.m_global_idx_z, m_Voxel.m_idx_x, 
                         m_Voxel.m_idx_y, m_Voxel.m_idx_z, m_Voxel.m_Mass, m_Voxel.m_Volume);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns a list mapping track IDs to their kinetic energies for all tracks recorded in the voxel.
+ *
+ * @return Vector of pairs, each containing a track ID and its corresponding kinetic energy.
+ */
 std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdEnergyMappingList() const {
   std::vector<std::pair<G4int, G4double>> trkIdE;
   auto itE = m_Voxel.m_trksE.begin();
@@ -341,7 +429,11 @@ std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdEnergyMappingList() co
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns a list mapping track IDs to their momentum theta angles.
+ *
+ * @return Vector of pairs, each containing a track ID and its corresponding momentum theta angle.
+ */
 std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdThetaMappingList() const {
   std::vector<std::pair<G4int, G4double>> trkIdTheta;
   auto itTheta = m_Voxel.m_trksTheta.begin();
@@ -350,7 +442,11 @@ std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdThetaMappingList() con
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns a list mapping track IDs to their corresponding track lengths within the voxel.
+ *
+ * @return Vector of pairs, each containing a track ID and its associated track length.
+ */
 std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdLengthMappingList() const {
   std::vector<std::pair<G4int, G4double>> trkIdLength;
   auto itL = m_Voxel.m_trksLength.begin();
@@ -359,7 +455,11 @@ std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdLengthMappingList() co
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns a list mapping user track IDs to their corresponding user track lengths.
+ *
+ * @return Vector of pairs, each containing a user track ID and its associated user track length.
+ */
 std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdUserLengthMappingList() const {
   std::vector<std::pair<G4int, G4double>> trkIdLength;
   auto itL = m_Voxel.m_usrTrksLength.begin();
@@ -368,7 +468,13 @@ std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdUserLengthMappingList(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns a list mapping track lengths to their corresponding pre-step positions.
+ *
+ * @return Vector of pairs, each containing a track length and its associated pre-step position.
+ *
+ * @note The mapping uses track lengths as keys, which may be unintended; typically, track IDs are used for such mappings.
+ */
 std::vector<std::pair<G4int, G4ThreeVector>> VoxelHit::GetTrkIdPositionMappingList() const {
   std::vector<std::pair<G4int, G4ThreeVector>> trkPosition;
   auto itP = m_Voxel.m_trksPosition.begin();
@@ -377,7 +483,11 @@ std::vector<std::pair<G4int, G4ThreeVector>> VoxelHit::GetTrkIdPositionMappingLi
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns a list mapping track IDs to their particle type codes for this voxel.
+ *
+ * @return Vector of pairs, each containing a track ID and its corresponding particle type code.
+ */
 std::vector<std::pair<G4int, G4int>> VoxelHit::GetTrackIdTypeMappingList() const {
   std::vector<std::pair<G4int, G4int>> trkTypeId;
   auto itType = m_Voxel.m_trksTypeId.begin();
@@ -387,7 +497,11 @@ std::vector<std::pair<G4int, G4int>> VoxelHit::GetTrackIdTypeMappingList() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns a list of pairs containing the track ID and the physical process type that occurred in that track.
-///
+/**
+ * @brief Returns a list mapping track IDs to their corresponding process type codes for this voxel.
+ *
+ * @return Vector of pairs, each containing a track ID and its associated process type code.
+ */
 std::vector<std::pair<G4int, G4int>> VoxelHit::GetTrkIdProcessTypeMappingList() const {
   // Vector to store the resulting pairs (Track ID, Process Type ID)
   std::vector<std::pair<G4int, G4int>> processTypeId;
@@ -403,7 +517,11 @@ std::vector<std::pair<G4int, G4int>> VoxelHit::GetTrkIdProcessTypeMappingList() 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns a vector of pairs containing the track ID and the secondary electron origin classification.
+/**
+ * @brief Retrieves a list mapping track IDs to their secondary electron origin type codes.
+ *
+ * @return Vector of pairs, each containing a track ID and its corresponding electron origin classification code.
+ */
 std::vector<std::pair<G4int, G4int>> VoxelHit::GetTrkIdElectronOriginTypeMappingList() const {
   // Vector to store resulting pairs (Track ID, Electron Origin Type)
   std::vector<std::pair<G4int, G4int>> electronOriginTypeId;
@@ -420,7 +538,11 @@ std::vector<std::pair<G4int, G4int>> VoxelHit::GetTrkIdElectronOriginTypeMapping
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the kinetic energy of the primary track in the voxel.
+ *
+ * @return The kinetic energy of the primary track (track ID 1), or -1 if no primary track is present in this voxel hit.
+ */
 G4double VoxelHit::GetPrimaryTrkEnergy() const {
   for (auto& iIdE : GetTrkIdEnergyMappingList())
     if (iIdE.first == 1) return iIdE.second;
@@ -428,7 +550,11 @@ G4double VoxelHit::GetPrimaryTrkEnergy() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the mean energy deposited per step in the voxel.
+ *
+ * @return The average energy deposited per step, or -1 if no steps have been recorded.
+ */
 G4double VoxelHit::GetMeanEnergyDeposit() const {
   if (m_Voxel.m_stepsEdep.size() > 0) {
     double sum = std::accumulate(m_Voxel.m_stepsEdep.begin(), m_Voxel.m_stepsEdep.end(), 0.0);
@@ -438,7 +564,11 @@ G4double VoxelHit::GetMeanEnergyDeposit() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Prints the energies of incident primary particles for the current event.
+ *
+ * Outputs the energy of each primary particle stored in the event to the console.
+ */
 void VoxelHit::PrintEvtInfo() const {
   for (int i = 0; i < m_evtPrimariesIncidentE.size(); ++i) {
     G4cout << "[INFO]::VoxelHit::EvtInfo() incident primary(" << i << ") energy: " << m_evtPrimariesIncidentE.at(i) << " [keV]" << G4endl;
@@ -446,17 +576,34 @@ void VoxelHit::PrintEvtInfo() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns a hashed identifier based on the global voxel indices.
+ *
+ * The hash is computed from the voxel's global x, y, and z indices to provide a unique identifier for the voxel's global position.
+ *
+ * @return std::size_t Hashed value representing the global voxel indices.
+ */
 std::size_t VoxelHit::GetGlobalHashedStrId() const { return svc::getHashedStrFromIndexes({m_Voxel.m_global_idx_x, m_Voxel.m_global_idx_y, m_Voxel.m_global_idx_z}); }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns a hashed identifier string based on both global and local voxel indices.
+ *
+ * The hash uniquely represents the voxel using its global and local indices.
+ *
+ * @return std::size_t Hashed identifier for the voxel.
+ */
 std::size_t VoxelHit::GetHashedStrId() const {
   return svc::getHashedStrFromIndexes({m_Voxel.m_global_idx_x, m_Voxel.m_global_idx_y, m_Voxel.m_global_idx_z, m_Voxel.m_idx_x, m_Voxel.m_idx_y, m_Voxel.m_idx_z});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Checks if two voxel hits have identical global and local voxel indices.
+ *
+ * @param other The VoxelHit to compare with.
+ * @return true if both global and local indices match; false otherwise.
+ */
 bool VoxelHit::operator==(const VoxelHit& other) const {
   return m_Voxel.m_global_idx_x == other.m_Voxel.m_global_idx_x && m_Voxel.m_global_idx_y == other.m_Voxel.m_global_idx_y &&
          m_Voxel.m_global_idx_z == other.m_Voxel.m_global_idx_z && m_Voxel.m_idx_x == other.m_Voxel.m_idx_x && m_Voxel.m_idx_y == other.m_Voxel.m_idx_y &&
@@ -464,7 +611,13 @@ bool VoxelHit::operator==(const VoxelHit& other) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Checks if this voxel hit is aligned with another voxel hit.
+ *
+ * @param other The voxel hit to compare with.
+ * @param global_and_local If true, checks both global and local voxel indices for alignment; if false, checks only global indices.
+ * @return true if the voxel hits are aligned according to the specified criteria; false otherwise.
+ */
 bool VoxelHit::IsAligned(const VoxelHit& other, bool global_and_local) const {
   if (global_and_local) {
     return *this == other;
@@ -474,7 +627,15 @@ bool VoxelHit::IsAligned(const VoxelHit& other, bool global_and_local) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Cumulates dose and related data from another VoxelHit if aligned.
+ *
+ * If the provided VoxelHit is aligned (based on the specified alignment check), adds its dose to this voxel hit. For global-only alignment, the dose is weighted by the ratio of the other voxel's volume to this voxel's volume. For both global and local alignment, doses are added directly. If the voxel hits are not aligned, a warning is printed and no cumulation occurs.
+ *
+ * @param other The VoxelHit to cumulate data from.
+ * @param global_and_local_allignemnt_check If true, requires both global and local indices to match for cumulation; if false, only global indices are checked.
+ * @return Reference to this VoxelHit after cumulation.
+ */
 VoxelHit& VoxelHit::Cumulate(const VoxelHit& other, bool global_and_local_allignemnt_check) {
   // if(!global_and_local_allignemnt_check)
   // Print(); INFO_GEO("+"); other.Print();
@@ -501,7 +662,13 @@ VoxelHit& VoxelHit::Cumulate(const VoxelHit& other, bool global_and_local_allign
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Adds the dose from another voxel hit to this voxel hit.
+ *
+ * Increases this voxel's dose by the dose value from the other voxel hit.
+ *
+ * @return Reference to this voxel hit after accumulation.
+ */
 VoxelHit& VoxelHit::operator+=(const VoxelHit& other) {
   // TODO: m_Voxel.m_Dose+=other.GetDose()*other.GetVolume() / GetVolume(); Tu też?
   m_Voxel.m_Dose += other.GetDose();

@@ -19,20 +19,47 @@ class G4Run;
 class StepAnalysis {
 
   private:
-  ///
+  /**
+ * @brief Default constructor for the StepAnalysis singleton.
+ *
+ * This constructor is private and used internally to enforce the singleton pattern.
+ */
   StepAnalysis() = default;
 
-  ///
+  /**
+ * @brief Destroys the StepAnalysis instance.
+ *
+ * As a singleton, destruction is managed automatically and should not be invoked directly.
+ */
   ~StepAnalysis() = default;
 
-  /// Delete the copy and move constructors
+  /**
+ * @brief Deleted copy constructor to enforce singleton pattern.
+ *
+ * Prevents copying of StepAnalysis instances.
+ */
   StepAnalysis(const StepAnalysis &) = delete;
 
-  StepAnalysis &operator=(const StepAnalysis &) = delete;
+  /**
+ * @brief Deleted copy assignment operator to enforce singleton pattern.
+ *
+ * Prevents copying of StepAnalysis instances.
+ */
+StepAnalysis &operator=(const StepAnalysis &) = delete;
 
-  StepAnalysis(StepAnalysis &&) = delete;
+  /**
+ * @brief Move constructor is deleted to enforce singleton pattern.
+ *
+ * Prevents moving of StepAnalysis instances to ensure only one instance exists.
+ */
+StepAnalysis(StepAnalysis &&) = delete;
 
-  StepAnalysis &operator=(StepAnalysis &&) = delete;
+  /**
+ * @brief Move assignment operator is deleted to enforce singleton pattern.
+ *
+ * Prevents moving of StepAnalysis instances to ensure only one instance exists.
+ */
+StepAnalysis &operator=(StepAnalysis &&) = delete;
 
   ///
   G4Cache<G4int> m_hitsNtupleId;

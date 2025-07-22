@@ -27,7 +27,13 @@ G4ThreeVector D3DCell::SIZE = {10.0 * mm, 10.0 * mm, 10.0 * mm};
 G4bool D3DCell::m_set_cell_scorer = true;
 G4bool D3DCell::m_set_cell_voxelised_scorer = true;
 ////////////////////////////////////////////////////////////////////////////////
-/// static
+/**
+ * @brief Enables or disables cell scoring for all D3DCell instances.
+ *
+ * Sets the static flag controlling whether cell-level scoring is active in the simulation.
+ *
+ * @param val If true, enables cell scoring; if false, disables it.
+ */
 void D3DCell::CellScorer(G4bool val) {
   m_set_cell_scorer = val;
   // if(!val){ // by default it's set to true
@@ -35,7 +41,13 @@ void D3DCell::CellScorer(G4bool val) {
   // }
 }
 ////////////////////////////////////////////////////////////////////////////////
-/// static
+/**
+ * @brief Enables or disables voxelized scoring for all D3DCell instances.
+ *
+ * When disabled, removes the voxel scoring type from the run service's scoring types.
+ *
+ * @param val Set to true to enable voxelized scoring, false to disable.
+ */
 void D3DCell::CellVoxelisedScorer(G4bool val) {
   m_set_cell_voxelised_scorer = val;
   if (!val) {  // by default it's set to true
@@ -44,16 +56,35 @@ void D3DCell::CellVoxelisedScorer(G4bool val) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs a D3DCell with the specified label, global center position, and material name.
+ *
+ * Initializes the cell with a unique label, sets its global center coordinates, and assigns the material medium for geometry construction.
+ *
+ * @param label Unique identifier for the cell.
+ * @param centre Global center position of the cell.
+ * @param cellMediumName Name of the material medium for the cell.
+ */
 D3DCell::D3DCell(const G4String& label, const G4ThreeVector& centre, G4String cellMediumName) : VPatient(label), m_cell_medium(cellMediumName) { m_global_centre = centre; }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Destructor for the D3DCell class.
+ *
+ * Cleans up resources by destroying the associated physical volume and deleting the step limit if allocated.
+ */
 D3DCell::~D3DCell() {
   Destroy();
   if (m_step_limit) delete m_step_limit;
 }
 
+/**
+ * @brief Sets the cell's integer identifiers along the x, y, and z axes.
+ *
+ * @param x Identifier for the x-axis.
+ * @param y Identifier for the y-axis.
+ * @param z Identifier for the z-axis.
+ */
 void D3DCell::SetIDs(G4int x, G4int y, G4int z) {
   m_id_x = x;
   m_id_y = y;
@@ -61,11 +92,17 @@ void D3DCell::SetIDs(G4int x, G4int y, G4int z) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Outputs a placeholder message indicating that cell information output is not yet implemented.
+ */
 void D3DCell::WriteInfo() { INFO_GEO("The Dose3D cell {} info: Implement me.", GetName()); }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Deletes the physical volume associated with the D3DCell and resets its pointer.
+ *
+ * Frees resources by deleting the cell's physical volume if it exists and sets the internal pointer to null.
+ */
 void D3DCell::Destroy() {
   INFO_GEO("Destroing the D3DCell volume.");
   auto phantomVolume = GetPhysicalVolume();
@@ -76,7 +113,12 @@ void D3DCell::Destroy() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Sets the number of voxels along a specified axis for voxelized scoring.
+ *
+ * @param axis The axis to set ('x', 'y', or 'z', case-insensitive).
+ * @param nv The number of voxels to assign along the specified axis.
+ */
 void D3DCell::SetNVoxels(char axis, int nv) {
   switch (std::tolower(axis)) {
     case 'x':
@@ -92,7 +134,13 @@ void D3DCell::SetNVoxels(char axis, int nv) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs the 3D dose cell geometry and places it within the parent volume.
+ *
+ * Creates the cell's solid and logical volumes with the specified material, transforms and sets its position, assigns production cuts, and associates a simulation region. Updates the cell's global center and sets the cell volume.
+ *
+ * @param parentWorld The parent physical volume in which the cell is placed.
+ */
 void D3DCell::Construct(G4VPhysicalVolume* parentWorld) {
   // std::cout << "[INFO]:: D3DCell construction... " << std::endl;
   auto label = GetName();
@@ -131,18 +179,35 @@ void D3DCell::Construct(G4VPhysicalVolume* parentWorld) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Placeholder update method for the D3DCell.
+ *
+ * Always returns true. Intended for future extension to update cell state if needed.
+ *
+ * @return G4bool Always true.
+ */
 G4bool D3DCell::Update() { return true; }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Determines if voxelized scoring is enabled for a given run collection.
+ *
+ * Checks whether the sensitive detector has voxelized scoring configured for the specified run collection.
+ *
+ * @param run_collection The name of the run collection to query.
+ * @return true if voxelized scoring is enabled for the run collection; false otherwise.
+ */
 bool D3DCell::IsRunCollectionScoringVolumeVoxelised(const G4String& run_collection) const {
   if (GetSD()->GetRunCollectionReferenceScoringVolume(run_collection, true)) return true;
   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Defines and attaches a sensitive detector to the cell volume.
+ *
+ * Creates a `D3DCellSD` sensitive detector for the cell if one does not already exist, configures it with the cell's label, global center, and IDs, and sets up scoring volumes with the appropriate voxelization parameters. Registers the sensitive detector with the logical volume and the Geant4 SD manager.
+ */
 void D3DCell::DefineSensitiveDetector() {
   G4AutoLock lock(&CellMutex);
   if (m_patientSD.Get() == 0) {

@@ -10,7 +10,13 @@
 #include "Services.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the singleton instance of the SavePhSpAnalysis class.
+ *
+ * Ensures that only one instance of SavePhSpAnalysis exists throughout the program.
+ *
+ * @return Pointer to the singleton SavePhSpAnalysis instance.
+ */
 SavePhSpAnalysis *SavePhSpAnalysis::GetInstance() {
   static SavePhSpAnalysis instance = SavePhSpAnalysis();
   return &instance;
@@ -18,7 +24,11 @@ SavePhSpAnalysis *SavePhSpAnalysis::GetInstance() {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Initializes phase space analysis at the start of a simulation run.
+ *
+ * Opens the output file for phase space data, sets up the ntuple directory, and defines the ntuple structure for recording particle phase space information, including spatial coordinates, direction cosines, energy, particle type, and index.
+ */
 void SavePhSpAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
   // Extract from VPatient geometry information, and define NTuples structure
   //
@@ -49,7 +59,13 @@ void SavePhSpAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Placeholder for filling phase space data from a simulation step.
+ *
+ * Intended to record phase space information using data from the provided simulation step.
+ *
+ * @param step Pointer to the current simulation step containing particle data.
+ */
 void SavePhSpAnalysis::FillPhSp(G4Step* step) {
   // TODO :: put here the stuff from SavePhSpSD::ProcessHits
 }

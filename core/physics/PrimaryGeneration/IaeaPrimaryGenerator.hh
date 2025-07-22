@@ -18,13 +18,17 @@ class G4PrimaryVertex;
 ///\class IaeaPrimaryGenerator
 class IaeaPrimaryGenerator : public G4VPrimaryGenerator {
   public:
-    ///
+    /****
+ * @brief Default constructor is deleted to prevent instantiation without a phase space file.
+ */
     IaeaPrimaryGenerator() = delete;
 
     ///
     explicit IaeaPrimaryGenerator(const G4String& fileName);
 
-    ///
+    /**
+ * @brief Destroys the IaeaPrimaryGenerator instance.
+ */
     ~IaeaPrimaryGenerator() = default;
 
     ///

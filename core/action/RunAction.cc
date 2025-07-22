@@ -18,7 +18,11 @@
 // run action constructor and delete it in its destructor. This guarantees correct
 // behavior in multi-threading mode.
 /////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs a RunAction object and configures analysis settings for the simulation run.
+ *
+ * Initializes the analysis manager singleton, sets ntuple merging and verbosity based on configuration, and enables run scoring if specified.
+ */
 RunAction::RunAction() : G4UserRunAction(), fAnalysisManager(nullptr) {
   fAnalysisManager = G4AnalysisManager::Instance();
 
@@ -30,7 +34,11 @@ RunAction::RunAction() : G4UserRunAction(), fAnalysisManager(nullptr) {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Destructor for RunAction, cleaning up the analysis manager on the master thread.
+ *
+ * Deletes the analysis manager singleton and resets its pointer to null if called on the master thread.
+ */
 RunAction::~RunAction(){
   if (IsMaster()) {
     delete fAnalysisManager;
@@ -40,7 +48,13 @@ RunAction::~RunAction(){
 }
 
 /////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Generates and returns a new simulation run using the current control point.
+ *
+ * If called on the master thread, prints informational messages about the new run, including the number of events and any defined rotation. Delegates run creation to the current control point, passing the run scoring flag.
+ *
+ * @return G4Run* Pointer to the newly generated run.
+ */
 G4Run* RunAction::GenerateRun(){
   auto control_point = Service<RunSvc>()->CurrentControlPoint();
   if (IsMaster()){
@@ -54,7 +68,13 @@ G4Run* RunAction::GenerateRun(){
   return control_point->GenerateRun(m_run_scoring);
 }
 /////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Prepares analysis modules and output files at the start of a simulation run.
+ *
+ * Opens the analysis output file, prints run start information distinguishing master and worker threads, and initializes enabled analysis modules based on configuration. If running as master, outputs geometry information. Starts the internal run timer.
+ *
+ * @param aRun Pointer to the current Geant4 run.
+ */
 void RunAction::BeginOfRunAction(const G4Run* aRun) {
   auto configSvc = Service<ConfigSvc>();
   auto runSvc = Service<RunSvc>();
@@ -99,7 +119,11 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Finalizes the simulation run, writes analysis data, and reports elapsed time.
+ *
+ * Stops the internal timer, prints the elapsed time for the run (distinguishing between master and worker threads), writes and closes the analysis output file, and, if enabled and on the master thread, finalizes run-level analysis.
+ */
 void RunAction::EndOfRunAction(const G4Run* aRun) {
   m_timer.Stop();
   G4double loopRealElapsedTime = m_timer.GetRealElapsed();

@@ -36,10 +36,18 @@ class PrimaryGenerationAction : public G4VUserPrimaryGeneratorAction {
     ///
     void GeneratePrimaries(G4Event *anEvent) override;
 
-    ///
+    /**
+ * @brief Sets the static rotation matrix used for primary particle generation.
+ *
+ * @param rotMatrix Pointer to the rotation matrix to apply during primary generation.
+ */
     static void SetRotation(G4RotationMatrix* rotMatrix) { m_rotation_matrix = rotMatrix; }
 
-    ///
+    /**
+ * @brief Sets the static source-to-isocenter distance parameter for primary particle generation.
+ *
+ * @param distance The distance from the source to the isocenter, in simulation units.
+ */
     static void SetSID(G4double distance) { m_source_isocentre_distance = distance; }
 
   private:

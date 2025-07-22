@@ -4,6 +4,15 @@
 
 namespace { G4Mutex sdMutex = G4MUTEX_INITIALIZER; }
 
+/**
+ * @brief Constructs a sensitive detector for recording phase space data and managing particle termination.
+ *
+ * Merges user-defined and header phase space positions, determines the maximum position as the "killer" plane for particle termination, and initializes mappings for supported particle types. Prepares the detector for recording particle data and killing tracks that cross the killer plane.
+ *
+ * @param phspUsr Vector of user-defined phase space positions.
+ * @param phspHead Vector of header-defined phase space positions.
+ * @param id_ Identifier for the sensitive detector instance.
+ */
 SavePhSpSD::SavePhSpSD(std::vector<G4double> phspUsr, std::vector<G4double> phspHead,
                                    G4int id_)
     : G4VSensitiveDetector(""), id(id_) {
@@ -28,7 +37,14 @@ SavePhSpSD::SavePhSpSD(std::vector<G4double> phspUsr, std::vector<G4double> phsp
 }
 
 /// TODO: Handling in a proper way dumping data into given phsp directory within NTuple
-/// it can be done with SavePhSpAnalysis::FillPhSp(G4Step *step)
+/**
+ * @brief Processes a particle hit, records phase space data, and kills tracks crossing the killer plane.
+ *
+ * Records particle position, momentum direction, kinetic energy, particle type, and detector ID to the analysis ntuple when a recognized particle crosses a geometry boundary. If the particle crosses the defined killer plane in the z-direction during the step, its track is stopped and killed.
+ *
+ * @param step The current Geant4 step to process.
+ * @return G4bool Always returns true to indicate successful processing.
+ */
 G4bool SavePhSpSD::ProcessHits(G4Step *step, G4TouchableHistory *) {
 
   G4AutoLock lock(&sdMutex);

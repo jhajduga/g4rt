@@ -6,11 +6,21 @@
 #include "GeometryBuilder.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs an IbaImRT phantom geometry object.
+ *
+ * Initializes the IbaImRT instance as a named physical volume for use in Geant4 simulations.
+ */
 IbaImRT::IbaImRT():IPhysicalVolume("IbaImRT"){}
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the singleton instance of the IbaImRT class.
+ *
+ * Ensures that only one instance of IbaImRT exists throughout the application.
+ *
+ * @return Pointer to the single IbaImRT instance.
+ */
 IbaImRT* IbaImRT::GetInstance() {
   static IbaImRT instance;
   return &instance;
@@ -20,7 +30,13 @@ IbaImRT* IbaImRT::GetInstance() {
 ///
 G4ThreeVector IbaImRT::IbaToLocalTranslation(0.0, 0.0, 0.0);
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs and places the IbaImRT phantom geometry within the provided parent physical volume.
+ *
+ * Depending on the configuration parameter "PatientGeometry.EnviromentPatientEnvelop", this method either builds a box or composite phantom geometry using Geant4 solids and places it in the simulation, or delegates construction to the GeometryBuilder for "IbaImRT_3mf" geometries.
+ *
+ * @param parentPV The parent Geant4 physical volume in which the phantom geometry will be placed.
+ */
 void IbaImRT::Construct(G4VPhysicalVolume *parentPV) {
   
   if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") != "IbaImRT_3mf") {

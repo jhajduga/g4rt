@@ -34,7 +34,11 @@ class BeamMonitoringSD : public G4VSensitiveDetector {
   ///
   BeamMonitoringSD(const G4String& sdName);
 
-  ///
+  /**
+ * @brief Destroys the BeamMonitoringSD object.
+ *
+ * Performs cleanup for the sensitive detector. No custom destruction logic is implemented.
+ */
   ~BeamMonitoringSD() = default;
 
   ///

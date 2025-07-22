@@ -8,11 +8,21 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs a ModularWaterPhantom object with the default name.
+ *
+ * Initializes the base IPhysicalVolume with the name "ModularWaterPhantom".
+ */
 ModularWaterPhantom::ModularWaterPhantom():IPhysicalVolume("ModularWaterPhantom"){}
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the singleton instance of the ModularWaterPhantom class.
+ *
+ * Ensures that only one instance of ModularWaterPhantom exists throughout the application.
+ *
+ * @return Pointer to the singleton ModularWaterPhantom instance.
+ */
 ModularWaterPhantom* ModularWaterPhantom::GetInstance() {
   static ModularWaterPhantom instance;
   return &instance;
@@ -22,7 +32,15 @@ ModularWaterPhantom* ModularWaterPhantom::GetInstance() {
 ///
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs the modular water phantom geometry within the specified parent physical volume.
+ *
+ * Depending on the configuration parameter `"PatientGeometry.EnviromentPatientEnvelop"`, this method either:
+ * - Builds a simplified modular water phantom consisting of multiple aquarium-like boxes and water fillings arranged around the patient isocenter, or
+ * - Delegates construction to the `GeometryBuilder` for a 3MF-based phantom.
+ *
+ * @param parentPV The parent Geant4 physical volume in which the modular water phantom geometry will be placed.
+ */
 void ModularWaterPhantom::Construct(G4VPhysicalVolume *parentPV) {
 
     if (ConfigSvc::GetInstance()->GetValue<std::string>("PatientGeometry", "EnviromentPatientEnvelop") == "ModularWaterPhantom_simplified") {

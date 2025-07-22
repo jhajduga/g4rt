@@ -1,10 +1,16 @@
-
 #include "D3DTray.hh"
 #include "Services.hh"
 #include "G4Box.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs a D3DTray instance, initializing geometry and configuration.
+ *
+ * Initializes the tray with the specified parent physical volume and name, sets up the associated detector, loads configuration parameters (including overrides from a TOML file), and constructs the tray's geometry within the simulation.
+ *
+ * @param parentPV The parent Geant4 physical volume to which this tray will be attached.
+ * @param name The unique name for this tray instance.
+ */
 D3DTray::D3DTray(G4VPhysicalVolume *parentPV, const std::string& name)
 :IPhysicalVolume(name), TomlConfigModule(name), m_tray_name(name) {
     m_detector = new D3DDetector(m_tray_name);
@@ -13,7 +19,13 @@ D3DTray::D3DTray(G4VPhysicalVolume *parentPV, const std::string& name)
 } 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs the 3D tray environment and places it within the parent physical volume.
+ *
+ * Creates a box-shaped Geant4 volume representing the tray environment, assigns it a material, and places it in the simulation geometry with the configured rotation and position. Delegates further construction and information output to the associated detector instance.
+ *
+ * @param parentPV The parent Geant4 physical volume into which the tray environment is placed.
+ */
 void D3DTray::Construct(G4VPhysicalVolume *parentPV) {
     auto medium = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C");
     
@@ -32,13 +44,21 @@ void D3DTray::Construct(G4VPhysicalVolume *parentPV) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Delegates the definition of sensitive detectors to the associated detector.
+ *
+ * Calls the `DefineSensitiveDetector()` method of the contained `D3DDetector` instance to set up sensitive detector components for the tray.
+ */
 void D3DTray::DefineSensitiveDetector() {
     m_detector->DefineSensitiveDetector();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Loads and applies configuration settings for the D3D tray and its detector.
+ *
+ * Sets default geometry, position, rotation, and detector parameters, then overrides them with values from a TOML configuration file if present. The resulting configuration is applied to the associated detector instance.
+ */
 void D3DTray::LoadConfiguration(){
 
     // Deafult configuration
@@ -64,7 +84,11 @@ void D3DTray::LoadConfiguration(){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Parses and applies tray configuration parameters from a TOML file.
+ *
+ * Reads the specified TOML configuration file, extracts position, voxelization, and rotation parameters under the configured prefix, and updates the tray's global center, detector voxelization, and rotation accordingly. If the configuration file does not exist, logs a fatal error and terminates the program.
+ */
 void D3DTray::ParseTomlConfig(){
     SetTomlConfigFile(); // it set the job main file for searching this configuration
     auto configFile = GetTomlConfigFile();

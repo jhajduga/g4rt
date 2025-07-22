@@ -15,7 +15,11 @@
 #include "G4ReflectedSolid.hh"
 #include <memory>
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs an MlcHd120 object and initializes its Geant4 region.
+ *
+ * Creates a unique Geant4 region named "MlcHd120Region" and sets its default production cut to 1.0 cm for particle tracking.
+ */
 MlcHd120::MlcHd120():IPhysicalVolume("MlcHd120"), VMlc("MlcHd120"){
     // Region and default production cuts
     m_mlc_region = std::make_unique<G4Region>("MlcHd120Region");
@@ -24,7 +28,13 @@ MlcHd120::MlcHd120():IPhysicalVolume("MlcHd120"), VMlc("MlcHd120"){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs the MlcHd120 geometry within the specified parent physical volume.
+ *
+ * Retrieves the tungsten alloy material from the configuration service and initiates the creation of the MLC modules using this material.
+ *
+ * @param parentPV The parent Geant4 physical volume in which the MLC geometry will be constructed.
+ */
 void MlcHd120::Construct(G4VPhysicalVolume *parentPV){
     G4cout << "\n[INFO]::  Construction of the " << GetName() << G4endl;
 
@@ -34,7 +44,15 @@ void MlcHd120::Construct(G4VPhysicalVolume *parentPV){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs and places all MLC leaf modules within the parent physical volume.
+ *
+ * Creates logical and physical volumes for all leaf types (side, central, and transition leaves) of the HD120 multi-leaf collimator, assigns appropriate orientations, and places them in the simulation geometry. Each leaf is positioned and oriented according to its type and index, with mirrored placements for paired leaves. Overlap checks are performed after placement.
+ *
+ * @param parentPV The parent Geant4 physical volume to contain the MLC modules.
+ * @param material The Geant4 material used for all leaf logical volumes.
+ * @return The parent physical volume containing all placed MLC leaf modules.
+ */
 G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Material* material){
 
     // TODO
@@ -380,7 +398,13 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
 
 /////////////////////////////////////////////////////////////////////////////
 //  Giving the shape to the central leaf.
-/////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Creates the geometric solid representing a central MLC leaf.
+ *
+ * Constructs the central leaf shape by combining a cylindrical tube and boxes using intersection and subtraction operations, then removes an end cap section. The resulting solid models the detailed geometry of a central leaf for the high-definition 120-leaf MLC.
+ *
+ * @return G4VSolid* The constructed solid representing the central leaf.
+ */
 
 G4VSolid* MlcHd120::CreateCentralLeafShape() const {
 
@@ -437,7 +461,13 @@ G4VSolid* MlcHd120::CreateCentralLeafShape() const {
 
 /////////////////////////////////////////////////////////////////////////////
 //  Giving the shape to the side leaf.
-/////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Creates the geometric solid representing a side leaf of the HD120 MLC.
+ *
+ * Constructs the side leaf shape by combining a cylindrical tube and multiple boxes using intersection and subtraction operations, then removes the end cap region. The resulting solid models the physical geometry of a side leaf for use in Geant4 simulations.
+ *
+ * @return G4VSolid* The constructed solid representing the side leaf.
+ */
 
 G4VSolid* MlcHd120::CreateSideLeafShape() const {
 
@@ -493,7 +523,14 @@ G4VSolid* MlcHd120::CreateSideLeafShape() const {
 
 /////////////////////////////////////////////////////////////////////////////
 //  Giving the shape to the transition leaf.
-/////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Creates a Geant4 solid representing a transition leaf for the HD120 MLC.
+ *
+ * Constructs the 3D geometry of a transition leaf based on the specified type, using a combination of cylindrical and box solids with boolean operations to achieve the required shape. The type determines the leaf width and the offsets for the cut operations, supporting four variants: "SideA", "SideB", "CentralA", and "CentralB".
+ *
+ * @param type String identifier for the transition leaf variant ("SideA", "SideB", "CentralA", or "CentralB").
+ * @return G4VSolid* Pointer to the constructed Geant4 solid representing the transition leaf.
+ */
 
 G4VSolid* MlcHd120::CreateTransitionLeafShape(const std::string& type) const{
 
@@ -557,32 +594,54 @@ G4VSolid* MlcHd120::CreateTransitionLeafShape(const std::string& type) const{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Creates a box solid used for cutting the end caps of MLC leaves.
+ *
+ * @return G4VSolid* Pointer to a 20 cm × 20 cm × 20 cm box solid centered at the origin.
+ */
 G4VSolid* MlcHd120::CreateEndCapCutBox() const {
     return new G4Box("EndCapCutBox", 10. * cm, 10. * cm, 10. * cm);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Placeholder for updating the MLC state.
+ *
+ * Currently returns true without performing any operations. Intended for future implementation of dynamic updates to the MLC geometry or state.
+ *
+ * @return G4bool Always returns true.
+ */
 G4bool MlcHd120::Update(){
     // implement me.
     return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Resets the MlcHd120 state.
+ *
+ * Placeholder for future implementation to reset the internal state of the MlcHd120 object.
+ */
 void MlcHd120::Reset(){
     // implement me.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Outputs information about the MlcHd120 configuration.
+ *
+ * Intended for future implementation to provide details about the current MLC state or geometry.
+ */
 void MlcHd120::WriteInfo(){
     // implement me.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Configures the MLC leaf positions based on the provided control point.
+ *
+ * Selects the positioning mode ("CustomPlan" or "RTPlan") according to the control point's field type and updates the MLC leaf positions accordingly. Marks the MLC as initialized and stores the control point ID.
+ */
 void MlcHd120::SetRunConfiguration(const ControlPoint* control_point){
     auto inputType = control_point->GetFieldType();
     //thisConfig()->GetValue<std::string>("PositionningFileType");
@@ -601,7 +660,11 @@ void MlcHd120::SetRunConfiguration(const ControlPoint* control_point){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Updates the positions of MLC leaves based on custom control point data.
+ *
+ * Adjusts the X translation of each Y1 and Y2 leaf according to the provided MLC positioning vectors from the control point, and records the new X positions for Y1 leaves.
+ */
 void MlcHd120::SetCustomPositioning(const ControlPoint* control_point){
     const auto& mlc_a_positioning = control_point->GetMlcPositioning("Y1");
     const auto& mlc_b_positioning = control_point->GetMlcPositioning("Y2");
@@ -619,7 +682,14 @@ void MlcHd120::SetCustomPositioning(const ControlPoint* control_point){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Updates the MLC leaf positions based on RTPlan control point data.
+ *
+ * Retrieves MLC positioning vectors from the current control point and applies the positions to the Y1 and Y2 leaf physical volumes. Validates that the positioning data is present and of correct size (60 elements). Updates the static vector of leaf x-positions for later use. Throws a fatal exception if the positioning data is invalid.
+ *
+ * @param current_beam Index of the current beam (unused).
+ * @param current_controlpoint Index of the current control point (unused).
+ */
 void MlcHd120::SetRTPlanPositioning(int current_beam, int current_controlpoint){
     auto contolPoint = Service<RunSvc>()->CurrentControlPoint();
     const auto& pos1 = contolPoint->GetMlcPositioning("Y1");

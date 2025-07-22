@@ -3,12 +3,24 @@
 #include <iostream>
 #include <iomanip>
 
+/**
+ * @brief Returns the singleton instance of the AnalysisFlagRegistry.
+ *
+ * Ensures that only one instance of the registry exists throughout the program's lifetime.
+ *
+ * @return Pointer to the singleton AnalysisFlagRegistry instance.
+ */
 AnalysisFlagRegistry* AnalysisFlagRegistry::Instance() {
   static AnalysisFlagRegistry instance;
   return &instance;
 }
 
 
+/**
+ * @brief Prints the status of all analysis flags to the console.
+ *
+ * Outputs each global analysis flag's name and whether it is enabled or disabled, formatted for readability.
+ */
 void AnalysisFlagRegistry::PrintAllFlags() const {
   std::cout << "[AnalysisFlagRegistry] Active global flags:\n";
 

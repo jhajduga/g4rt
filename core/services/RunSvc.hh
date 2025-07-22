@@ -51,14 +51,31 @@ class RunSvc : public TomlConfigurable {
 
   ~RunSvc();
 
-  // Delete the copy and move constructors
+  /**
+ * @brief Deleted copy constructor to enforce singleton pattern.
+ *
+ * Prevents copying of the RunSvc instance.
+ */
   RunSvc(const RunSvc &) = delete;
 
-  RunSvc &operator=(const RunSvc &) = delete;
+  /**
+ * @brief Deleted copy assignment operator to enforce singleton pattern.
+ *
+ * Prevents copying of the RunSvc instance.
+ */
+RunSvc &operator=(const RunSvc &) = delete;
 
-  RunSvc(RunSvc &&) = delete;
+  /**
+ * @brief Move constructor is deleted to enforce singleton pattern.
+ */
+RunSvc(RunSvc &&) = delete;
 
-  RunSvc &operator=(RunSvc &&) = delete;
+  /**
+ * @brief Move assignment operator is deleted to enforce singleton behavior.
+ *
+ * Prevents moving assignment of the RunSvc instance.
+ */
+RunSvc &operator=(RunSvc &&) = delete;
 
   ///\brief Keep info about the actual application mode status.
   OperationalMode m_application_mode;
@@ -116,10 +133,18 @@ class RunSvc : public TomlConfigurable {
   ///\brief Set requested number of threads to be used in the simulation.
   void SetNofThreads(int val);
 
-  ///\brief Get the corresponding .mac files container
+  /**
+ * @brief Returns the list of Geant4 macro (.mac) files to be processed for the simulation run.
+ *
+ * @return Reference to a vector containing the paths of macro files.
+ */
   inline const std::vector<G4String> &GetMacFiles() const { return m_macFiles; }
 
-  ///\brief Set an appropriate application run-mode.
+  /**
+ * @brief Sets the operational mode of the application run.
+ *
+ * @param mode The desired operational mode (e.g., BuildGeometry or FullSimulation).
+ */
   void AppMode(OperationalMode mode) { m_application_mode = mode; }
 
   ///\brief Perform service and global run related configuration initialization.
@@ -146,16 +171,34 @@ class RunSvc : public TomlConfigurable {
   ///
   void LoadSimulationPlan();
 
-  ///
+  /**
+ * @brief Returns the pointer to the Geant4 run manager.
+ *
+ * @return G4RunManager* Pointer to the current Geant4 run manager instance managed by the service.
+ */
   G4RunManager* G4RunManagerPtr() const { return m_g4RunManager; }
 
 
-  const std::vector<ControlPoint>& GetControlPoints() const { return m_control_points; }
+  /**
+ * @brief Returns the list of defined control points for the simulation run.
+ *
+ * @return Reference to a vector containing all control points.
+ */
+const std::vector<ControlPoint>& GetControlPoints() const { return m_control_points; }
 
-  ///
+  /**
+ * @brief Returns the current control point in the simulation.
+ *
+ * @return Pointer to the current ControlPoint, or nullptr if not set.
+ */
   ControlPoint* CurrentControlPoint() const { return m_current_control_point; }
 
-  ///
+  /**
+   * @brief Sets the current control point and returns it.
+   *
+   * @param cp Pointer to the control point to set as current.
+   * @return ControlPoint* The control point that was set as current.
+   */
   ControlPoint* CurrentControlPoint(ControlPoint* cp) { 
     // cp->FillPlanFieldMask();
     m_current_control_point = cp; 
@@ -174,9 +217,20 @@ class RunSvc : public TomlConfigurable {
   ///
   void WriteGeometryData() const;
 
-  ///
+  /**
+ * @brief Returns the set of enabled scoring types for the simulation.
+ *
+ * @return Reference to the set of scoring types currently configured.
+ */
   const std::set<Scoring::Type>& GetScoringTypes() const { return m_scoring_types; }
-  std::set<Scoring::Type>& GetScoringTypes() { return m_scoring_types; }
+  /**
+ * @brief Returns a reference to the set of enabled scoring types for the simulation.
+ *
+ * Allows modification of the scoring types used during the simulation run.
+ *
+ * @return Reference to the set of scoring types.
+ */
+std::set<Scoring::Type>& GetScoringTypes() { return m_scoring_types; }
 };
 
 #endif  // Dose3D_RUNSVC_H

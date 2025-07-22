@@ -19,7 +19,11 @@ class WaterPhantomSD : public VPatientSD {
   //
   WaterPhantomSD(const G4String& sdName, const G4ThreeVector& centre);
 
-  ///
+  /**
+ * @brief Destroys the WaterPhantomSD object.
+ *
+ * Cleans up resources associated with the WaterPhantomSD instance.
+ */
   ~WaterPhantomSD() = default;
 
   ///

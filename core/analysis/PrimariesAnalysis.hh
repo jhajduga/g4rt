@@ -18,20 +18,37 @@ class G4PrimaryVertex;
 class PrimariesAnalysis {
 
   private:
-  ///
+  /**
+ * @brief Default constructor for PrimariesAnalysis.
+ *
+ * Initializes the PrimariesAnalysis singleton instance. Constructor is private to enforce singleton pattern.
+ */
   PrimariesAnalysis() = default;
 
-  ///
+  /**
+ * @brief Destroys the PrimariesAnalysis singleton instance.
+ */
   ~PrimariesAnalysis() = default;
 
-  /// Delete the copy and move constructors
+  /**
+ * @brief Copy constructor is deleted to prevent copying of the singleton instance.
+ */
   PrimariesAnalysis(const PrimariesAnalysis &) = delete;
 
-  PrimariesAnalysis &operator=(const PrimariesAnalysis &) = delete;
+  /**
+ * @brief Deleted copy assignment operator to prevent copying of PrimariesAnalysis instances.
+ */
+PrimariesAnalysis &operator=(const PrimariesAnalysis &) = delete;
 
-  PrimariesAnalysis(PrimariesAnalysis &&) = delete;
+  /**
+ * @brief Move constructor is deleted to prevent moving of PrimariesAnalysis instances.
+ */
+PrimariesAnalysis(PrimariesAnalysis &&) = delete;
 
-  PrimariesAnalysis &operator=(PrimariesAnalysis &&) = delete;
+  /**
+ * @brief Move assignment operator is deleted to prevent moving of PrimariesAnalysis instances.
+ */
+PrimariesAnalysis &operator=(PrimariesAnalysis &&) = delete;
 
   ///
   G4Cache<G4int> m_ntupleId;

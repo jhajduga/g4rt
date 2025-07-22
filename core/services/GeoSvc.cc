@@ -16,30 +16,50 @@
 #include "G4GDMLParser.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs the GeoSvc singleton and initializes its configuration.
+ *
+ * Sets up the geometry service by invoking the configuration routine upon creation.
+ */
 GeoSvc::GeoSvc() : TomlConfigurable("GeoSvc"){
   Configure();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Destructor for the GeoSvc service.
+ *
+ * Unregisters the service configuration upon destruction.
+ */
 GeoSvc::~GeoSvc() {
   configSvc()->Unregister(thisConfig()->GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the singleton instance of the GeoSvc service.
+ *
+ * @return GeoSvc* Pointer to the unique GeoSvc instance.
+ */
 GeoSvc *GeoSvc::GetInstance() {
   static GeoSvc instance;
   return &instance;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Checks if the geometry world has been constructed.
+ *
+ * @return true if the geometry world instance exists; false otherwise.
+ */
 bool GeoSvc::IsWorldBuilt() const { return my_world ? true : false; }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Defines and registers configuration parameters for the geometry service.
+ *
+ * Sets up all configurable units related to geometry construction, export options, and model selection, then applies their default values.
+ */
 void GeoSvc::Configure() {
   //G4cout << "[INFO]:: GeoSvc :: Service default configuration " << G4endl;
 
@@ -66,7 +86,13 @@ void GeoSvc::Configure() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Sets the default value for a specified geometry configuration parameter.
+ *
+ * Assigns a default value to the given configuration unit, such as head model, MLC model, isocentre distance, phase space plane requests, build flags, export options, or geometry directory. Used to initialize or reset configuration parameters to their standard defaults.
+ *
+ * @param unit The name of the configuration parameter to set to its default value.
+ */
 void GeoSvc::DefaultConfig(const std::string &unit) {
 
   // Config volume name
@@ -145,7 +171,11 @@ void GeoSvc::DefaultConfig(const std::string &unit) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Initializes the geometry service and validates configuration.
+ *
+ * Performs one-time initialization by printing the current configuration, parsing phase space plane requests if enabled, and verifying the configured head and MLC models. Marks the service as initialized to prevent repeated setup.
+ */
 void GeoSvc::Initialize() {
   if (!m_isInitialized) {
     
@@ -163,7 +193,14 @@ void GeoSvc::Initialize() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Updates the geometry world for the specified run ID.
+ *
+ * Attempts to update the existing geometry world instance with the provided run ID. Returns the world instance regardless of update success.
+ *
+ * @param runId The identifier for the current run, used to update geometry state.
+ * @return WorldConstruction* Pointer to the updated geometry world instance.
+ */
 WorldConstruction *GeoSvc::Update(int runId) {
   G4cout << "[INFO]:: GeoSvc :: Geometry world is already existing - Updating.." << G4endl;
   if (my_world->Update(runId)) 
@@ -176,7 +213,13 @@ WorldConstruction *GeoSvc::Update(int runId) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Builds and returns the geometry world instance.
+ *
+ * Ensures the service is initialized and constructs the geometry world if it does not already exist. Returns the singleton instance of the geometry world.
+ *
+ * @return Pointer to the constructed or existing WorldConstruction instance.
+ */
 WorldConstruction *GeoSvc::Build() {
 
   if (!m_isInitialized) { Initialize(); }
@@ -191,7 +234,11 @@ WorldConstruction *GeoSvc::Build() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Destroys the current geometry world and releases associated resources.
+ *
+ * Resets the internal pointer to the geometry world after destruction.
+ */
 void GeoSvc::Destroy() {
   G4cout << "[INFO]:: GeoSvc :: destroying geometry world" << G4endl;
   if (my_world) {
@@ -201,7 +248,11 @@ void GeoSvc::Destroy() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Parses and validates the phase space plane save request from configuration.
+ *
+ * Interprets the `SavePhspRequest` configuration string to determine where phase space planes should be saved during simulation. Supports both predefined head positions (before specific linac components) and user-defined positions relative to the isocenter. Updates the corresponding configuration vectors with the requested positions, enforcing that only one phase space plane can be saved per run. Throws a fatal Geant4 exception if the request is invalid, unsupported, or out of allowed range.
+ */
 void GeoSvc::ParseSavePhspPlaneRequest() {
   // NOTE:
   // Two the different types phsp planes are defined.
@@ -318,7 +369,13 @@ void GeoSvc::ParseSavePhspPlaneRequest() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the configured head geometry model.
+ *
+ * Retrieves the head model setting from the configuration and returns the corresponding EHeadModel enum value. Exits the program if the model name is unrecognized.
+ *
+ * @return EHeadModel The selected head geometry model.
+ */
 EHeadModel GeoSvc::GetHeadModel() const {
   auto headName = m_configSvc->GetValue<G4String>("GeoSvc", "HeadModel");
   if (headName.compare("BeamCollimation") == 0) {
@@ -332,7 +389,13 @@ EHeadModel GeoSvc::GetHeadModel() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the configured MLC (multi-leaf collimator) model as an enum.
+ *
+ * Retrieves the MLC model name from the configuration and maps it to the corresponding EMlcModel enum value. Exits the program if the model name is unrecognized.
+ *
+ * @return EMlcModel The selected MLC model.
+ */
 EMlcModel GeoSvc::GetMlcModel() const {
   auto mlcName = m_configSvc->GetValue<std::string>("GeoSvc", "MlcModel");
   if (mlcName.compare("Varian-Millennium") == 0) {
@@ -350,7 +413,13 @@ EMlcModel GeoSvc::GetMlcModel() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the patient geometry object if available.
+ *
+ * Retrieves the cached patient object if present; otherwise, obtains it from the patient environment in the current geometry world. Returns nullptr if no patient is available.
+ *
+ * @return VPatient* Pointer to the patient object, or nullptr if not present.
+ */
 VPatient* GeoSvc::Patient(){
   if (m_patient)
     return m_patient;
@@ -360,13 +429,21 @@ VPatient* GeoSvc::Patient(){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns a list of custom detector objects present in the geometry world.
+ *
+ * @return std::vector<VPatient*> Vector of pointers to custom detector instances.
+ */
 std::vector<VPatient*> GeoSvc::CustomDetectors(){
   return World()->GetCustomDetectors();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TODO: use enum types!!!
+/**
+ * @brief Returns the MLC (multi-leaf collimator) instance if the head model is configured.
+ *
+ * @return VMlc* Pointer to the MLC instance, or nullptr if not available.
+ */
 VMlc* GeoSvc::MLC(){
   if(thisConfig()->GetValue<G4String>("HeadModel")){
     return BeamCollimation::GetInstance()->GetMlc();
@@ -376,19 +453,33 @@ VMlc* GeoSvc::MLC(){
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Registers a scoring component for geometry export and analysis.
+ *
+ * Adds the specified scoring component to the internal list for later export or processing.
+ *
+ * @param element Pointer to the scoring component to register.
+ */
 void GeoSvc::RegisterScoringComponent(const GeoComponet *element){
   m_scoring_components.emplace_back(element);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Exports the geometry world to a ROOT TFile using default settings.
+ *
+ * This function triggers the export of the current geometry world to a ROOT TFile format, using the default export configuration.
+ */
 void GeoSvc::PerformDefaultExport() {
   WriteWorldToTFile();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Performs geometry and scoring component exports based on configuration flags.
+ *
+ * Conditionally exports the world geometry and scoring components to various formats, including ROOT TFile, CSV, GATE, and GDML, according to the current configuration settings.
+ */
 void GeoSvc::PerformRequestedExport() {
   if(thisConfig()->GetValue<bool>("ExportGeometryToTFile") && !m_is_tfile_exported)
     WriteWorldToTFile();
@@ -402,7 +493,11 @@ void GeoSvc::PerformRequestedExport() {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Exports all registered scoring components to GATE-compatible CSV files.
+ *
+ * Each scoring component is exported to a CSV file in the output directory for use with GATE simulations.
+ */
 void GeoSvc::ExportToGateGenericRepeater() const {
   std::cout << "[INFO] GeoSvc:: ExportToGateGenericRepeater..." <<std::endl;
   std::string output_dir = Service<ConfigSvc>()->GetValue<std::string>("RunSvc","OutputDir");
@@ -413,7 +508,11 @@ void GeoSvc::ExportToGateGenericRepeater() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Exports the positioning data of all registered scoring components to CSV files.
+ *
+ * For each registered scoring component, writes both cell and voxel positioning information to CSV files in the output directory.
+ */
 void GeoSvc::WriteScoringComponentsPositioningToCsv() const {
   
       INFO_GEO("Writing Scroing Components to CSV...");
@@ -427,7 +526,11 @@ void GeoSvc::WriteScoringComponentsPositioningToCsv() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Placeholder for exporting scoring components' positioning data to a ROOT TFile.
+ *
+ * This function is not yet implemented. Intended to export the positioning information of all registered scoring components to a ROOT TFile in the output directory.
+ */
 void GeoSvc::WriteScoringComponentsPositioningToTFile() const {
   
       INFO_GEO("Writing Scroing Components to TFile...");
@@ -440,7 +543,11 @@ void GeoSvc::WriteScoringComponentsPositioningToTFile() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write geometry as TGeometry object in TFile
+/**
+ * @brief Exports the world geometry to a ROOT TFile as a TGeoManager object.
+ *
+ * Converts the GDML representation of the world geometry into a ROOT TGeoManager, applies visualization settings for materials and components, and writes the geometry to a ROOT file in the output directory. Ensures GDML export is performed before conversion if necessary.
+ */
 void GeoSvc::WriteWorldToTFile() {
   
       DEBUG_GEO("Writing World Geometry To TFile...");
@@ -516,14 +623,22 @@ void GeoSvc::WriteWorldToTFile() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Exports the patient geometry CT data to CSV files in the output directory.
+ *
+ * The exported files are saved under a "dicom/ct_csv" subdirectory within the geometry output directory.
+ */
 void GeoSvc::WritePatientToCsvCT(){
   auto output_dir = GetOutputDir()+"/dicom/ct_csv";
   PatientGeometry::GetInstance()->ExportToCsvCT(output_dir);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Exports patient CT data from CSV format to DICOM format.
+ *
+ * Uses the Dicom service to convert patient CT data located in the CSV output directory to DICOM files in the specified DICOM output directory.
+ */
 void GeoSvc::WritePatientToDicomCT(){
   // NOTE: Currently this service is using the csv data, 
   //       hence the GeoSvc::WritePatientToCsvCT has to be called!
@@ -534,7 +649,11 @@ void GeoSvc::WritePatientToDicomCT(){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Exports the current world geometry to a GDML file in the output directory.
+ *
+ * The GDML file is named using the configured world file name. Marks the GDML export as completed.
+ */
 void GeoSvc::WriteWorldToGdml(){
   
       DEBUG_GEO("Writing World Geometry To GDML...");
@@ -543,7 +662,13 @@ void GeoSvc::WriteWorldToGdml(){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the full output directory path for geometry-related files, creating it if necessary.
+ *
+ * Combines the run service output directory and the geometry directory configuration to construct the path. Ensures the directory exists before returning.
+ *
+ * @return std::string The absolute path to the geometry output directory.
+ */
 std::string GeoSvc::GetOutputDir() {
   auto dir = Service<ConfigSvc>()->GetValue<std::string>("RunSvc","OutputDir")+
             "/"+Service<ConfigSvc>()->GetValue<std::string>("GeoSvc","GeoDir");

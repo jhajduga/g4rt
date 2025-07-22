@@ -13,10 +13,14 @@
 ///\class IonPrimaryGenerator
 class IonPrimaryGenerator : public G4GeneralParticleSource {
   public:
-    ///
+    /**
+ * @brief Constructs a new IonPrimaryGenerator with default settings.
+ */
     IonPrimaryGenerator() = default;
 
-    ///
+    /**
+ * @brief Destroys the IonPrimaryGenerator instance.
+ */
     ~IonPrimaryGenerator() = default;
 
     ///

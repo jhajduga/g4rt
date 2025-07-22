@@ -21,7 +21,9 @@ class SteppingAction : public G4UserSteppingAction{
     ///
     SteppingAction(EventAction* eventAct);
 
-    ///
+    /**
+ * @brief Destroys the SteppingAction object.
+ */
     ~SteppingAction() = default;
     
     ///

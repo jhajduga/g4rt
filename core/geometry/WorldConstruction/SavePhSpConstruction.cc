@@ -11,14 +11,24 @@
 #include "G4VSensitiveDetector.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the singleton instance of the SavePhSpConstruction class.
+ *
+ * Ensures that only one instance of SavePhSpConstruction exists throughout the application.
+ *
+ * @return Pointer to the singleton SavePhSpConstruction instance.
+ */
 SavePhSpConstruction* SavePhSpConstruction::GetInstance() {
   static SavePhSpConstruction instance;
   return &instance;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Initializes the phase space model by creating a new SavePhSp instance.
+ *
+ * @return true Always returns true after initialization.
+ */
 bool SavePhSpConstruction::ModelSetup() {
   //auto configSvc = Service<ConfigSvc>();
   // NOTE: Currently there is only one model of SavePhSp planes
@@ -27,7 +37,11 @@ bool SavePhSpConstruction::ModelSetup() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Releases resources associated with the phase space construction.
+ *
+ * Destroys the internal phase space model if it exists, deletes the world physical volume, and resets its pointer to nullptr.
+ */
 void SavePhSpConstruction::Destroy() {
   if (PVPhmWorld) {
     if (m_savePhSp) m_savePhSp->Destroy();
@@ -37,7 +51,13 @@ void SavePhSpConstruction::Destroy() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs phase space planes within the provided parent physical volume.
+ *
+ * Initializes the phase space model and delegates the construction of phase space planes to the internal `SavePhSp` instance, placing them directly in the main world volume without creating an enclosing box.
+ *
+ * @param parentPV The parent physical volume in which the phase space planes will be constructed.
+ */
 void SavePhSpConstruction::Construct(G4VPhysicalVolume *parentPV) {
   // A call to select the right model
   if (ModelSetup()) {
@@ -48,7 +68,13 @@ void SavePhSpConstruction::Construct(G4VPhysicalVolume *parentPV) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Updates the phase space model state.
+ *
+ * Calls the `Update()` method on the internal `SavePhSp` instance if it exists. Returns `false` if the update fails; otherwise, returns `true`.
+ *
+ * @return `true` if the update succeeds or no model is present; `false` if the update fails.
+ */
 G4bool SavePhSpConstruction::Update() {
   if (m_savePhSp) {
     if (!m_savePhSp->Update()) return false;
@@ -57,13 +83,21 @@ G4bool SavePhSpConstruction::Update() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Writes phase space information using the associated SavePhSp instance.
+ *
+ * Delegates to the WriteInfo() method of the internal SavePhSp object if it exists.
+ */
 void SavePhSpConstruction::WriteInfo() {
   if(m_savePhSp) m_savePhSp->WriteInfo();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Defines sensitive detectors for phase space planes in the simulation geometry.
+ *
+ * Retrieves user and header configuration data to create and assign `SavePhSpSD` sensitive detector instances to the main phase space logical volume and to additional volumes corresponding to specified Z-positions. Sensitive detectors are registered with the world geometry if valid configuration data is available.
+ */
 void SavePhSpConstruction::DefineSensitiveDetector(){
 
   /// !!!

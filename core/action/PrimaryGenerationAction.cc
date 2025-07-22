@@ -18,14 +18,22 @@ G4RotationMatrix* PrimaryGenerationAction::m_rotation_matrix=nullptr;
 G4double PrimaryGenerationAction::m_source_isocentre_distance = 0.0;
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs a PrimaryGenerationAction and initializes the primary particle generator.
+ *
+ * Determines the primary generator type from configuration and sets up the corresponding generator instance for use in simulation events.
+ */
 PrimaryGenerationAction::PrimaryGenerationAction(){
   SetPrimaryGenerator();
   ConfigurePrimaryGenerator();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Sets the primary generator type based on the configured beam type.
+ *
+ * Determines the primary generator type from configuration and updates internal state accordingly. Throws a fatal exception if the beam type is unrecognized.
+ */
 void PrimaryGenerationAction::SetPrimaryGenerator() {
   auto configSvc = Service<ConfigSvc>();
   auto sourceType = configSvc->GetValue<std::string>("RunSvc", "BeamType");
@@ -45,7 +53,16 @@ void PrimaryGenerationAction::SetPrimaryGenerator() {
   
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Instantiates and configures the primary particle generator based on the selected generator type.
+ *
+ * Depending on the configured generator type, this method creates and initializes the appropriate primary generator:
+ * - For IAEA phase space files, it verifies the existence of required files and creates an `IaeaPrimaryGenerator`.
+ * - For general particle source (GPS), it creates a `G4GeneralParticleSource`.
+ * - For ion GPS, it creates an `IonPrimaryGenerator` with a predefined ion source.
+ *
+ * Throws a fatal exception if required IAEA files are missing.
+ */
 void PrimaryGenerationAction::ConfigurePrimaryGenerator() {
   auto configSvc = Service<ConfigSvc>();
   G4AutoLock lock(&PrimGenMutex);
@@ -84,7 +101,11 @@ void PrimaryGenerationAction::ConfigurePrimaryGenerator() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Destructor that safely deletes the primary generator instance.
+ *
+ * Ensures thread-safe cleanup of the primary generator by acquiring a mutex lock before deletion.
+ */
 PrimaryGenerationAction::~PrimaryGenerationAction(void) {
   G4AutoLock lock(&PrimGenMutex);
   if (m_primaryGenerator) {
@@ -94,7 +115,13 @@ PrimaryGenerationAction::~PrimaryGenerationAction(void) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Generates and configures primary vertices for a simulation event.
+ *
+ * Depending on the configured primary generator type, this method generates primary vertices for the given event, applies optional collimation filtering, and enforces a minimum vertex multiplicity for IAEA phase space sources. It then applies any configured rotation and translation to the vertex positions and momenta, attaches or updates user information for each primary particle, and optionally fills primary particle analysis data if enabled.
+ *
+ * @param anEvent The Geant4 event to which primary vertices will be added and configured.
+ */
 void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
   auto runSvc = Service<RunSvc>();
   G4AutoLock lock(&PrimGenMutex);

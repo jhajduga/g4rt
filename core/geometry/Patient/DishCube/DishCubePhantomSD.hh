@@ -16,7 +16,9 @@ class DishCubePhantomSD : public VPatientSD {
     ///
     DishCubePhantomSD(const G4String& sdName);
 
-    ///
+    /**
+ * @brief Destroys the DishCubePhantomSD sensitive detector.
+ */
     ~DishCubePhantomSD() = default;
 
     ///

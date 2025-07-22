@@ -28,7 +28,13 @@ class BeamCollimation : public IPhysicalVolume, public RunComponet {
   ///
   void Destroy() override;
 
-  ///
+  /**
+   * @brief Placeholder for updating the beam collimation state.
+   *
+   * Currently unimplemented; always returns true.
+   *
+   * @return G4bool Always returns true.
+   */
   G4bool Update() override {
     G4cout << "BeamCollimation::Update::Implement me." << G4endl;
     return true;
@@ -44,13 +50,23 @@ class BeamCollimation : public IPhysicalVolume, public RunComponet {
 
   static G4ThreeVector SetParticlePositionBeforeCollimators(G4PrimaryVertex* vrtx, G4double finalZ);
 
-  VMlc* GetMlc() const { return m_mlc; }
+  /**
+ * @brief Returns the pointer to the multi-leaf collimator (MLC) object.
+ *
+ * @return VMlc* Pointer to the MLC instance managed by the collimation system.
+ */
+VMlc* GetMlc() const { return m_mlc; }
 
   static G4double AfterMLC;
   static G4double BeforeMLC;
   static G4double BeforeJaws;
   static G4double ParticleAngleTreshold;
-  VMlc* GetMlc() { return m_mlc; }
+  /**
+ * @brief Returns a pointer to the multi-leaf collimator (MLC) object.
+ *
+ * @return VMlc* Pointer to the MLC instance managed by the collimation system.
+ */
+VMlc* GetMlc() { return m_mlc; }
 
   void SetRunConfiguration(const ControlPoint* ) override;
 
@@ -62,14 +78,29 @@ class BeamCollimation : public IPhysicalVolume, public RunComponet {
   ///
   ~BeamCollimation();
 
-  // Delete the copy and move constructors
+  /**
+ * @brief Copy constructor is deleted to enforce singleton pattern.
+ */
   BeamCollimation(const BeamCollimation &) = delete;
 
-  BeamCollimation &operator=(const BeamCollimation &) = delete;
+  /**
+ * @brief Deleted copy assignment operator to enforce singleton pattern.
+ *
+ * Prevents copying of BeamCollimation instances.
+ */
+BeamCollimation &operator=(const BeamCollimation &) = delete;
 
-  BeamCollimation(BeamCollimation &&) = delete;
+  /**
+ * @brief Move constructor is deleted to enforce singleton pattern.
+ */
+BeamCollimation(BeamCollimation &&) = delete;
 
-  BeamCollimation &operator=(BeamCollimation &&) = delete;
+  /**
+ * @brief Deleted move assignment operator to enforce singleton pattern.
+ *
+ * Prevents moving assignment of BeamCollimation instances to ensure only one instance exists.
+ */
+BeamCollimation &operator=(BeamCollimation &&) = delete;
 
   ///
   std::map<G4String, G4VPhysicalVolume *> m_physicalVolume;
@@ -92,7 +123,11 @@ class BeamCollimation : public IPhysicalVolume, public RunComponet {
   ///
   std::unordered_map<std::string, double> m_apertures;
 
-  ///
+  /**
+ * @brief Placeholder for defining sensitive detectors in the collimation system.
+ *
+ * This method is currently unimplemented.
+ */
   void DefineSensitiveDetector() {}
 
 };

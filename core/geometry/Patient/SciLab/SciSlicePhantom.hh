@@ -30,7 +30,11 @@ class SciSlicePhantom : public VPatient {
     ///
     G4bool Update() override;
 
-    ///
+    /**
+ * @brief Placeholder for resetting the phantom state.
+ *
+ * Currently not implemented; outputs a message indicating the need for implementation.
+ */
     void Reset() override { G4cout << "Implement me." << G4endl; }
 
     ///
@@ -39,7 +43,11 @@ class SciSlicePhantom : public VPatient {
     ///
     void DefineSensitiveDetector() override;
 
-    ///
+    /**
+ * @brief Parses TOML configuration for the SciSlicePhantom.
+ *
+ * This method is overridden but intentionally left empty, as no TOML configuration is required for this class.
+ */
     void ParseTomlConfig() override {}
 
 };

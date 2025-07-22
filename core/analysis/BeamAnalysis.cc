@@ -17,7 +17,11 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs a BeamAnalysis instance, initializing particle code mappings and scoring plane positions.
+ *
+ * Sets up internal mappings between PDG codes and internal particle IDs for gamma, electron, positron, neutron, and proton. Retrieves user-defined scoring plane Z positions from the configuration service; logs an error if the configuration is unavailable.
+ */
 BeamAnalysis::BeamAnalysis(){
   m_particleCodesMapping[G4Gamma::Definition()->GetPDGEncoding()] = 1;
   m_particleCodesMapping[G4Electron::Definition()->GetPDGEncoding()] = 2;
@@ -37,14 +41,24 @@ BeamAnalysis::BeamAnalysis(){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the singleton instance of the BeamAnalysis class.
+ *
+ * Ensures only one instance of BeamAnalysis exists throughout the simulation.
+ *
+ * @return Pointer to the singleton BeamAnalysis instance.
+ */
 BeamAnalysis *BeamAnalysis::GetInstance() {
   static BeamAnalysis instance = BeamAnalysis();
   return &instance;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Initializes the ntuple structure for beam monitoring data at the start of a simulation run.
+ *
+ * Sets up the analysis manager and defines columns in the "BeamMonitoringEventTree" ntuple to record particle count, scoring plane ID, particle energy, momentum components, position, particle and track IDs, and primary particle kinematics for the run.
+ */
 void BeamAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
 
   auto analysisManager =  G4AnalysisManager::Instance();
@@ -74,14 +88,22 @@ void BeamAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This member is called at the end of every event from EventAction::EndOfEventAction
+/**
+ * @brief Handles end-of-event processing for beam monitoring data.
+ *
+ * Writes collected particle data for the current event to the ntuple and clears internal buffers to prepare for the next event.
+ */
 void BeamAnalysis::EndOfEventAction(const G4Event *evt){
   FillParticlesNTuple();
   ClearParticlesEventData();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Resets all stored particle data for the current event.
+ *
+ * Clears internal buffers holding particle properties and sets the particle count to zero, preparing for data collection in the next event.
+ */
 void BeamAnalysis::ClearParticlesEventData(){
   m_particleN.Put(0);
   m_monitoringPlaneId.Clear();
@@ -101,7 +123,14 @@ void BeamAnalysis::ClearParticlesEventData(){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Collects and stores particle data from a simulation step for beam monitoring.
+ *
+ * Extracts particle properties such as position, momentum, energy, particle type, and track ID from the provided Geant4 step, associates them with the specified scoring plane, and appends them to internal buffers for later analysis.
+ *
+ * @param step Pointer to the Geant4 step containing particle information.
+ * @param scoringPlaneId Identifier for the scoring plane where the particle is recorded.
+ */
 void BeamAnalysis::FillParticles(G4Step *step, G4int scoringPlaneId){
   if(step){
     auto pdgcode = step->GetTrack()->GetDefinition()->GetPDGEncoding();
@@ -141,7 +170,11 @@ void BeamAnalysis::FillParticles(G4Step *step, G4int scoringPlaneId){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Writes the current event's particle count to the ntuple and adds a new row.
+ *
+ * This method records the number of particles collected during the current event into the first column of the beam monitoring ntuple and finalizes the row for storage.
+ */
 void BeamAnalysis::FillParticlesNTuple() {
   auto analysisManager = G4AnalysisManager::Instance();
   auto ntupleId = m_ntupleId.Get();

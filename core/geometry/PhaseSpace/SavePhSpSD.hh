@@ -33,7 +33,12 @@ class SavePhSpSD : public G4VSensitiveDetector {
   public:
   SavePhSpSD(std::vector<G4double> phspUsr, std::vector<G4double> phspHead, G4int id_);
 
-  ~SavePhSpSD() = default;
+  /**
+ * @brief Destroys the SavePhSpSD instance.
+ *
+ * Cleans up resources used by the sensitive detector. No custom destruction logic is implemented.
+ */
+~SavePhSpSD() = default;
 
   G4bool ProcessHits(G4Step *aStep, G4TouchableHistory *ROHist);
 

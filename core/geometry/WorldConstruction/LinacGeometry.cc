@@ -15,21 +15,35 @@ namespace {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs a LinacGeometry instance and initializes its configuration.
+ *
+ * Initializes the LinacGeometry object by setting up default configuration parameters.
+ */
 LinacGeometry::LinacGeometry() 
 : Configurable("LinacGeometry"), IPhysicalVolume("LinacGeometry") {
   Configure();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the singleton instance of the LinacGeometry class.
+ *
+ * Ensures that only one instance of LinacGeometry exists throughout the application.
+ *
+ * @return Pointer to the global LinacGeometry instance.
+ */
 LinacGeometry *LinacGeometry::GetInstance() {
   static LinacGeometry instance;
   return &instance;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Sets up the default configuration parameters for the LinacGeometry.
+ *
+ * Defines configuration units for the linac label, envelope box size, and source-to-isocentre distance (SID), then applies and prints the default configuration values.
+ */
 void LinacGeometry::Configure() {
   G4cout << "\n\n[INFO]::  Default configuration of the " << thisConfig()->GetName() << G4endl;
 
@@ -43,7 +57,13 @@ void LinacGeometry::Configure() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Sets the default configuration value for a specified unit.
+ *
+ * Assigns a default value to the given configuration unit, such as the label, envelope box size, or source-to-isocentre distance, if it matches a recognized unit name.
+ *
+ * @param unit The name of the configuration unit to set a default value for.
+ */
 void LinacGeometry::DefaultConfig(const std::string &unit) {
 
   // Volume name
@@ -58,7 +78,13 @@ void LinacGeometry::DefaultConfig(const std::string &unit) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Selects and instantiates the appropriate accelerator head model for the linac geometry.
+ *
+ * Determines the head model type from the geometry service configuration, creates the corresponding head instance, and stores it internally. Returns true if a head accelerator instance was successfully created.
+ *
+ * @return true if a head accelerator instance exists after selection; false otherwise.
+ */
 bool LinacGeometry::design() {
   auto geoSvc = Service<GeoSvc>();
   G4cout << "I'm building " << geoSvc->thisConfig()->GetValue<G4String>("HeadModel") << "  geometry..." << G4endl;
@@ -74,7 +100,11 @@ bool LinacGeometry::design() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Destroys the linac gantry geometry and associated accelerator head volumes.
+ *
+ * Releases and deletes the current physical volume and, if present, destroys the accelerator head instance and resets its pointer.
+ */
 void LinacGeometry::Destroy() {
   G4cout << "[INFO]:: \t\tDestroing the Gantry volumes... " << G4endl;
   auto headPV = GetPhysicalVolume();
@@ -89,7 +119,11 @@ void LinacGeometry::Destroy() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Updates the accelerator head geometry if it exists.
+ *
+ * @return `true` if the update succeeds or no head instance is present; `false` if the head instance update fails.
+ */
 G4bool LinacGeometry::Update() {
   if (m_headInstance) {
     if (!m_headInstance->Update()) return false;
@@ -98,7 +132,13 @@ G4bool LinacGeometry::Update() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs the linac world volume and places the accelerator head within the simulation.
+ *
+ * Creates the accelerator world as a box with configurable size and material, places it relative to the parent physical volume, and delegates construction of the accelerator head geometry to the selected head instance.
+ *
+ * @param parentPV The parent physical volume to which the linac world volume is attached.
+ */
 void LinacGeometry::Construct(G4VPhysicalVolume *parentPV) {
 
   // a call to select the right accelerator
@@ -119,24 +159,42 @@ void LinacGeometry::Construct(G4VPhysicalVolume *parentPV) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Outputs the current accelerator rotation angle in degrees.
+ *
+ * Retrieves the rotation angle around the X-axis from the world construction configuration and prints it to the console.
+ */
 void LinacGeometry::WriteInfo() {
   G4double rotationX = configSvc()->GetValue<G4double>("WorldConstruction", "rotationX");
   G4cout << "Accelerator angle: " << rotationX / deg << " [deg]" << G4endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Resets the accelerator head geometry to its initial state.
+ *
+ * If an accelerator head instance exists, calls its reset method to restore default configuration or state.
+ */
 void LinacGeometry::ResetHead() {
   if (m_headInstance) m_headInstance->Reset();
 }
 
 
 
+/**
+ * @brief Sets the isocentre distance for the linac geometry.
+ *
+ * @param distance_cm The source-to-isocentre distance in centimeters.
+ */
 void LinacGeometry::SetIsocentreDistance(double distance_cm) {
   s_isocentre_distance_cm = distance_cm;
 }
 
+/**
+ * @brief Returns the current isocentre distance in centimeters.
+ *
+ * @return The isocentre distance value in centimeters.
+ */
 double LinacGeometry::GetIsocentreDistance() {
   return s_isocentre_distance_cm;
 }
@@ -179,7 +237,11 @@ double LinacGeometry::GetIsocentreDistance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// NOTE: This method is called from WorldConstruction::ConstructSDandField
-///       which is being called in workers in MT mode
+/**
+ * @brief Defines sensitive detectors for the linac head geometry in a thread-safe manner.
+ *
+ * Acquires a mutex lock to ensure thread safety when defining sensitive detectors, particularly in multi-threaded execution. Delegates the sensitive detector definition to the current accelerator head instance if it exists.
+ */
 void LinacGeometry::DefineSensitiveDetector() {
   G4AutoLock lock(&headConstructionMutex);
 

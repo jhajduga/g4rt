@@ -3,16 +3,37 @@
 #include "G4Box.hh"
 #include "Types.hh"
 
+/**
+ * @brief Constructs a BWorldConstruction object with default initialization.
+ */
 BWorldConstruction::BWorldConstruction(){}
 
-    ///
+    /**
+ * @brief Destroys the BWorldConstruction object.
+ *
+ * Default destructor with no custom cleanup logic.
+ */
 BWorldConstruction::~BWorldConstruction(){}
 
+/**
+ * @brief Returns the singleton instance of BWorldConstruction.
+ *
+ * Ensures only one instance of BWorldConstruction exists, managed externally by G4GeometryManager.
+ *
+ * @return Pointer to the singleton BWorldConstruction instance.
+ */
 WorldConstruction* BWorldConstruction::GetInstance() {
     static auto instance = new BWorldConstruction(); // It's being released by G4GeometryManager
     return instance;
 }
 
+/**
+ * @brief Constructs the simulation world geometry, including world, bunker, and environment volumes.
+ *
+ * Creates the main world volume at the configured isocenter, adds a concrete bunker wall and an inner bunker environment, and places them hierarchically. Also constructs world modules and tray detectors within the bunker environment.
+ *
+ * @return true Always returns true upon successful construction.
+ */
 bool BWorldConstruction::Create() {
     
      // create the world box
@@ -40,6 +61,13 @@ bool BWorldConstruction::Create() {
     return true;
 }
 
+/**
+ * @brief Creates and places nine tray detector objects within the specified parent volume.
+ *
+ * Each tray is uniquely named and added to the internal tray collection for later use.
+ *
+ * @param parentPV The parent physical volume in which the tray detectors are placed.
+ */
 void BWorldConstruction::ConstructTrayDetectors(G4VPhysicalVolume *parentPV) {
     
     m_trays.push_back(new D3DTray(parentPV, "Tray001")); 
@@ -55,6 +83,11 @@ void BWorldConstruction::ConstructTrayDetectors(G4VPhysicalVolume *parentPV) {
     // m_trays.back()->Rotate(rot);
 }
 
+/**
+ * @brief Defines sensitive detectors and fields for the world and all tray detectors.
+ *
+ * Calls the base class implementation to set up sensitive detectors and fields, then defines sensitive detectors for each tray in the simulation.
+ */
 void BWorldConstruction::ConstructSDandField() {
     WorldConstruction::ConstructSDandField();
     for(auto& tray : m_trays){
@@ -62,6 +95,11 @@ void BWorldConstruction::ConstructSDandField() {
     }
 }
 
+/**
+ * @brief Retrieves pointers to custom detectors associated with each tray.
+ *
+ * @return std::vector<VPatient*> Vector of pointers to the detectors from all tray objects.
+ */
 std::vector<VPatient*> BWorldConstruction::GetCustomDetectors() const {
     std::vector<VPatient*> customDetectors;
     for(const auto& tray : m_trays){

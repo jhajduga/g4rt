@@ -25,11 +25,22 @@ private:
     ///
     ~BWorldConstruction();
 
-    /// Delete the copy and move constructors
+    /**
+ * @brief Deleted copy constructor to prevent copying of the singleton instance.
+ */
     BWorldConstruction(const BWorldConstruction &) = delete;
-    BWorldConstruction &operator=(const BWorldConstruction &) = delete;
-    BWorldConstruction(BWorldConstruction &&) = delete;
-    BWorldConstruction &operator=(BWorldConstruction &&) = delete;
+    /**
+ * @brief Deleted copy assignment operator to prevent copying of BWorldConstruction instances.
+ */
+BWorldConstruction &operator=(const BWorldConstruction &) = delete;
+    /**
+ * @brief Move constructor is deleted to prevent moving of BWorldConstruction instances.
+ */
+BWorldConstruction(BWorldConstruction &&) = delete;
+    /**
+ * @brief Deleted move assignment operator to prevent moving of BWorldConstruction instances.
+ */
+BWorldConstruction &operator=(BWorldConstruction &&) = delete;
 
     ///
     std::vector<D3DTray*> m_trays;

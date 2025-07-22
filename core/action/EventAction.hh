@@ -18,7 +18,10 @@ class EventAction : public G4UserEventAction {
   public:
   EventAction();
 
-  ~EventAction() = default;
+  /**
+ * @brief Destroys the EventAction instance.
+ */
+~EventAction() = default;
 
   public:
   void BeginOfEventAction(const G4Event *);

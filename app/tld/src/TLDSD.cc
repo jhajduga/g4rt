@@ -7,7 +7,15 @@
 #include "PrimaryParticleInfo.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs a TLDSD sensitive detector with a specified name, center position, and spatial identifiers.
+ *
+ * @param sdName Name of the sensitive detector.
+ * @param centre Center position of the detector in 3D space.
+ * @param idX X-coordinate identifier for the detector.
+ * @param idY Y-coordinate identifier for the detector.
+ * @param idZ Z-coordinate identifier for the detector.
+ */
 TLDSD::TLDSD(const G4String& sdName, const G4ThreeVector& centre, G4int idX, G4int idY, G4int idZ)
 :VPatientSD(sdName,centre){
   m_id_x = idX;
@@ -16,7 +24,14 @@ TLDSD::TLDSD(const G4String& sdName, const G4ThreeVector& centre, G4int idX, G4i
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This method is being called for each G4Step in sensitive volume
+/**
+ * @brief Processes a Geant4 step within the sensitive detector volume.
+ *
+ * For each step occurring in the sensitive volume, updates track information if configured, and processes relevant hit collections associated with this detector instance.
+ *
+ * @param aStep The current Geant4 step to process.
+ * @return G4bool Always returns true to indicate successful processing.
+ */
 G4bool TLDSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   // The TouchableHistory is used to obtain the physical volume of the hit
   // i.e. get volume where G4Step is remember 

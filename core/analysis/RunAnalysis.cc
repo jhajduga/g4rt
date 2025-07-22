@@ -16,6 +16,11 @@
 #endif
 #include "PatientGeometry.hh"
 
+/**
+ * @brief Initializes analysis modules for the simulation run.
+ *
+ * Ensures singleton instances of CSV and NTuple analysis modules are created if they have not been initialized. This setup is performed only once per process.
+ */
 RunAnalysis::RunAnalysis(){
   if(!m_is_initialized){
     if(!m_csv_run_analysis) // TODO: && RUN_CSV_ANALYSIS
@@ -29,7 +34,13 @@ RunAnalysis::RunAnalysis(){
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the singleton instance of the RunAnalysis class.
+ *
+ * Ensures that only one instance of RunAnalysis exists throughout the application's lifetime.
+ *
+ * @return Pointer to the global RunAnalysis instance.
+ */
 RunAnalysis *RunAnalysis::GetInstance() {
     static RunAnalysis instance = RunAnalysis();
     return &instance;
@@ -37,7 +48,14 @@ RunAnalysis *RunAnalysis::GetInstance() {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Prepares analysis at the start of a Geant4 simulation run.
+ *
+ * Retrieves the current control point and logs the thread type (master or worker) at the beginning of the run. Scoring collection initialization is handled elsewhere.
+ *
+ * @param runPtr Pointer to the current Geant4 run.
+ * @param isMaster Indicates if the current thread is the master thread.
+ */
 void RunAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
     m_current_cp = Service<RunSvc>()->CurrentControlPoint();
     std::string worker = G4Threading::IsWorkerThread() ? "*WORKER*" : " *MASTER* ";
@@ -46,14 +64,26 @@ void RunAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This member is called at the end of every event from EventAction::EndOfEventAction
+/**
+ * @brief Processes event data at the end of each simulation event.
+ *
+ * Retrieves the hit collections from the given event and passes them to the current control point for event-specific analysis and data accumulation.
+ *
+ * @param evt Pointer to the Geant4 event whose data will be processed.
+ */
 void RunAnalysis::EndOfEventAction(const G4Event *evt){
     auto hCofThisEvent = evt->GetHCofThisEvent();
     m_current_cp->FillEventCollections(hCofThisEvent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Finalizes analysis and writes output data at the end of a Geant4 run.
+ *
+ * Triggers end-of-run processing for the current control point, then writes dose and field mask data to CSV and/or ROOT files depending on the initialized analysis modules and configuration settings. Optionally exports dose data in CT format if enabled.
+ *
+ * @param runPtr Pointer to the completed Geant4 run.
+ */
 void RunAnalysis::EndOfRun(const G4Run* runPtr){
     ANA_INFO("RunAnalysis::EndOfRun:: CtrlPoint-{} / G4Run-{}", m_current_cp->GetId(), runPtr->GetRunID());
     // Note: Multithreading merging is being performed before...

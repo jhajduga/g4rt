@@ -5,20 +5,32 @@
 #include "WorldConstruction.hh"
 #include "G4SDManager.hh"
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs a BeamMonitoring instance and initializes its configuration.
+ *
+ * Calls the Configure() method to set up default configuration parameters for beam monitoring volumes.
+ */
 BeamMonitoring::BeamMonitoring(): IPhysicalVolume("BeamMonitoring"), Configurable("BeamMonitoring"){
   Configure();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Destructor for the BeamMonitoring class.
+ *
+ * Unregisters the configuration for this instance and releases resources associated with scoring plane physical volumes.
+ */
 BeamMonitoring::~BeamMonitoring() {
   configSvc()->Unregister(thisConfig()->GetName());
   Destroy();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Sets up configuration units and initializes default configuration for beam monitoring.
+ *
+ * Defines the "ScoringZPositions" configuration unit and applies default configuration values for all parameters. Prints the current configuration state.
+ */
 void BeamMonitoring::Configure() {
   // G4cout << "\n\n[INFO]::  Configuring the " << thisConfig()->GetName() << G4endl;
   
@@ -28,7 +40,13 @@ void BeamMonitoring::Configure() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Sets default configuration values for the specified unit.
+ *
+ * For the "Label" unit, assigns the default label "Beam monitoring". For the "ScoringZPositions" unit, initializes a vector of doubles with default Z positions at -30 cm and -15 cm.
+ *
+ * @param unit The configuration unit to set default values for.
+ */
 void BeamMonitoring::DefaultConfig(const std::string &unit) {
 
   // Volume name
@@ -45,13 +63,21 @@ void BeamMonitoring::DefaultConfig(const std::string &unit) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Placeholder for writing beam monitoring information.
+ *
+ * Intended for future implementation to output or log relevant information about the beam monitoring setup.
+ */
 void BeamMonitoring::WriteInfo() {
   /// implement me.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Destroys all scoring plane physical volumes managed by BeamMonitoring.
+ *
+ * Deletes each scoring plane physical volume and resets its pointer to nullptr to release resources.
+ */
 void BeamMonitoring::Destroy() {
   G4cout << "[INFO]:: \tDestroing the BeamMonitoring volume(s). " << G4endl;
   for(auto& plane : m_scoringPlanesPV){
@@ -61,7 +87,13 @@ void BeamMonitoring::Destroy() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs beam monitoring scoring planes within the parent world volume.
+ *
+ * Creates thin scoring plane volumes at configured Z positions, including an additional plane just above the patient environment. Each scoring plane is placed as a physical volume within the parent world and stored for later management. If the scoring positions configuration is unavailable, logs an error.
+ *
+ * @param parentWorld Pointer to the parent world physical volume where scoring planes will be placed.
+ */
 void BeamMonitoring::Construct(G4VPhysicalVolume *parentWorld) {
   G4cout << "[INFO]:: BeamMonitoring construction... " << G4endl;
   const VecG4doubleWPtr& scoringZPositionWPtr = thisConfig()->GetValue<VecG4doubleSPtr>("ScoringZPositions");
@@ -93,7 +125,13 @@ void BeamMonitoring::Construct(G4VPhysicalVolume *parentWorld) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Handles configuration updates for the BeamMonitoring instance.
+ *
+ * Checks if the configuration has been updated and logs updated parameters. Always returns true.
+ *
+ * @return G4bool Always returns true.
+ */
 G4bool BeamMonitoring::Update() {
 
   if (thisConfig()->GetStatus()) {
@@ -108,7 +146,11 @@ G4bool BeamMonitoring::Update() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Creates and registers the beam monitoring sensitive detector, assigning it to the scoring plane logical volume.
+ *
+ * If the sensitive detector does not already exist, it is instantiated and registered with the Geant4 sensitive detector manager. The detector is then assigned to the logical volume named "BeamScoringPlaneLV" in the world geometry.
+ */
 void BeamMonitoring::DefineSensitiveDetector(){
 
   if(m_beamMonitoringSD.Get()==0){

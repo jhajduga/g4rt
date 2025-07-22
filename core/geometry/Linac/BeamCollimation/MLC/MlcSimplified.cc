@@ -5,11 +5,21 @@
 #include "MlcSimplified.hh"
 #include "ControlPoint.hh"
 
+/**
+ * @brief Constructs a simplified multi-leaf collimator (MLC) model.
+ *
+ * Initializes the base VMlc class with the name "Simplified".
+ */
 MlcSimplified::MlcSimplified() : VMlc("Simplified"){
     //m_control_point = Service<RunSvc>()->CurrentControlPoint();
     //m_fieldShape = m_control_point->GetFieldType();
 };
 
+/**
+ * @brief Configures the simplified MLC geometry for a given control point.
+ *
+ * Initializes the MLC's internal state based on the provided control point, including field shape, field size parameters, and leaf positions. For rectangular and ellipsoidal fields, sets the field dimensions. For RTPlan or CustomPlan shapes, constructs the polygonal MLC aperture from leaf positions and transforms coordinates to the isocentre plane if the plan is a DICOM RT Plan. Marks the MLC as initialized for subsequent field membership queries.
+ */
 void MlcSimplified::SetRunConfiguration(const ControlPoint* control_point){
     INFO_GEO("Initializing MLC Simplified for position {} and control point {}", m_isocentre, control_point->Id());
     // Update the control point
@@ -63,6 +73,15 @@ void MlcSimplified::SetRunConfiguration(const ControlPoint* control_point){
     m_isInitialized = true;
 }
 
+/**
+ * @brief Determines whether a 3D position lies within the MLC-defined radiation field.
+ *
+ * Checks if the given position is inside the current MLC field shape, optionally transforming the position to the isocentre plane. Supports rectangular, ellipsoidal, and polygonal (RTPlan/CustomPlan) field shapes. Returns false if the MLC is not initialized for the current control point or if the position is outside the field.
+ *
+ * @param position The 3D position to test.
+ * @param transformToIsocentre If true, transforms the position to the isocentre plane before testing.
+ * @return true if the position is within the MLC field; false otherwise.
+ */
 bool MlcSimplified::IsInField(const G4ThreeVector& position, bool transformToIsocentre) {
     auto maskLevelPosition = position;
     if((maskLevelPosition.z()!=m_isocentre.z()) && !transformToIsocentre){
@@ -114,6 +133,14 @@ bool MlcSimplified::IsInField(const G4ThreeVector& position, bool transformToIso
 }
 
 
+/**
+ * @brief Determines if the given primary vertex is within the MLC-defined radiation field.
+ *
+ * Uses the vertex's position in the mask plane to evaluate field inclusion based on the current MLC configuration.
+ *
+ * @param vrtx Pointer to the primary vertex to test.
+ * @return true if the vertex is inside the field; false otherwise.
+ */
 bool MlcSimplified::IsInField(G4PrimaryVertex* vrtx) {
     return IsInField(VMlc::GetPositionInMaskPlane(vrtx)); 
 }
