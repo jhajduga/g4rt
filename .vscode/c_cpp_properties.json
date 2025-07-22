@@ -14,34 +14,62 @@
             "intelliSenseMode": "gcc-x64",
             "configurationProvider": "ms-vscode.cmake-tools"
         },
+                {
+            "name": "linux-faculty-jakub",
+            "includePath": [
+                "/usr/local/include/*",
+                "~/miniforge3/envs/g4rt_devel/include/*",
+                "~/miniforge3/envs/g4rt_devel/include/Geant4/*",
+                "~/miniforge3/envs/g4rt_devel/include/python3.12/*",
+                "~/miniforge3/envs/g4rt_devel/include/spdlog/fmt/**",
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "compilerPath": "~/miniforge3/envs/g4rt_devel/bin/clang++",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64",
+            "configurationProvider": "ms-vscode.cmake-tools",
+            "mergeConfigurations": false,
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/**",
+                    "/usr/local/include/*",
+                    "~/miniforge3/envs/g4rt_devel/include/*",
+                    "~/miniforge3/envs/g4rt_devel/include/Geant4/*",
+                    "~/miniforge3/envs/g4rt_devel/include/python3.12/*",
+                    "~/miniforge3/envs/g4rt_devel/include/spdlog/fmt/*",
+                    "${workspaceFolder}/*"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            }
+        },
         {
             "name": "alma-jakub",
             "includePath": [
                 "~/work/dose3d/g4rt/*",
                 "/usr/local/include/*",
-                "~/miniforge3/envs/G4ImpressU/include/*",
-                "~/miniforge3/envs/G4ImpressU/include/Geant4/*",
-                "~/miniforge3/envs/G4ImpressU/include/python3.11/*",
-                "~/miniforge3/envs/G4ImpressU/include/spdlog/fmt/**",
+                "~/miniforge3/envs/geant4/include/*",
+                "~/miniforge3/envs/geant4/include/Geant4/*",
+                "~/miniforge3/envs/geant4/include/python3.10/*",
+                "~/miniforge3/envs/geant4/include/spdlog/fmt/**",
                 "${workspaceFolder}/**"
             ],
             "defines": [],
-            "compilerPath": "~/miniforge3/envs/G4ImpressU/bin/g++",
+            "compilerPath": "~/miniforge3/envs/geant4/bin/g++",
             "cStandard": "c11",
             "cppStandard": "c++17",
             "intelliSenseMode": "gcc-x64",
             "configurationProvider": "ms-vscode.cmake-tools",
-            "compilerPathInCppPropertiesJson": "~/miniforge3/envs/G4ImpressU/bin/g++",
-            "configurationProviderInCppPropertiesJson": "ms-vscode.cmake-tools",
             "mergeConfigurations": false,
             "browse": {
                 "path": [
                     "~/work/dose3d/g4rt/*",
                     "/usr/local/include/*",
-                    "~/miniforge3/envs/G4ImpressU/include/*",
-                    "~/miniforge3/envs/G4ImpressU/include/Geant4/*",
-                    "~/miniforge3/envs/G4ImpressU/include/python3.11/*",
-                    "~/miniforge3/envs/G4ImpressU/include/spdlog/fmt/*",
+                    "~/miniforge3/envs/geant4/include/*",
+                    "~/miniforge3/envs/geant4/include/Geant4/*",
+                    "~/miniforge3/envs/geant4/include/python3.10/*",
+                    "~/miniforge3/envs/geant4/include/spdlog/fmt/*",
                     "${workspaceFolder}/*"
                 ],
                 "limitSymbolsToIncludedHeaders": true
@@ -52,7 +80,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/opt/geant4/include/**",
-                "/home/geant4/miniconda3/envs/g4rt/include/**"
+                "/home/geant4/miniconda3/envs/g4rt_devel/include/**"
             ],
             "defines": [],
             "compilerPath": "/home/geant4/miniconda3/envs/dose3d/bin/g++",
