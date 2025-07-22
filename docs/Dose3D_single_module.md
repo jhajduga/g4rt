@@ -1,1 +1,0 @@
-# Dose3D default single module (4x4x4 cells)
