@@ -16,7 +16,11 @@ class TLDSD : public VPatientSD {
     ///
     TLDSD(const G4String& sdName, const G4ThreeVector& centre, G4int idX, G4int idY, G4int idZ);
 
-    ///
+    /**
+ * @brief Destroys the TLDSD object.
+ *
+ * Default destructor with no custom cleanup logic.
+ */
     ~TLDSD() = default;
 
     ///

@@ -6,11 +6,24 @@
 #include "PatientTrackInfo.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs a SciSlicePhantomSD sensitive detector with the specified name.
+ *
+ * Initializes the sensitive detector by passing the given name to the base class VPatientSD.
+ *
+ * @param sdName Name of the sensitive detector.
+ */
 SciSlicePhantomSD::SciSlicePhantomSD(const G4String& sdName):VPatientSD(sdName){}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This method is being called for each G4Step in sensitive volume
+/**
+ * @brief Processes a Geant4 step within the sensitive detector volume.
+ *
+ * Associates step information with the current track's user data, processes all relevant hit collections for the step, and optionally records step analysis data if enabled in the configuration.
+ *
+ * @param aStep The current Geant4 step occurring in the sensitive detector.
+ * @return G4bool Always returns true to indicate the hit was processed.
+ */
 G4bool SciSlicePhantomSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   
   // The TouchableHistory is used to obtain the physical volume of the hit

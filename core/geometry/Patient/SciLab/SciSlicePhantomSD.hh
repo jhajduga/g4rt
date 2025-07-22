@@ -16,7 +16,9 @@ class SciSlicePhantomSD : public VPatientSD {
     ///
     SciSlicePhantomSD(const G4String& sdName);
 
-    ///
+    /**
+ * @brief Destroys the SciSlicePhantomSD object.
+ */
     ~SciSlicePhantomSD() = default;
 
     ///

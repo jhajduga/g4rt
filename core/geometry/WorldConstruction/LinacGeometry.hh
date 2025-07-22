@@ -48,16 +48,32 @@ class LinacGeometry : public Configurable, public IPhysicalVolume {
   private:
   LinacGeometry();
 
-  ~LinacGeometry() = default;
+  /**
+ * @brief Destroys the LinacGeometry instance.
+ *
+ * Cleans up resources associated with the LinacGeometry object upon destruction.
+ */
+~LinacGeometry() = default;
 
-  // Delete the copy and move constructors
+  /**
+ * @brief Deleted copy constructor to prevent copying of LinacGeometry instances.
+ */
   LinacGeometry(const LinacGeometry &) = delete;
 
-  LinacGeometry &operator=(const LinacGeometry &) = delete;
+  /**
+ * @brief Deleted copy assignment operator to prevent copying of LinacGeometry instances.
+ */
+LinacGeometry &operator=(const LinacGeometry &) = delete;
 
-  LinacGeometry(LinacGeometry &&) = delete;
+  /**
+ * @brief Move constructor is deleted to prevent moving of the singleton instance.
+ */
+LinacGeometry(LinacGeometry &&) = delete;
 
-  LinacGeometry &operator=(LinacGeometry &&) = delete;
+  /**
+ * @brief Deleted move assignment operator to prevent moving of LinacGeometry instances.
+ */
+LinacGeometry &operator=(LinacGeometry &&) = delete;
 
   bool design();
 

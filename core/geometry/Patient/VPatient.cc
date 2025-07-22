@@ -9,7 +9,11 @@
 #include "Services.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Assigns a sensitive detector to a logical volume.
+ *
+ * Associates the provided sensitive detector with the specified logical volume name, registers it with the Geant4 sensitive detector manager, and sets it in the world geometry.
+ */
 void VPatient::SetSensitiveDetector(const G4String& logicalVName, VPatientSD* sensitiveDetectorPtr){
   if(m_patientSD.Get()==0) // NOTE: this should be checked already from the caller!
     m_patientSD.Put(sensitiveDetectorPtr);
@@ -19,7 +23,12 @@ void VPatient::SetSensitiveDetector(const G4String& logicalVName, VPatientSD* se
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the stored volume of the patient.
+ *
+ * If the volume is unset or invalid (less than -1), logs a fatal error and throws a Geant4 exception.
+ * @return G4double The volume value.
+ */
 G4double VPatient::GetVolume() const {
   if(m_volume<-1){
     G4String msg = "Volume of the "+GetName()+" no set or set with value < 0.";

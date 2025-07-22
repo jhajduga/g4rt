@@ -33,14 +33,25 @@ class GeoSvc : public TomlConfigurable{
 
   std::string m_world_file_name = "world_geometry";
 
-  // Delete the copy and move constructors
+  /**
+ * @brief Deleted copy constructor to enforce singleton behavior.
+ */
   GeoSvc(const GeoSvc &) = delete;
 
-  GeoSvc &operator=(const GeoSvc &) = delete;
+  /**
+ * @brief Deleted copy assignment operator to enforce singleton behavior.
+ */
+GeoSvc &operator=(const GeoSvc &) = delete;
 
-  GeoSvc(GeoSvc &&) = delete;
+  /**
+ * @brief Move constructor is deleted to enforce singleton behavior.
+ */
+GeoSvc(GeoSvc &&) = delete;
 
-  GeoSvc &operator=(GeoSvc &&) = delete;
+  /**
+ * @brief Move assignment operator is deleted to enforce singleton behavior.
+ */
+GeoSvc &operator=(GeoSvc &&) = delete;
 
   ///\brief Main/top volume world pointer.
   WorldConstruction *my_world = nullptr;
@@ -82,14 +93,33 @@ class GeoSvc : public TomlConfigurable{
   ///\brief Build the actual main/top volume in the Geant4 framework.
   WorldConstruction *Build();
 
-  ///\brief Get the main/top volume world pointer.
+  /**
+ * @brief Returns a pointer to the main/top volume world geometry.
+ *
+ * @return Pointer to the current WorldConstruction instance representing the simulation's world volume.
+ */
   WorldConstruction *World() const { return my_world; }
-  WorldConstruction *World() { return my_world ? my_world : Build(); }
+  /**
+ * @brief Returns a pointer to the main world geometry, building it if necessary.
+ *
+ * If the world geometry has not been constructed yet, this method triggers its construction before returning the pointer.
+ *
+ * @return Pointer to the main world geometry object.
+ */
+WorldConstruction *World() { return my_world ? my_world : Build(); }
   
-  /// 
+  /**
+ * @brief Sets the main world geometry pointer.
+ *
+ * Assigns the provided WorldConstruction instance as the current main/top volume world.
+ */
   void SetWorld(WorldConstruction *world) { my_world = world; }
 
-  ///
+  /**
+ * @brief Registers a patient geometry object with the geometry service.
+ *
+ * Associates the provided patient geometry with the service for use in simulation.
+ */
   void RegisterPatient(VPatient* patient) { m_patient = patient; }
   
   ///
@@ -143,7 +173,11 @@ class GeoSvc : public TomlConfigurable{
   ///
   void WriteScoringComponentsPositioningToCsv() const;
   
-  ///
+  /**
+ * @brief Overrides the TOML configuration parsing method with no implementation.
+ *
+ * This method is intentionally left empty as TOML configuration parsing is not required for this service.
+ */
   void ParseTomlConfig() override {}
 
 };

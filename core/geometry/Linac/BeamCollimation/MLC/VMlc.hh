@@ -23,9 +23,19 @@ class VMlc: public RunComponet {
         bool m_isInitialized = false;
         static G4ThreeVector m_isocentre;
     public:
-        VMlc() = delete;
+        /**
+ * @brief Deleted default constructor to enforce construction with a name.
+ *
+ * Prevents instantiation of VMlc without specifying a name parameter.
+ */
+VMlc() = delete;
         explicit VMlc(const std::string& name);
-        virtual ~VMlc() = default;
+        /**
+ * @brief Virtual destructor for the VMlc class.
+ *
+ * Ensures proper cleanup of resources in derived multi-leaf collimator classes.
+ */
+virtual ~VMlc() = default;
         virtual bool IsInField(const G4ThreeVector& position, bool transformToIsocentre=false) = 0;
         virtual bool IsInField(G4PrimaryVertex* vrtx) = 0;
         std::vector<G4ThreeVector> GetMlcPositioning(const std::string& side) const;

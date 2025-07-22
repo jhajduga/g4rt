@@ -22,10 +22,18 @@ class PatientTrackInfo : public G4VUserTrackInformation {
     G4double              m_trackLength         = 0.;
 
   public:
-    ///
+    /**
+ * @brief Constructs a PatientTrackInfo object with default values.
+ *
+ * Initializes tracking status and track length for a new particle track within the patient volume.
+ */
     PatientTrackInfo() = default;
 
-    ///
+    /**
+ * @brief Destroys the PatientTrackInfo object.
+ *
+ * Ensures proper cleanup of resources when a PatientTrackInfo instance is destroyed.
+ */
     virtual ~PatientTrackInfo() = default;
     
     ///
@@ -43,7 +51,11 @@ class PatientTrackInfo : public G4VUserTrackInformation {
     ///
     void FillInfo(G4Step* aStep);
 
-    ///
+    /**
+ * @brief Returns the track length within the patient volume.
+ *
+ * @return G4double The length of the track inside the patient volume.
+ */
     G4double GetTrackLength() const { return m_trackLength; }
 };
 
@@ -52,7 +64,12 @@ class PatientTrackInfo : public G4VUserTrackInformation {
 extern G4ThreadLocal G4Allocator<PatientTrackInfo>* aPatientTrackInfoAllocator;
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Allocates memory for a PatientTrackInfo object using a thread-local allocator.
+ *
+ * Ensures the thread-local G4Allocator is initialized before allocating memory for a single PatientTrackInfo instance.
+ * @return Pointer to the allocated memory for a PatientTrackInfo object.
+ */
 inline void* PatientTrackInfo::operator new(size_t){
   if(!aPatientTrackInfoAllocator)
     aPatientTrackInfoAllocator = new G4Allocator<PatientTrackInfo>;
@@ -60,7 +77,11 @@ inline void* PatientTrackInfo::operator new(size_t){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Deallocates memory for a PatientTrackInfo object using the thread-local allocator.
+ *
+ * Frees the memory previously allocated for a PatientTrackInfo instance via the custom allocator.
+ */
 inline void PatientTrackInfo::operator delete(void *aTrackInfo){
   aPatientTrackInfoAllocator->FreeSingle((PatientTrackInfo*)aTrackInfo);
 }

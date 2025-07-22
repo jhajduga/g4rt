@@ -16,7 +16,11 @@ class D3DCellSD : public VPatientSD {
     ///
     D3DCellSD(const G4String& sdName, const G4ThreeVector& centre, G4int idX, G4int idY, G4int idZ);
 
-    ///
+    /**
+ * @brief Destroys the D3DCellSD object.
+ *
+ * Default destructor; no custom cleanup is performed.
+ */
     ~D3DCellSD() = default;
 
     ///

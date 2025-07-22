@@ -7,11 +7,21 @@
 
 
 /////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs a SteppingAction object with a reference to the given EventAction.
+ *
+ * @param eventAct Pointer to the EventAction instance associated with this stepping action.
+ */
 SteppingAction::SteppingAction(EventAction* eventAct):G4UserSteppingAction(), m_EventAction(eventAct){}
 
 /////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Called at each simulation step to process step-specific actions.
+ *
+ * This method is invoked by the simulation framework for every step taken by a particle. Currently, it does not perform any operations.
+ *
+ * @param aStep Pointer to the current simulation step.
+ */
 void SteppingAction::UserSteppingAction(const G4Step* aStep) {
   // ?
   // G4int stepNb = aStep->GetTrack()->GetCurrentStepNumber();

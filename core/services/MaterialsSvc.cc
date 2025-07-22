@@ -8,26 +8,44 @@
 #include "G4NistManager.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs the MaterialsSvc service and initializes material configurations.
+ *
+ * Initializes the MaterialsSvc singleton by setting its name and configuring all predefined material units for use in the simulation environment.
+ */
 MaterialsSvc::MaterialsSvc() : Configurable("MaterialsSvc") {
   Configure();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Destructor for the MaterialsSvc class.
+ *
+ * Unregisters the service configuration from the configuration service upon destruction.
+ */
 MaterialsSvc::~MaterialsSvc() {
   configSvc()->Unregister(thisConfig()->GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the singleton instance of the MaterialsSvc service.
+ *
+ * Ensures that only one instance of MaterialsSvc exists throughout the application.
+ *
+ * @return Pointer to the singleton MaterialsSvc instance.
+ */
 MaterialsSvc *MaterialsSvc::GetInstance() {
   static MaterialsSvc instance;
   return &instance;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Registers all supported material units for the simulation environment.
+ *
+ * Defines a set of material units, including standard NIST materials, modified NIST materials, and custom materials, making them available for configuration and retrieval. After registering all units, applies default configurations for each material.
+ */
 void MaterialsSvc::Configure() {
   //G4cout << "[INFO]:: MaterialsSvc :: Service default configuration " << G4endl;
 
@@ -86,7 +104,13 @@ void MaterialsSvc::Configure() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Sets the default configuration for a specified material unit.
+ *
+ * Initializes and registers the physical properties and composition of the given material unit, using either the Geant4 NIST database or custom definitions. Supports standard, modified, and custom materials by name, including alloys, polymers, composites, and doped materials. The resulting material is stored as a shared pointer in the configuration under the unit's name.
+ *
+ * @param unit The name of the material unit to configure.
+ */
 void MaterialsSvc::DefaultConfig(const std::string &unit) {
 
   G4double d;

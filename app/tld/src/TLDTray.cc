@@ -1,11 +1,17 @@
-
 #include "TLDTray.hh"
 #include "Services.hh"
 #include "G4Box.hh"
 #include "VPatientSD.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs a TLDTray object, initializing configuration and geometry.
+ *
+ * Initializes the tray by loading configuration parameters, constructing the tray and its TLD detectors within the specified parent physical volume, and registering the tray with the geometry service.
+ *
+ * @param parentPV The parent Geant4 physical volume in which the tray is placed.
+ * @param name The name assigned to the tray instance.
+ */
 TLDTray::TLDTray(G4VPhysicalVolume *parentPV, const std::string& name)
 // :IPhysicalVolume(name), TomlConfigModule(name), m_tray_name(name) {
 :VPatient(name), m_tray_name(name) {
@@ -15,7 +21,13 @@ TLDTray::TLDTray(G4VPhysicalVolume *parentPV, const std::string& name)
 } 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs the TLD tray geometry and populates it with TLD detectors.
+ *
+ * Creates the tray's environment volume within the specified parent physical volume, applies configured rotation and position, and arranges TLD detectors in a grid pattern based on configuration parameters. Each TLD detector is initialized with its own center position, medium, geometry, and voxelization settings, and is constructed and registered for further use.
+ *
+ * @param parentPV The parent physical volume in which the tray environment is placed.
+ */
 void TLDTray::Construct(G4VPhysicalVolume *parentPV) {
     auto medium = Service<ConfigSvc>()->GetValue<G4MaterialSPtr>("MaterialsSvc", "Usr_G4AIR20C");
     
@@ -53,14 +65,22 @@ void TLDTray::Construct(G4VPhysicalVolume *parentPV) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Sets up sensitive detectors for all TLD detectors in the tray.
+ *
+ * Delegates the definition of sensitive detectors to each contained TLD detector.
+ */
 void TLDTray::DefineSensitiveDetector() {
     for (auto& tld : m_tld_detectors)
         tld->DefineSensitiveDetector();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Loads and applies configuration settings for the TLD tray.
+ *
+ * Sets default configuration values for rotation, world size, global center, and TLD medium, then overrides them with values from a TOML configuration file. Marks the configuration as initialized.
+ */
 void TLDTray::LoadConfiguration(){
 
     // Deafult configuration
@@ -78,7 +98,11 @@ void TLDTray::LoadConfiguration(){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Parses and applies TLD tray configuration from a TOML file.
+ *
+ * Reads configuration parameters such as global position, voxelization, world size, grid dimensions, rotation, TLD medium, and geometry file path from a TOML file. Updates the tray's internal configuration accordingly. Exits the program if the configuration file is missing.
+ */
 void TLDTray::ParseTomlConfig(){
     SetTomlConfigFile(); // it set the job main file for searching this configuration
     auto configFile = GetTomlConfigFile();
@@ -139,7 +163,15 @@ void TLDTray::ParseTomlConfig(){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Generates a map of hashed voxel or cell IDs to VoxelHit objects for scoring.
+ *
+ * For each TLD detector in the tray, initializes VoxelHit objects representing either individual voxels or entire detector cells, depending on the specified scoring type. Each VoxelHit contains spatial, identification, and material properties required for scoring.
+ *
+ * @param scoring_name Name of the scoring volume or collection.
+ * @param type Specifies whether to generate hits for voxels or entire cells.
+ * @return Map from hashed IDs to corresponding VoxelHit objects, covering all relevant voxels or cells in the tray.
+ */
 std::map<std::size_t, VoxelHit> TLDTray::GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const {
     G4cout << "Getting ScoringHashedMap for " << scoring_name << "/" << Scoring::to_string(type) << G4endl;
     std::map<std::size_t, VoxelHit> hashed_map_scoring;

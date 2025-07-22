@@ -20,13 +20,39 @@ class G4Run;
 
 class NTupleEventAnalisys {
  private:
-  NTupleEventAnalisys() = default;
-  ~NTupleEventAnalisys() = default;
+  /**
+ * @brief Default constructor for NTupleEventAnalisys.
+ *
+ * Initializes the NTupleEventAnalisys instance. Intended for internal use to enforce singleton pattern.
+ */
+NTupleEventAnalisys() = default;
+  /**
+ * @brief Destroys the NTupleEventAnalisys singleton instance.
+ *
+ * Cleans up resources associated with event-level data analysis and collection.
+ */
+~NTupleEventAnalisys() = default;
 
-  NTupleEventAnalisys(const NTupleEventAnalisys&) = delete;
-  NTupleEventAnalisys& operator=(const NTupleEventAnalisys&) = delete;
-  NTupleEventAnalisys(NTupleEventAnalisys&&) = delete;
-  NTupleEventAnalisys& operator=(NTupleEventAnalisys&&) = delete;
+  /**
+ * @brief Copy constructor is deleted to enforce singleton pattern.
+ */
+NTupleEventAnalisys(const NTupleEventAnalisys&) = delete;
+  /**
+ * @brief Deleted copy assignment operator to enforce singleton pattern.
+ *
+ * Prevents copying of NTupleEventAnalisys instances.
+ */
+NTupleEventAnalisys& operator=(const NTupleEventAnalisys&) = delete;
+  /**
+ * @brief Move constructor is deleted to enforce singleton pattern.
+ */
+NTupleEventAnalisys(NTupleEventAnalisys&&) = delete;
+  /**
+ * @brief Move assignment operator is deleted to enforce singleton pattern.
+ *
+ * Prevents moving assignment of NTupleEventAnalisys instances.
+ */
+NTupleEventAnalisys& operator=(NTupleEventAnalisys&&) = delete;
 
   /// Event-local data collection (filled per event)
   class TTreeEventCollection {
@@ -111,8 +137,18 @@ class NTupleEventAnalisys {
   static void DefineTTree(const G4String& treeName, bool cellVoxelisation = false, const G4String& hcName = G4String(), const G4String& treeDescription = G4String());
 
 
-  static G4bool IsAnyTTreeDefined() { return m_ttree_collection.Get().empty() ? false : true; }
-  static const std::vector<TTreeCollection>& TreeCollection() { return m_ttree_collection.Get(); }
+  /**
+ * @brief Checks if any TTree collections have been defined.
+ *
+ * @return `true` if at least one TTree collection exists, `false` otherwise.
+ */
+static G4bool IsAnyTTreeDefined() { return m_ttree_collection.Get().empty() ? false : true; }
+  /**
+ * @brief Returns the collection of all defined tree configurations.
+ *
+ * @return Reference to a vector containing all TTreeCollection objects currently defined.
+ */
+static const std::vector<TTreeCollection>& TreeCollection() { return m_ttree_collection.Get(); }
 
   G4ThreadLocal static NTupleEventAnalisys* fInstance;
 };

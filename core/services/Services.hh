@@ -19,6 +19,14 @@
 
 ///\brief Templated method to get a pointer to the different type of services.
 template<typename T>
+/**
+ * @brief Returns the singleton instance pointer of the specified service type.
+ *
+ * This templated function retrieves the singleton instance of a service class by invoking its static `GetInstance()` method.
+ *
+ * @tparam T Service class type that implements a static `GetInstance()` method.
+ * @return Pointer to the singleton instance of type T.
+ */
 T *Service() {
   return T::GetInstance();
 }
@@ -70,6 +78,15 @@ namespace svc {
   ///\param v number to be converted.
   ///\param precision precision to be taken in the conversion.
   template<typename T>
+  /**
+   * @brief Converts a value to a string with fixed precision and boolean formatting.
+   *
+   * Converts the input value to a string using two decimal places for floating-point types and outputs boolean values as "true" or "false".
+   *
+   * @tparam T Type of the value to convert.
+   * @param v The value to convert to a string.
+   * @return std::string String representation of the value, or "*** error ***" if conversion fails.
+   */
   std::string to_string(const T &v) {
     std::ostringstream stm;
     stm << std::fixed << std::setprecision(2) << std::boolalpha;
@@ -79,6 +96,11 @@ namespace svc {
 
   ///\brief Function to check if the given key exists in a given std::map.
   template<typename K, typename V>
+  /**
+   * @brief Checks if a given key exists in a map.
+   *
+   * @return true if the key is present in the map, false otherwise.
+   */
   bool checkItem(std::map<K, V> &items, const K key) {
     if (items.find(key) != items.end())
       return true;

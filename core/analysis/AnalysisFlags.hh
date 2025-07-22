@@ -20,13 +20,31 @@ enum class AnalysisFlag {
 // Container class for storing active flags for a given tree
 class AnalysisFlags {
  public:
-  AnalysisFlags() = default;
+  /**
+ * @brief Constructs an AnalysisFlags object with all flags disabled.
+ */
+AnalysisFlags() = default;
 
-  bool operator[](AnalysisFlag flag) const { return m_bitset_flags.test(static_cast<size_t>(flag)); }
+  /**
+ * @brief Checks whether a specific analysis flag is enabled.
+ *
+ * @param flag The analysis flag to query.
+ * @return true if the flag is enabled; false otherwise.
+ */
+bool operator[](AnalysisFlag flag) const { return m_bitset_flags.test(static_cast<size_t>(flag)); }
 
-  void Set(AnalysisFlag flag, bool value = true) { m_bitset_flags.set(static_cast<size_t>(flag), value); }
+  /**
+ * @brief Sets the specified analysis flag to the given state.
+ *
+ * @param flag The analysis flag to modify.
+ * @param value If true, the flag is enabled; if false, the flag is disabled. Defaults to true.
+ */
+void Set(AnalysisFlag flag, bool value = true) { m_bitset_flags.set(static_cast<size_t>(flag), value); }
 
-  void Reset() { m_bitset_flags.reset(); }
+  /**
+ * @brief Clears all analysis flags, disabling every flag in the set.
+ */
+void Reset() { m_bitset_flags.reset(); }
 
  private:
   std::bitset<static_cast<size_t>(AnalysisFlag::COUNT)> m_bitset_flags;
@@ -37,13 +55,35 @@ class AnalysisFlagRegistry {
  public:
   static AnalysisFlagRegistry* Instance();
 
-  void SetFlag(AnalysisFlag flag, bool value) { m_analysis_flags.Set(flag, value); }
-  bool IsEnabled(AnalysisFlag flag) const { return m_analysis_flags[flag]; }
-  void ResetAll() { m_analysis_flags.Reset(); }
+  /**
+ * @brief Sets the specified analysis flag to the given state.
+ *
+ * @param flag The analysis flag to modify.
+ * @param value If true, enables the flag; if false, disables it.
+ */
+void SetFlag(AnalysisFlag flag, bool value) { m_analysis_flags.Set(flag, value); }
+  /**
+ * @brief Checks if a specific analysis flag is enabled.
+ *
+ * @param flag The analysis flag to query.
+ * @return true if the flag is enabled; false otherwise.
+ */
+bool IsEnabled(AnalysisFlag flag) const { return m_analysis_flags[flag]; }
+  /**
+ * @brief Clears all analysis flags in the registry.
+ *
+ * Resets the state of every analysis flag to disabled within the singleton registry.
+ */
+void ResetAll() { m_analysis_flags.Reset(); }
   void PrintAllFlags() const;
 
  private:
-  AnalysisFlagRegistry() = default;
+  /**
+ * @brief Default constructor for AnalysisFlagRegistry.
+ *
+ * Initializes the registry instance. Constructor is private to enforce the singleton pattern.
+ */
+AnalysisFlagRegistry() = default;
   AnalysisFlags m_analysis_flags;
 };
 

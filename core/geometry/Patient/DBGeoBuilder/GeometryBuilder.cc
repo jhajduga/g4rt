@@ -15,14 +15,20 @@
 #include <cctype>
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs a GeometryBuilder and initializes it as a TomlConfigModule named "GeometryBuilder".
+ */
 GeometryBuilder::GeometryBuilder():TomlConfigModule("GeometryBuilder"){
 
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///   
+/**
+ * @brief Parses the TOML configuration file to set geometry parameters.
+ *
+ * Loads position and rotation values, as well as an optional list of object names to exclude from geometry construction, from the specified TOML configuration file.
+ */
 void GeometryBuilder::ParseTomlConfig(){
   SetTomlConfigFile();
   auto configFile = GetTomlConfigFile();
@@ -59,20 +65,36 @@ void GeometryBuilder::ParseTomlConfig(){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the singleton instance of the GeometryBuilder class.
+ *
+ * Provides global access to the unique GeometryBuilder instance for geometry construction and configuration.
+ *
+ * @return Pointer to the singleton GeometryBuilder instance.
+ */
 GeometryBuilder* GeometryBuilder::GetInstance() {
   static GeometryBuilder instance;
   return &instance;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Destroys the GeometryBuilder instance.
+ *
+ * Default destructor with no custom cleanup logic.
+ */
 GeometryBuilder::~GeometryBuilder() {
   
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Loads geometry parameterization from a TOML configuration file if available, or uses default values.
+ *
+ * Checks for the existence of a TOML configuration file and parses it to set geometry parameters. If the file does not exist, loads default parameterization instead.
+ *
+ * @return Always returns true.
+ */
 G4bool GeometryBuilder::LoadParameterization(){
   // Configurable::ValidateConfig();
   if(IsTomlConfigExists()){
@@ -85,12 +107,26 @@ G4bool GeometryBuilder::LoadParameterization(){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Loads default geometry parameterization.
+ *
+ * This stub implementation always returns true and does not perform any parameter loading.
+ *
+ * @return G4bool Always returns true.
+ */
 G4bool GeometryBuilder::LoadDefaultParameterization(){
   return true;
 }
 
 
+/**
+ * @brief Returns a lowercase copy of the input string.
+ *
+ * Converts all characters in the input string to their lowercase equivalents.
+ *
+ * @param input The string to convert.
+ * @return std::string The lowercase version of the input string.
+ */
 static std::string to_lower(const std::string& input) {
     std::string out;
     out.resize(input.size());
@@ -100,7 +136,13 @@ static std::string to_lower(const std::string& input) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+   * @brief Constructs and places geometry components into the parent Geant4 physical volume.
+   *
+   * Iterates over geometry objects from the database, filtering out excluded components and those with a non-empty or non-"nan" `sc_id`. For each included object, creates a tessellated solid from its vertex and facet data, assigns the specified material, and places the resulting logical volume into the parent world volume. Placement applies configured rotations and a translation determined by the environment type.
+   *
+   * @param parentWorld The parent Geant4 physical volume into which geometry components are placed.
+   */
 void GeometryBuilder::Build(G4VPhysicalVolume *parentWorld) {
   LoadParameterization();
   // auto* nist = G4NistManager::Instance();

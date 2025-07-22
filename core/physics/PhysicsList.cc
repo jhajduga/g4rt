@@ -21,7 +21,11 @@
 // ============================================================================
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs and configures the PhysicsList with selected physics models and processes.
+ *
+ * Initializes the physics list with a default cut value and verbosity level. Selects the electromagnetic (EM) physics model and enables optional extra physics processes (hadronic, ion, stopping, optical) based on configuration parameters. Instantiates core physics components for decay and radioactive decay, and, if enabled, additional physics modules for detailed particle interactions. Registers the optical physics module when extra processes are enabled. Sets up a global step limiter process to apply to all particles.
+ */
 PhysicsList::PhysicsList() {
 
   SetDefaultCutValue(0.5 * mm);
@@ -60,7 +64,11 @@ PhysicsList::PhysicsList() {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs particles required for the simulation, including decay products and optical photons.
+ *
+ * Invokes the decay physics model to define all particles involved in decay processes and explicitly defines the optical photon particle for optical physics simulations.
+ */
 void PhysicsList::ConstructParticle() {
 
   /// Decay particles
@@ -70,7 +78,11 @@ void PhysicsList::ConstructParticle() {
   G4OpticalPhoton::OpticalPhotonDefinition();
 }
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Adds a user-defined hard step limiter process to applicable particles.
+ *
+ * This method creates and configures a StepMax process to enforce a strict maximum step length for all non-short-lived particles where the process is applicable. The step limiter overrides the electromagnetic step size if the specified maximum is shorter.
+ */
 void PhysicsList::AddStepMax()
 {
   // User-defined hard step limiter (StepMax process):
@@ -95,7 +107,11 @@ void PhysicsList::AddStepMax()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Defines all physics processes used in the simulation.
+/**
+ * @brief Configures and registers all physics processes for the simulation.
+ *
+ * Adds the mandatory transportation process, the selected electromagnetic (EM) physics model, standard and radioactive decay processes, and, if enabled, additional physics modules for extra EM effects, hadronic and ion interactions, and stopping physics. Configures detailed electromagnetic parameters for atomic de-excitation, secondary emissions, low-energy electron tracking, dynamic step limitation, Mott correction, and ICRU90 data usage. Optionally adds a user-defined hard step limiter process if a maximum step size is specified.
+ */
 void PhysicsList::ConstructProcess() {
 
   /// Mandatory transportation process 
@@ -168,7 +184,13 @@ void PhysicsList::ConstructProcess() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Selects and activates an electromagnetic (EM) physics model by name.
+ *
+ * If the specified model name matches a supported EM physics list, instantiates and sets it as the active EM physics model. If the name is unrecognized, outputs a warning and recursively falls back to the previously selected EM physics model. Prints the name of the activated EM physics model.
+ *
+ * @param name The name of the EM physics model to activate (e.g., "emstandard_opt3", "LowE_Livermore").
+ */
 void PhysicsList::AddPhysicsList(const G4String &name) {
   auto vlevel = GetVerboseLevel();
   if (vlevel > -1)

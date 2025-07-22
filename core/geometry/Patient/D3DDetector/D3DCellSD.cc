@@ -7,7 +7,17 @@
 #include "PrimaryParticleInfo.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs a 3D sensitive detector cell with specified name, center, and grid indices.
+ *
+ * Initializes the detector cell with a unique name, its center position in 3D space, and integer indices identifying its location within the grid.
+ *
+ * @param sdName Name of the sensitive detector.
+ * @param centre Center position of the cell in 3D space.
+ * @param idX X-axis index of the cell in the grid.
+ * @param idY Y-axis index of the cell in the grid.
+ * @param idZ Z-axis index of the cell in the grid.
+ */
 D3DCellSD::D3DCellSD(const G4String& sdName, const G4ThreeVector& centre, G4int idX, G4int idY, G4int idZ)
 :VPatientSD(sdName,centre){
   m_id_x = idX;
@@ -16,7 +26,14 @@ D3DCellSD::D3DCellSD(const G4String& sdName, const G4ThreeVector& centre, G4int 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This method is being called for each G4Step in sensitive volume
+/**
+ * @brief Processes a Geant4 step occurring in this sensitive detector cell.
+ *
+ * Updates track information if configured, and processes hits for all relevant scoring volumes associated with this detector cell. Returns true to indicate successful handling of the step.
+ *
+ * @param aStep The current Geant4 step within the sensitive volume.
+ * @return G4bool True if the hit was processed successfully.
+ */
 G4bool D3DCellSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   // The TouchableHistory is used to obtain the physical volume of the hit
   // i.e. get volume where G4Step is remember 

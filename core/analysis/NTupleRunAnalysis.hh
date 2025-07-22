@@ -11,17 +11,38 @@ class G4Run;
 
 class NTupleRunAnalysis {
     private:
-        ///
+        /**
+ * @brief Default constructor for NTupleRunAnalysis.
+ *
+ * Constructor is private to enforce the singleton pattern and prevent direct instantiation.
+ */
         NTupleRunAnalysis() = default;
 
-        ///
+        /**
+ * @brief Destroys the NTupleRunAnalysis singleton instance.
+ *
+ * This destructor is private to enforce the singleton pattern and prevent external destruction.
+ */
         ~NTupleRunAnalysis() = default;
 
-        /// Delete the copy and move constructors
+        /**
+ * @brief Deleted copy constructor to prevent copying of the singleton instance.
+ */
         NTupleRunAnalysis(const NTupleRunAnalysis &) = delete;
-        NTupleRunAnalysis &operator=(const NTupleRunAnalysis &) = delete;
-        NTupleRunAnalysis(NTupleRunAnalysis &&) = delete;
-        NTupleRunAnalysis &operator=(NTupleRunAnalysis &&) = delete;
+        /**
+ * @brief Deleted copy assignment operator to enforce singleton pattern.
+ *
+ * Prevents copying of NTupleRunAnalysis instances.
+ */
+NTupleRunAnalysis &operator=(const NTupleRunAnalysis &) = delete;
+        /**
+ * @brief Deleted move constructor to prevent moving of NTupleRunAnalysis instances.
+ */
+NTupleRunAnalysis(NTupleRunAnalysis &&) = delete;
+        /**
+ * @brief Deleted move assignment operator to prevent moving of NTupleRunAnalysis instances.
+ */
+NTupleRunAnalysis &operator=(NTupleRunAnalysis &&) = delete;
 
     public:
         ///

@@ -40,11 +40,26 @@ public:
      */
     static void SetTerminalLogLevel(loguru::Verbosity verbosity);
 
-    static void SetLogFolder(const std::string& folder) { s_log_folder = folder; }
-    static std::string GetLogFolder() { return s_log_folder; }
+    /**
+ * @brief Sets the folder path where log files are stored.
+ *
+ * Updates the internal log folder path to the specified directory.
+ */
+static void SetLogFolder(const std::string& folder) { s_log_folder = folder; }
+    /**
+ * @brief Returns the current log folder path used for storing log files.
+ *
+ * @return std::string The path to the log folder.
+ */
+static std::string GetLogFolder() { return s_log_folder; }
 
 
-    static loguru::Verbosity GetVerbosity() { return s_terminal_verbosity; }
+    /**
+ * @brief Returns the current terminal verbosity level for logging output.
+ *
+ * @return loguru::Verbosity The verbosity level used for terminal logs.
+ */
+static loguru::Verbosity GetVerbosity() { return s_terminal_verbosity; }
 
     /**
      * @brief Replaces the current main log file with a new one.
@@ -60,26 +75,52 @@ public:
      * @brief Logs a message with debug verbosity for a given module.
      */
     template<typename... Args>
+    /**
+     * @brief Logs a debug-level message for the specified module.
+     *
+     * Formats and logs a message at verbosity level 9 (debug) for the given module, including source file and line information.
+     */
     static void LogDebug(const std::string& module, const char* file, int line, const char* format, const Args&... args) {
         logToModule(module, loguru::Verbosity_9, file, line, format, args...);
     }
 
     template<typename... Args>
+    /**
+     * @brief Logs an informational message for a specified module with formatting and source location.
+     *
+     * Formats the message using the provided format string and arguments, and logs it at info verbosity level, tagging it with the module name, source file, and line number.
+     */
     static void LogInfo(const std::string& module, const char* file, int line, const char* format, const Args&... args) {
         logToModule(module, loguru::Verbosity_INFO, file, line, format, args...);
     }
 
     template<typename... Args>
+    /**
+     * @brief Logs a formatted warning-level message for a specific module.
+     *
+     * Logs a message with warning verbosity, including the module name, source file, and line number.
+     * The message is formatted using the provided format string and arguments.
+     */
     static void LogWarning(const std::string& module, const char* file, int line, const char* format, const Args&... args) {
         logToModule(module, loguru::Verbosity_WARNING, file, line, format, args...);
     }
 
     template<typename... Args>
+    /**
+     * @brief Logs a formatted error-level message for the specified module.
+     *
+     * Logs a message at error verbosity, including the module name, source file, and line number. The message is formatted using the provided format string and arguments.
+     */
     static void LogError(const std::string& module, const char* file, int line, const char* format, const Args&... args) {
         logToModule(module, loguru::Verbosity_ERROR, file, line, format, args...);
     }
 
     template<typename... Args>
+    /**
+     * @brief Logs a formatted fatal-level message for the specified module and immediately flushes all logs.
+     *
+     * The message is tagged with the module name, source file, and line number. This method is intended for unrecoverable errors and ensures that all log output is written to disk before returning.
+     */
     static void LogFatal(const std::string& module, const char* file, int line, const char* format, const Args&... args) {
         logToModule(module, loguru::Verbosity_FATAL, file, line, format, args...);
         loguru::flush();
@@ -99,6 +140,19 @@ private:
 
 
 template<typename... Args>
+/**
+ * @brief Logs a formatted message to the specified module with given verbosity, file, and line information.
+ *
+ * Formats the message using the provided format string and arguments, then logs it with the module name as a tag.
+ *
+ * @tparam Args Types of the format arguments.
+ * @param module Name of the module to tag the log entry.
+ * @param verbosity Verbosity level for the log message.
+ * @param file Source file name where the log is generated.
+ * @param line Line number in the source file.
+ * @param format Format string compatible with `fmt`.
+ * @param args Arguments for the format string.
+ */
 static void logToModule(const std::string& module, loguru::Verbosity verbosity, const char* file, int line, const char* format, const Args&... args) {
     std::string formatted_message = fmt::vformat(format, fmt::make_format_args(args...));
     loguru::log(verbosity, file, line, "[{}] {}", module, formatted_message);

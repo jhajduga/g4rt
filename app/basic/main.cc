@@ -8,6 +8,15 @@
 #include "LogSvc.hh"
 #include <locale.h>
 
+/**
+ * @brief Entry point for the Geant-RT simulation application.
+ *
+ * Initializes the environment, embedded Python interpreter, logging, and core services. Parses command-line arguments to configure application mode, geometry export options, threading, event count, configuration files, output directory, and log level. Validates inputs, loads configuration, and executes the main simulation or geometry-building workflow. Handles errors in argument parsing and missing files, and ensures clean shutdown of services before exiting.
+ *
+ * @param argc Number of command-line arguments.
+ * @param argv Array of command-line argument strings.
+ * @return int Exit status code (EXIT_SUCCESS on normal termination).
+ */
 int main(int argc, const char *argv[]) {
   // Force POSIX "C" locale to ensure consistent scientific notation (e.g., 1.23e-12).
   // In some locales (e.g., pl_PL.UTF-8), numerical formatting functions may emit

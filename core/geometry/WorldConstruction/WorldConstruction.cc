@@ -11,7 +11,11 @@
 #include "MyGeometryTolerance.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs a WorldConstruction object for managing the simulation world.
+ *
+ * Initializes the WorldConstruction instance by invoking base class constructors for IPhysicalVolume and Configurable. Does not perform configuration or geometry creation during construction.
+ */
 WorldConstruction::WorldConstruction()
   :IPhysicalVolume("WorldConstruction"), Configurable("WorldConstruction"){
   // Configure();
@@ -20,7 +24,11 @@ WorldConstruction::WorldConstruction()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Destructor for the WorldConstruction class.
+ *
+ * Unregisters the configuration service for this instance and deletes the beam monitoring object.
+ */
 WorldConstruction::~WorldConstruction() {
   configSvc()->Unregister(thisConfig()->GetName());
   delete m_beamMonitoring;
@@ -28,14 +36,24 @@ WorldConstruction::~WorldConstruction() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the singleton instance of the WorldConstruction class.
+ *
+ * Ensures only one instance of WorldConstruction exists, managed for the lifetime of the application.
+ *
+ * @return Pointer to the singleton WorldConstruction instance.
+ */
 WorldConstruction *WorldConstruction::GetInstance() {
   static auto instance = new WorldConstruction(); // It's being released by G4GeometryManager
   return instance;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Defines configuration parameters for the simulation world.
+ *
+ * Registers all configurable units and parameters required for constructing and managing the simulation world, including geometry, isocentre, phase space, rotation, and parameterized volumes. Sets up their default values using the base configuration mechanism.
+ */
 void WorldConstruction::Configure() {
   G4cout << "\n\n[INFO]::  Default configuration of the " << thisConfig()->GetName() << G4endl;
 
@@ -60,7 +78,13 @@ void WorldConstruction::Configure() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Sets default configuration values for the specified world construction parameter.
+ *
+ * Assigns a default value to the given configuration unit, such as world size, isocentre position, phase space parameters, rotation, or parameterized volumes. Used to initialize or reset configuration settings for the simulation world environment.
+ *
+ * @param unit The name of the configuration parameter to set to its default value.
+ */
 void WorldConstruction::DefaultConfig(const std::string &unit) {
 
   // Module name
@@ -123,7 +147,11 @@ void WorldConstruction::DefaultConfig(const std::string &unit) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Destroys the world geometry and its submodules, preparing for cleanup.
+ *
+ * Releases geometry resources by opening the geometry for modification, destroys gantry and phantom environments if present, and unregisters the configuration for this instance.
+ */
 void WorldConstruction::Destroy() {
 
             INFO_GEO("Destroing the World volumes... ");
@@ -142,11 +170,21 @@ void WorldConstruction::Destroy() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the current physical volume representing the simulation world.
+ *
+ * @return Pointer to the world physical volume.
+ */
 G4VPhysicalVolume* WorldConstruction::Construct() { return GetPhysicalVolume(); }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Creates and initializes the simulation world geometry.
+ *
+ * Builds the main world volume as a box filled with air, positions it at the configured isocentre, and constructs all configured submodules within the world. Updates the internal pointer to the world physical volume.
+ *
+ * @return true upon successful creation of the world geometry.
+ */
 bool WorldConstruction::Create() {
   // MyGeometryTolerance::ResetSurfaceTolerance(0.0005*mm);
   // create the world box
@@ -182,7 +220,14 @@ bool WorldConstruction::Create() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs and initializes world submodules based on configuration flags.
+ *
+ * Creates and attaches the gantry geometry, patient geometry, phase space saving planes, and beam monitoring modules to the world volume if their corresponding configuration options are enabled.
+ *
+ * @param parentPV Pointer to the parent physical volume to which submodules are attached.
+ * @return true after all enabled submodules are constructed.
+ */
 bool WorldConstruction::ConstructWorldModules(G4VPhysicalVolume *parentPV) {
   // ___________________________________________________________________
   // create the gantry-world box
@@ -225,7 +270,11 @@ bool WorldConstruction::ConstructWorldModules(G4VPhysicalVolume *parentPV) {
   return true;
 }
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Defines sensitive detectors for all constructed submodules in the world.
+ *
+ * Calls the `DefineSensitiveDetector()` method on each submodule (gantry, phase space, phantom, and beam monitoring) if it exists.
+ */
 void WorldConstruction::ConstructSDandField() {
 
   if(m_gantryEnv) m_gantryEnv->DefineSensitiveDetector();
@@ -235,11 +284,24 @@ void WorldConstruction::ConstructSDandField() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Updates the world geometry state.
+ *
+ * This implementation performs no action and always returns true.
+ *
+ * @return G4bool Always returns true.
+ */
 G4bool WorldConstruction::Update() { return true; } // override
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Updates the world geometry for a specific run.
+ *
+ * Updates the phantom environment geometry if it exists. Returns `false` if the update fails; otherwise, returns `true`.
+ *
+ * @param runId The identifier for the current run.
+ * @return G4bool `true` if the update succeeds, `false` otherwise.
+ */
 G4bool WorldConstruction::Update(int runId) {
 
             INFO_GEO("Updating world geometry for run {}",runId);
@@ -270,7 +332,11 @@ G4bool WorldConstruction::Update(int runId) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Checks for overlaps in the world geometry up to three levels of daughter volumes.
+ *
+ * Iterates through the world volume's daughters, their daughters, and their daughters' daughters, invoking `CheckOverlaps()` on each to detect and report any geometry overlaps.
+ */
 void WorldConstruction::checkVolumeOverlap() {
   // loop inside all the daughters volumes
   //        bool bCheckOverlap;
@@ -302,7 +368,13 @@ void WorldConstruction::checkVolumeOverlap() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Indicates whether a new geometry has been created.
+ *
+ * Currently unimplemented; always returns false.
+ *
+ * @return false Always returns false as new geometry creation is not implemented.
+ */
 bool WorldConstruction::newGeometry() {
   G4cout << "[ERROR] :: WorldConstruction::newGeometry::Implement me." << G4endl;
   G4bool bNewGeometry = false;
@@ -322,7 +394,16 @@ bool WorldConstruction::newGeometry() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Exports the specified world geometry to a GDML file.
+ *
+ * Writes the geometry of the physical volume identified by `worldName` to a GDML file at the given path and file name. If the specified world volume is not found, logs an error and returns the intended file path without exporting.
+ *
+ * @param path Directory where the GDML file will be saved.
+ * @param fileName Name of the GDML file to create.
+ * @param worldName Name of the world volume to export.
+ * @return std::string Full path to the exported GDML file.
+ */
 std::string WorldConstruction::ExportToGDML(const std::string& path, const std::string& fileName, const std::string& worldName) {
   auto file = path+"/"+fileName;
   svc::deleteFileIfExists(file);
@@ -351,7 +432,11 @@ std::string WorldConstruction::ExportToGDML(const std::string& path, const std::
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Writes informational output for the gantry and phantom environments if they exist.
+ *
+ * Calls the `WriteInfo()` method on the gantry and phantom geometry modules to output their configuration or status details.
+ */
 void WorldConstruction::WriteInfo(){
   if(m_gantryEnv) m_gantryEnv->WriteInfo();
   if(m_phantomEnv) m_phantomEnv->WriteInfo();

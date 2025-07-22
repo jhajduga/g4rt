@@ -23,14 +23,29 @@ G4Cache<std::vector<NTupleEventAnalisys::TTreeCollection>> NTupleEventAnalisys::
 AnalysisFlagRegistry* NTupleEventAnalisys::m_analysis_reg = AnalysisFlagRegistry::Instance();
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Returns the singleton instance of NTupleEventAnalisys.
+ *
+ * Ensures a single global instance of the NTupleEventAnalisys class is used throughout the application.
+ *
+ * @return Pointer to the singleton NTupleEventAnalisys instance.
+ */
 NTupleEventAnalisys* NTupleEventAnalisys::GetInstance() {
   static NTupleEventAnalisys instance;
   return &instance;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// DefineTTree rewritten to preserve logic: single/multi HC registration
+/**
+ * @brief Registers a TTree definition for event analysis.
+ *
+ * Defines a new TTree for storing event data, supporting both single and multi-hit collection (HC) configurations. If `hcName` is empty, a single scoring volume tree is created; otherwise, the HC name is added to a shared tree structure. Sets the voxelization analysis flag if requested. No action is taken if ntuple analysis is disabled in the configuration.
+ *
+ * @param treeName Name of the TTree to define.
+ * @param cellVoxelisation If true, enables voxelized data storage for this tree.
+ * @param hcName Name of the hit collection to associate with the tree; if empty, defines a single-volume tree.
+ * @param treeDescription Description of the TTree.
+ */
 void NTupleEventAnalisys::DefineTTree(const G4String& treeName, bool cellVoxelisation, const G4String& hcName, const G4String& treeDescription) {
   if (!Service<ConfigSvc>()->GetValue<bool>("RunSvc", "NTupleAnalysis")) return;
 
@@ -82,7 +97,13 @@ void NTupleEventAnalisys::DefineTTree(const G4String& treeName, bool cellVoxelis
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// BeginOfRun: initialize flags and create Ntuples if missing
+/**
+ * @brief Initializes analysis flags and creates ntuples at the start of a run.
+ *
+ * Sets analysis flags based on configuration values and stores run-specific information. For each defined TTree, creates a corresponding ntuple if it does not already exist. Skips all operations if ntuple analysis is disabled in the configuration.
+ *
+ * @param runPtr Pointer to the current Geant4 run.
+ */
 void NTupleEventAnalisys::BeginOfRun(const G4Run* runPtr, G4bool /*isMaster*/) {
 
   auto setAnalysisFlag = [](AnalysisFlag which, bool enable) {
@@ -112,7 +133,13 @@ void NTupleEventAnalisys::BeginOfRun(const G4Run* runPtr, G4bool /*isMaster*/) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Refactored CreateNTuple to use AnalysisFlags instead of legacy bools
+/**
+ * @brief Creates and configures an ntuple for event data storage based on analysis flags.
+ *
+ * Defines columns in the ntuple corresponding to the specified tree collection, dynamically including event, cell, voxel, track, and primary particle data according to enabled analysis flags. Finalizes the ntuple definition in the analysis manager.
+ *
+ * @param treeColl The collection describing the ntuple tree to be created, including its name and description.
+ */
 void NTupleEventAnalisys::CreateNTuple(const TTreeCollection& treeColl) {
   const auto treeName = treeColl.m_name + m_treeNamePostfix;
 
@@ -195,7 +222,13 @@ void NTupleEventAnalisys::CreateNTuple(const TTreeCollection& treeColl) {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Refactored FillEventCollection to match final AnalysisFlags layout
+/**
+ * @brief Extracts and stores hit data from a voxel hits collection for a given event and tree.
+ *
+ * Populates the internal event data structure for the specified tree with hit information from the provided voxel hits collection, applying coordinate transformations and storing data fields according to enabled analysis flags. Supports storage of cell and voxel IDs, dose, positions, energy deposits, primary particle information, and detailed track data as configured.
+ *
+ * If the tree name does not correspond to a defined ntuple, the function logs a warning and returns without storing data.
+ */
 void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4Event* evt, VoxelHitsCollection* hitsColl) {
   auto isoToSim = Service<ConfigSvc>()->GetValue<G4ThreeVector>("WorldConstruction", "IsoToSimTransformation");
   auto analysisManager = G4AnalysisManager::Instance();
@@ -306,7 +339,11 @@ void NTupleEventAnalisys::FillEventCollection(const G4String& treeName, const G4
   }
 }
 ////////////////////////////////////////////////////////////////////////////////
-/// Refactored FillNTupleEvent to use AnalysisFlags instead of legacy flags
+/**
+ * @brief Fills ntuple rows with event data for all defined ntuple collections.
+ *
+ * Iterates over all stored event data collections and populates the corresponding ntuple columns in the Geant4 analysis manager. The columns filled depend on the enabled analysis flags, including cell and voxel information, event and run metadata, positions, energies, and detailed track data. Adds a row to the ntuple for each hit in the event.
+ */
 void NTupleEventAnalisys::FillNTupleEvent() {
   auto analysisManager = G4AnalysisManager::Instance();
 
@@ -398,7 +435,11 @@ void NTupleEventAnalisys::FillNTupleEvent() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Refactored ClearEventCollections to respect flag logic
+/**
+ * @brief Clears all stored event data for each ntuple collection.
+ *
+ * Resets event IDs, counters, and all data vectors in every ntuple event collection, preparing for the next event.
+ */
 void NTupleEventAnalisys::ClearEventCollections() {
   for (auto coll = m_ntuple_collection.Begin(); coll != m_ntuple_collection.End(); ++coll) {
     const auto& treeName = coll->first;
@@ -447,7 +488,12 @@ void NTupleEventAnalisys::ClearEventCollections() {
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Retrieves the ntuple ID associated with a given tree name.
+ *
+ * @param treeName Name of the ntuple tree.
+ * @return The ntuple ID if the tree exists; otherwise, returns -1.
+ */
 G4int NTupleEventAnalisys::GetNTupleId(const G4String& treeName) {
   auto exists = m_ntuple_collection.Has(treeName);
   if (exists) {
@@ -458,7 +504,11 @@ G4int NTupleEventAnalisys::GetNTupleId(const G4String& treeName) {
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// This member is called at the end of every event from
-/// EventAction::EndOfEventAction
+/**
+ * @brief Processes the end-of-event actions by collecting and storing hit data into ntuples.
+ *
+ * Retrieves hit collections for each defined TTree, fills internal event data structures with hit information, and writes the data into ntuples for the current event. Skips processing if no hit collections are present.
+ */
 void NTupleEventAnalisys::EndOfEventAction(const G4Event* evt) {
   auto hCofThisEvent = evt->GetHCofThisEvent();
   if (!hCofThisEvent) return;

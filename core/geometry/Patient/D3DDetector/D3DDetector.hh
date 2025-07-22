@@ -34,7 +34,11 @@ class D3DDetector : public VPatient, public GeoComponet {
     ///
     G4bool Update() override;
 
-    ///
+    /**
+ * @brief Placeholder method for resetting the detector state.
+ *
+ * Currently not implemented.
+ */
     void Reset() override { G4cout << "Implement me." << G4endl; }
 
     ///
@@ -58,7 +62,13 @@ class D3DDetector : public VPatient, public GeoComponet {
     //
     std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const override;
 
-    //
+    /**
+ * @brief Returns the volume of a single Dose3D cell.
+ *
+ * The volume is calculated as the product of the cell's dimensions along the X, Y, and Z axes.
+ *
+ * @return G4double The computed cell volume.
+ */
     G4double GetCellVolume() const override { return D3DCell::SIZE.getX() * D3DCell::SIZE.getY() * D3DCell::SIZE.getZ(); };
 
     class Config {
@@ -91,10 +101,23 @@ class D3DDetector : public VPatient, public GeoComponet {
     ///
     void SetConfig(const D3DDetector::Config& config);
 
-    ///
+    /**
+ * @brief Returns the current configuration of the D3DDetector.
+ *
+ * @return Reference to the detector's configuration object.
+ */
     const D3DDetector::Config& GetConfig() const { return m_config; }
 
-    ///
+    /**
+ * @brief Indicates whether a point is inside the detector volume.
+ *
+ * Always returns false, indicating that no point is considered inside the detector.
+ *
+ * @param x X-coordinate of the point.
+ * @param y Y-coordinate of the point.
+ * @param z Z-coordinate of the point.
+ * @return G4bool Always false.
+ */
     G4bool IsInside(double x, double y, double z) override { return false; }
     ///
     static G4double COVER_WIDTH;

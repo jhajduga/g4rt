@@ -36,20 +36,39 @@ class SavePhSpConstruction : public IPhysicalVolume {
   void DefineSensitiveDetector();
 
   private:
-  ///
+  /**
+ * @brief Constructs the SavePhSpConstruction object and initializes the base class with the name "WorldConstruction".
+ *
+ * This constructor is private and used internally to enforce the singleton pattern.
+ */
   SavePhSpConstruction():IPhysicalVolume("WorldConstruction"){}
 
-  ///
+  /**
+ * @brief Default destructor for SavePhSpConstruction.
+ */
   ~SavePhSpConstruction() = default;
 
-  /// Delete the copy and move constructors
+  /**
+ * @brief Copy constructor is deleted to enforce the singleton pattern.
+ */
   SavePhSpConstruction(const SavePhSpConstruction &) = delete;
 
-  SavePhSpConstruction &operator=(const SavePhSpConstruction &) = delete;
+  /**
+ * @brief Deleted copy assignment operator to enforce singleton pattern.
+ */
+SavePhSpConstruction &operator=(const SavePhSpConstruction &) = delete;
 
-  SavePhSpConstruction(SavePhSpConstruction &&) = delete;
+  /**
+ * @brief Move constructor is deleted to enforce singleton pattern.
+ */
+SavePhSpConstruction(SavePhSpConstruction &&) = delete;
 
-  SavePhSpConstruction &operator=(SavePhSpConstruction &&) = delete;
+  /**
+ * @brief Deleted move assignment operator to enforce singleton semantics.
+ *
+ * Prevents moving assignment of SavePhSpConstruction instances.
+ */
+SavePhSpConstruction &operator=(SavePhSpConstruction &&) = delete;
 
   ///
   bool ModelSetup();

@@ -34,7 +34,13 @@ private:
     struct CellInfo { 
         std::string sc_id; 
         G4ThreeVector com;
-        CellInfo(const std::string& id, const G4ThreeVector& vec): sc_id(id), com(vec) {}
+        /**
+ * @brief Constructs a CellInfo object with the given scintillator ID and center of mass.
+ *
+ * @param id Scintillator identifier.
+ * @param vec Center of mass position vector.
+ */
+CellInfo(const std::string& id, const G4ThreeVector& vec): sc_id(id), com(vec) {}
     };
 
 
@@ -42,7 +48,12 @@ private:
     
     // Private constructor for singleton
     GeometryDBReader();
-    ~GeometryDBReader() = default;
+    /**
+ * @brief Destroys the GeometryDBReader instance.
+ *
+ * Cleans up resources associated with the GeometryDBReader singleton.
+ */
+~GeometryDBReader() = default;
 
     public:
     // Singleton accessor
@@ -50,9 +61,16 @@ private:
 
     void Finalize();
 
-    // Deleted copy/move
+    /**
+ * @brief Copy constructor is deleted to enforce singleton behavior.
+ */
     GeometryDBReader(const GeometryDBReader&) = delete;
-    GeometryDBReader& operator=(const GeometryDBReader&) = delete;
+    /**
+ * @brief Deleted copy assignment operator to enforce singleton behavior.
+ *
+ * Prevents copying of the GeometryDBReader instance.
+ */
+GeometryDBReader& operator=(const GeometryDBReader&) = delete;
 
     // Load and parse sheets from Excel and CSV
     void LoadDataBase( const std::string& path );
@@ -60,10 +78,18 @@ private:
     std::string db_filename;
     std::string csv_filename;
     std::string sheet;
-    // Access parsed geometry data
+    /**
+ * @brief Returns the parsed geometry data.
+ *
+ * @return Const reference to a vector containing GeometryData for each parsed component.
+ */
     const std::vector<GeometryData>& GetData() const { return geoms_; }
 
-    // Access cells positioning data 
+    /**
+ * @brief Returns the collection of cell positioning data.
+ *
+ * @return Reference to a vector of CellInfo structs containing scintillator IDs and center of mass positions for each cell.
+ */
     const std::vector<CellInfo>& GetCellsPositioning() const { return m_db_cells_positioning; } 
 };
 

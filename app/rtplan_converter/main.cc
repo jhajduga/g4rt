@@ -7,7 +7,14 @@
 #include <pybind11/embed.h>
 #include "LogSvc.hh"
 #include <locale.h>
-// Helper functions to parse a pair from a string
+/**
+ * @brief Converts a pair of strings to a pair of floats.
+ *
+ * @param input Pair of strings to convert.
+ * @return std::pair<float, float> Pair of floats corresponding to the input strings.
+ * @throws std::invalid_argument If either string cannot be converted to a float.
+ * @throws std::out_of_range If either string represents a value outside the float range.
+ */
 std::pair<float, float> convertPair(const std::pair<std::string, std::string>& input) {
     try {
         float first = std::stof(input.first);
@@ -19,6 +26,15 @@ std::pair<float, float> convertPair(const std::pair<std::string, std::string>& i
         throw std::out_of_range("Out of range: One or both strings represent a value out of float range.");
     }
 }
+/**
+ * @brief Parses a comma-separated string into a pair of floats.
+ *
+ * Splits the input string on the first comma and converts both parts to floats.
+ * Throws std::invalid_argument if the format is incorrect or conversion fails.
+ *
+ * @param input String formatted as "value1,value2".
+ * @return std::pair<float, float> The parsed float values.
+ */
 std::pair<float, float> parsePair(const std::string& input) {
     std::istringstream stream(input);
     std::string first, second;
@@ -28,6 +44,17 @@ std::pair<float, float> parsePair(const std::string& input) {
     throw std::invalid_argument("Invalid pair format. Expected 'value1,value2'.");
 }
 
+/**
+ * @brief Entry point for the RT-Plan DICOM to .dat file conversion application.
+ *
+ * Initializes the environment, parses command-line arguments, and processes a DICOM RT-Plan file to extract beam and control point data. Applies optional field centralization and field size constraints, then writes the resulting jaw and MLC leaf positions to .dat files in the specified output directory. Reports statistics on processed and filtered control points.
+ *
+ * Exits with failure if required arguments are missing or invalid, or if command-line parsing fails.
+ *
+ * @param argc Number of command-line arguments.
+ * @param argv Array of command-line argument strings.
+ * @return int Exit status code.
+ */
 int main(int argc, const char *argv[]) {
   // Force POSIX "C" locale to ensure consistent scientific notation (e.g., 1.23e-12).
   // In some locales (e.g., pl_PL.UTF-8), numerical formatting functions may emit

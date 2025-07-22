@@ -5,19 +5,35 @@
 
 G4ThreeVector VMlc::m_isocentre = G4ThreeVector();
 
+/**
+ * @brief Constructs a VMlc instance and initializes the isocentre position.
+ *
+ * Retrieves the isocentre vector from the configuration service and registers the instance with the run service.
+ */
 VMlc::VMlc(const std::string& name){
     m_isocentre = Service<ConfigSvc>()->GetValue<G4ThreeVector>("WorldConstruction", "Isocentre");
     AcceptRunVisitor(Service<RunSvc>());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Registers this MLC component with the provided run service.
+ *
+ * Associates the VMlc instance as a run component in the simulation framework.
+ */
 void VMlc::AcceptRunVisitor(RunSvc *visitor){
     visitor->RegisterRunComponent(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Projects a 3D point onto the current MLC mask plane along the line to the radiation source.
+ *
+ * Calculates the intersection point of a line from the given position to the source origin with the mask plane defined by the current control point's rotation and geometry.
+ *
+ * @param position The 3D position to be projected onto the mask plane.
+ * @return G4ThreeVector The intersection point on the mask plane, rounded to 8 decimal places.
+ */
 G4ThreeVector VMlc::GetPositionInMaskPlane(const G4ThreeVector& position){
     // Build the plane equation
     auto cp = Service<RunSvc>()->CurrentControlPoint();
@@ -56,6 +72,14 @@ G4ThreeVector VMlc::GetPositionInMaskPlane(const G4ThreeVector& position){
     return svc::round_with_prec(G4ThreeVector(cp_vox_x,cp_vox_y,cp_vox_z),8);
 }
 
+/**
+ * @brief Projects the primary particle's trajectory onto the isocentre plane.
+ *
+ * Calculates the intersection point of the primary particle's momentum vector, starting from the given vertex position, with the plane at the isocentre z-coordinate.
+ *
+ * @param vrtx Pointer to the primary vertex containing position and primary particle information.
+ * @return G4ThreeVector The intersection point on the isocentre plane.
+ */
 G4ThreeVector VMlc::GetPositionInMaskPlane(const G4PrimaryVertex* vrtx){
     auto position = vrtx->GetPosition();
     auto direction = vrtx->GetPrimary()->GetMomentum().unit();
@@ -67,12 +91,24 @@ G4ThreeVector VMlc::GetPositionInMaskPlane(const G4PrimaryVertex* vrtx){
     return G4ThreeVector(x, y, z);
 }
 
+/**
+ * @brief Checks whether the MLC is initialized for the specified control point.
+ *
+ * Returns true if the internal control point ID is valid and matches the provided control point's ID; otherwise, returns false.
+ */
 bool VMlc::Initialized(const ControlPoint* control_point) const { 
     if(m_control_point_id<0) return false;
     if(m_control_point_id != control_point->Id()) return false;
     return true; 
 }
 
+/**
+ * @brief Calculates the centroid of the open region in the MLC mask.
+ *
+ * Determines the geometric center (x, y) of all open leaf positions by averaging the coordinates of leaves on both Y1 and Y2 sides where the leaf gap is nonzero. The z-coordinate is taken from the first leaf position.
+ *
+ * @return G4ThreeVector The centroid position of the open MLC mask region.
+ */
 G4ThreeVector VMlc::GetMaskCentre() const{
     auto mlc_y1 = GetMlcPositioning("Y1");
     auto mlc_y2 = GetMlcPositioning("Y2");
@@ -99,6 +135,14 @@ G4ThreeVector VMlc::GetMaskCentre() const{
 }
 
 
+/**
+ * @brief Returns the 3D positions of MLC leaves for the specified side.
+ *
+ * Retrieves the positions of the multi-leaf collimator (MLC) leaves on the given side ("Y1" or "Y2") as a vector of 3D coordinates. If the internal x-positions are uninitialized or if the number of x-positions does not match the number of y-positions from the current control point, an empty vector is returned. The y-coordinates are negated to ensure correct orientation.
+ *
+ * @param side The MLC side ("Y1" or "Y2") for which to retrieve leaf positions.
+ * @return std::vector<G4ThreeVector> Vector of 3D positions for the specified MLC side's leaves, or an empty vector if data is uninitialized or mismatched.
+ */
 std::vector<G4ThreeVector> VMlc::GetMlcPositioning(const std::string& side) const{
     // std::cout << "VMlc::GetMlcPositioning for " << side << std::endl;
     std::vector<G4ThreeVector> mlc_positioning;
@@ -124,6 +168,13 @@ std::vector<G4ThreeVector> VMlc::GetMlcPositioning(const std::string& side) cons
     return std::move(mlc_positioning);
 }
 
+/**
+ * @brief Calculates the Z-coordinate of the MLC in the simulation geometry.
+ *
+ * Computes the MLC's Z-position based on the isocentre position, the source-to-isocentre distance (SID), and a fixed offset.
+ *
+ * @return G4double The computed Z-coordinate of the MLC.
+ */
 G4double VMlc::GetMlcZPosition() {
     auto isocentre = Service<ConfigSvc>()->GetValue<G4ThreeVector>("WorldConstruction", "Isocentre");
     auto sid = Service<ConfigSvc>()->GetValue<G4double>("LinacGeometry", "SID");

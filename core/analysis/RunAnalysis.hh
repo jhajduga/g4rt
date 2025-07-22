@@ -27,14 +27,31 @@ class RunAnalysis {
     ///
     RunAnalysis();
 
-    ///
+    /**
+ * @brief Destroys the RunAnalysis instance.
+ *
+ * Cleans up resources associated with the RunAnalysis singleton when it is destroyed.
+ */
     ~RunAnalysis() = default;
 
-    /// Delete the copy and move constructors
+    /**
+ * @brief Deleted copy constructor to prevent copying of the RunAnalysis singleton.
+ */
     RunAnalysis(const RunAnalysis &) = delete;
-    RunAnalysis &operator=(const RunAnalysis &) = delete;
-    RunAnalysis(RunAnalysis &&) = delete;
-    RunAnalysis &operator=(RunAnalysis &&) = delete;
+    /**
+ * @brief Deleted copy assignment operator to prevent copying of RunAnalysis instances.
+ */
+RunAnalysis &operator=(const RunAnalysis &) = delete;
+    /**
+ * @brief Move constructor is deleted to enforce singleton pattern.
+ */
+RunAnalysis(RunAnalysis &&) = delete;
+    /**
+ * @brief Move assignment operator is deleted to enforce singleton pattern.
+ *
+ * Prevents moving assignment of RunAnalysis instances to ensure only one instance exists.
+ */
+RunAnalysis &operator=(RunAnalysis &&) = delete;
 
     /// Many HitsCollections can be associated to given collection name 
     // (e.g. when many sensitive detectors constituting a single detection unit)

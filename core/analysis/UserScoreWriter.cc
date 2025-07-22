@@ -9,12 +9,29 @@
 
 // Based on https://github.com/Geant4/geant4/tree/geant4-10.4-release/examples/extended/runAndEvent/RE03
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+/**
+ * @brief Constructs a UserScoreWriter with default initialization.
+ */
 UserScoreWriter::UserScoreWriter() : G4VScoreWriter() { ; }
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+/**
+ * @brief Destroys the UserScoreWriter instance.
+ *
+ * Performs no special cleanup.
+ */
 UserScoreWriter::~UserScoreWriter() { ; }
 
+/**
+ * @brief Writes scoring mesh data for a specified primitive scorer to a file in CSV or sparse format.
+ *
+ * Exports the scoring data associated with the given primitive scorer name from the scoring mesh to the specified file. The output format can be either "csv" (default, includes all mesh segments) or "sparse" (includes only non-zero entries), as determined by the `option` parameter (case-insensitive). The output file contains mesh metadata, column headers, and for each mesh segment, the indices, spatial coordinates, scored value, squared value, and entry count, normalized by the scorer's unit.
+ *
+ * If the option is invalid, the scorer name is unknown, or the file cannot be opened, an error message is printed and no file is written.
+ *
+ * @param psName Name of the primitive scorer quantity to export.
+ * @param fileName Path to the output file.
+ * @param option Output format: "csv" (default) or "sparse".
+ */
 void UserScoreWriter::DumpQuantityToFile(const G4String &psName, const G4String &fileName, const G4String &option) {
 
 //

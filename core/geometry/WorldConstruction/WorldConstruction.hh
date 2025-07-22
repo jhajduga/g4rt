@@ -31,7 +31,11 @@ class WorldConstruction : public G4VUserDetectorConstruction,
   G4bool Update() override;
   G4bool Update(int runId);
 
-  ///
+  /**
+ * @brief Resets the world construction state.
+ *
+ * This implementation is intentionally left empty.
+ */
   void Reset() override {}
 
   ///
@@ -55,9 +59,18 @@ class WorldConstruction : public G4VUserDetectorConstruction,
   ///
   void WriteInfo() override;
 
-  /// 
+  /**
+ * @brief Returns a pointer to the patient geometry environment.
+ *
+ * @return PatientGeometry* Pointer to the patient geometry component managed by the world construction.
+ */
   PatientGeometry* PatientEnvironment() { return m_phantomEnv; }
-  LinacGeometry* LinacEnvironment() { return m_gantryEnv; }
+  /**
+ * @brief Returns a pointer to the linac geometry environment.
+ *
+ * @return Pointer to the LinacGeometry instance managed by the world construction.
+ */
+LinacGeometry* LinacEnvironment() { return m_gantryEnv; }
 
 
   /// so that the unique_ptr may delete the singleton
@@ -73,6 +86,13 @@ class WorldConstruction : public G4VUserDetectorConstruction,
   ///
   void Configure() override;
 
+  /**
+   * @brief Returns a list of custom patient detectors.
+   *
+   * The default implementation returns an empty vector. Override this method to provide custom detectors for the simulation.
+   *
+   * @return std::vector<VPatient*> Vector of pointers to custom patient detectors.
+   */
   virtual std::vector<VPatient*> GetCustomDetectors() const {
     return std::vector<VPatient*>();
   }
@@ -91,19 +111,42 @@ class WorldConstruction : public G4VUserDetectorConstruction,
   bool ConstructWorldModules(G4VPhysicalVolume *parentPV);
   
   private:
-  /// Delete the copy and move constructors
+  /**
+ * @brief Deleted copy constructor to enforce singleton behavior.
+ */
   WorldConstruction(const WorldConstruction &) = delete;
 
-  WorldConstruction &operator=(const WorldConstruction &) = delete;
+  /**
+ * @brief Deleted copy assignment operator to enforce singleton behavior.
+ *
+ * Prevents copying of the WorldConstruction instance.
+ */
+WorldConstruction &operator=(const WorldConstruction &) = delete;
 
-  WorldConstruction(WorldConstruction &&) = delete;
+  /**
+ * @brief Move constructor is deleted to enforce singleton behavior.
+ */
+WorldConstruction(WorldConstruction &&) = delete;
 
-  WorldConstruction &operator=(WorldConstruction &&) = delete;
+  /**
+ * @brief Deleted move assignment operator to enforce singleton behavior.
+ *
+ * Prevents moving assignment of WorldConstruction instances.
+ */
+WorldConstruction &operator=(WorldConstruction &&) = delete;
 
 
-  /// have to implement pure virtual function
+  /**
+ * @brief Empty implementation of the pure virtual Construct method from IPhysicalVolume.
+ *
+ * This method is required to satisfy the interface but is intentionally left unimplemented in this class.
+ */
   void Construct(G4VPhysicalVolume*) override {}  // <- IPhysicalVolume
-  ///
+  /**
+ * @brief Returns the pointer to the world physical volume.
+ *
+ * @return G4VPhysicalVolume* Pointer to the constructed world volume, or nullptr if not yet constructed.
+ */
 
   G4VPhysicalVolume* GetWorldPV() { return m_worldPV; }
 

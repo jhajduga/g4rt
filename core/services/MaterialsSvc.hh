@@ -22,14 +22,25 @@ class MaterialsSvc : public Configurable {
 
   ~MaterialsSvc();
 
-  // Delete the copy and move constructors
+  /**
+ * @brief Copy constructor is deleted to prevent copying of the singleton instance.
+ */
   MaterialsSvc(const MaterialsSvc &) = delete;
 
-  MaterialsSvc &operator=(const MaterialsSvc &) = delete;
+  /**
+ * @brief Deleted copy assignment operator to prevent copying of the singleton instance.
+ */
+MaterialsSvc &operator=(const MaterialsSvc &) = delete;
 
-  MaterialsSvc(MaterialsSvc &&) = delete;
+  /**
+ * @brief Move constructor is deleted to prevent moving of the singleton instance.
+ */
+MaterialsSvc(MaterialsSvc &&) = delete;
 
-  MaterialsSvc &operator=(MaterialsSvc &&) = delete;
+  /**
+ * @brief Move assignment operator is deleted to prevent moving of MaterialsSvc instances.
+ */
+MaterialsSvc &operator=(MaterialsSvc &&) = delete;
 
   ///\brief Virtual method implementation defining the list of configuration units for this module.
   void Configure() override;

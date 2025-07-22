@@ -63,7 +63,11 @@ class MlcHd120 :  public IPhysicalVolume, public VMlc {
 
     MlcHd120();
 
-    ////
+    /**
+ * @brief Destroys the MlcHd120 object.
+ *
+ * Default destructor; cleans up resources used by the MlcHd120 instance.
+ */
     ~MlcHd120() = default;
 
     ///
@@ -75,11 +79,24 @@ class MlcHd120 :  public IPhysicalVolume, public VMlc {
     ///
     void WriteInfo() override;
 
-    ///
+    /**
+     * @brief Always returns true, indicating any position is considered within the MLC field.
+     *
+     * @param position The position to check.
+     * @param transformToIsocentre Ignored parameter; does not affect the result.
+     * @return true Always returns true.
+     */
     bool IsInField(const G4ThreeVector& position, bool transformToIsocentre) override {
       return true;
     }
 
+    /**
+     * @brief Determines if the given primary vertex is within the MLC field.
+     *
+     * This implementation always returns true, indicating all vertices are considered inside the field.
+     * @param vrtx Pointer to the primary vertex to check.
+     * @return true Always.
+     */
     bool IsInField(G4PrimaryVertex* vrtx) override {
       return true;
     }

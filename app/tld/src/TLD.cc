@@ -28,7 +28,11 @@ G4bool TLD::m_set_tld_voxelised_scorer = true;
 // TLD::CellScorer
 // Enable or disable cell scorer for TLD
 ////////////////////////////////////////////////////////////////////////////////
-/// static
+/**
+ * @brief Enables or disables cell-based scoring for TLD volumes.
+ *
+ * @param val Set to true to enable cell scoring, false to disable.
+ */
 void TLD::CellScorer(G4bool val) {
   m_set_tld_scorer = val;
   // if(!val){ // by default it's set to true
@@ -40,7 +44,13 @@ void TLD::CellScorer(G4bool val) {
 // TLD::CellVoxelisedScorer
 // Enable or disable voxelised cell scorer for TLD
 ////////////////////////////////////////////////////////////////////////////////
-/// static
+/**
+ * @brief Enables or disables voxelised cell scoring for all TLD instances.
+ *
+ * When disabled, removes the voxel scoring type from the run service's scoring types.
+ *
+ * @param val Set to true to enable voxelised scoring, false to disable.
+ */
 void TLD::CellVoxelisedScorer(G4bool val) {
   m_set_tld_voxelised_scorer = val;
   if (!val) {  // by default it's set to true
@@ -50,7 +60,11 @@ void TLD::CellVoxelisedScorer(G4bool val) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // TLD constructor
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Constructs a TLD (Thermoluminescent Dosimeter) volume with specified label, center, material, and optional STL geometry.
+ *
+ * Initializes a TLD instance for use in Geant4 simulations, setting its label, spatial center, material name, and STL geometry file path if provided.
+ */
 TLD::TLD(const G4String& label, const G4ThreeVector& centre, G4String tldMediumName, G4String stlGeometryFilePath)
     : VPatient(label), m_tld_medium(tldMediumName), m_stl_geometry_file_path(stlGeometryFilePath), m_centre(centre) {
 
@@ -58,12 +72,23 @@ TLD::TLD(const G4String& label, const G4ThreeVector& centre, G4String tldMediumN
 
 ////////////////////////////////////////////////////////////////////////////////
 // TLD destructor
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Destroys the TLD instance and releases allocated resources.
+ *
+ * Calls the Destroy method to clean up the TLD volume and deletes the step limit object if it was allocated.
+ */
 TLD::~TLD() {
   Destroy();
   if (m_step_limit) delete m_step_limit;
 }
 
+/**
+ * @brief Sets the integer identifiers for the TLD instance along the x, y, and z axes.
+ *
+ * @param x Identifier for the x-axis.
+ * @param y Identifier for the y-axis.
+ * @param z Identifier for the z-axis.
+ */
 void TLD::SetIDs(G4int x, G4int y, G4int z) {
   m_id_x = x;
   m_id_y = y;
@@ -72,12 +97,20 @@ void TLD::SetIDs(G4int x, G4int y, G4int z) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Write info (TODO)
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Placeholder for outputting TLD cell information.
+ *
+ * Currently logs a message indicating that detailed information output is not implemented.
+ */
 void TLD::WriteInfo() { INFO_GEO("The Dose3D cell {} info: Implement me.", GetName()); }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Destroy volumes and clean up
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Logs the destruction of the TLD volume.
+ *
+ * This method is intended to handle cleanup of the TLD's physical volume, but currently only logs the destruction event. Actual deletion of the physical volume is not performed.
+ */
 void TLD::Destroy() {
   INFO_GEO("Destroying the TLD volume.");
   // auto phantomVolume = GetPhysicalVolume();
@@ -89,7 +122,12 @@ void TLD::Destroy() {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Set number of voxels along an axis
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Sets the number of voxels along a specified axis for TLD voxelization.
+ *
+ * @param axis The axis to set ('x', 'y', or 'z', case-insensitive).
+ * @param nv The number of voxels to assign along the specified axis.
+ */
 void TLD::SetNVoxels(char axis, int nv) {
   switch (std::tolower(axis)) {
     case 'x':
@@ -106,7 +144,13 @@ void TLD::SetNVoxels(char axis, int nv) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Construct TLD geometry and place in the world
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Constructs and places the TLD geometry within the simulation world.
+ *
+ * Builds the TLD volume using either a provided STL mesh or a manual geometry (cylinder with a hemispherical cap), assigns the specified material, and places it at the configured center position within the parent world volume. Sets up a Geant4 region with production cuts and records the volume size.
+ *
+ * @param parentWorld The parent world volume in which the TLD is placed.
+ */
 void TLD::Construct(G4VPhysicalVolume* parentWorld) {
   // Retrieve name and material
   // std::cout << "[INFO]:: TLD construction... " << std::endl;
@@ -194,18 +238,33 @@ void TLD::Construct(G4VPhysicalVolume* parentWorld) {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Update (placeholder)
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Updates the TLD instance.
+ *
+ * This method currently performs no operations and always returns true.
+ *
+ * @return G4bool Always returns true.
+ */
 G4bool TLD::Update() { return true; }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Check if sensitive detector is voxelised
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Determines if the specified run collection uses voxelised scoring for this TLD volume.
+ *
+ * @param run_collection Name of the run collection to check.
+ * @return true if the run collection is associated with a voxelised scoring volume; false otherwise.
+ */
 bool TLD::IsRunCollectionScoringVolumeVoxelised(const G4String& run_collection) const { return GetSD()->GetRunCollectionReferenceScoringVolume(run_collection, true) != nullptr; }
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 // Define sensitive detector and scoring volume
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Defines and attaches a sensitive detector to the TLD logical volume.
+ *
+ * Creates a sensitive detector for the TLD geometry, computes the bounding scoring box, determines voxelization parameters, and registers the scoring volume for dose scoring. Ensures thread safety and prevents duplicate detector creation.
+ */
 void TLD::DefineSensitiveDetector() {
   G4AutoLock lock(&TldMutex);
   if (!m_patientSD.Get()) {

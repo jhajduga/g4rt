@@ -8,7 +8,11 @@
 #include "LogSvc.hh"
 #include "G4Threading.hh"
 /////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Configures user actions for the master thread in a multithreaded Geant4 simulation.
+ *
+ * Sets a custom score writer and registers the master thread's run-level action. This setup is specific to the master thread and may differ from worker thread configurations.
+ */
 void ActionInitialization::BuildForMaster() const {
   // In MT mode, to be clearer, the RunAction class for the master thread might be
   // different than the one used for the workers.
@@ -23,7 +27,11 @@ void ActionInitialization::BuildForMaster() const {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Configures user actions for a worker thread in a Geant4 simulation.
+ *
+ * Sets the thread name, assigns a custom score writer, and registers user actions for primary particle generation, run-level, event-level, and step-level processing. The event and stepping actions are linked to enable event-specific step handling.
+ */
 void ActionInitialization::Build() const {
 
   std::stringstream name;

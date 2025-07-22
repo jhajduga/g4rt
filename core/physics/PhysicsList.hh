@@ -38,7 +38,9 @@ class PhysicsList : public G4VModularPhysicsList {
     ///
     PhysicsList();
 
-    ///
+    /**
+ * @brief Destroys the PhysicsList object and releases associated resources.
+ */
     ~PhysicsList() = default;
 
     ///

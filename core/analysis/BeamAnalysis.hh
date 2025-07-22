@@ -21,17 +21,34 @@ class BeamAnalysis {
   ///
   BeamAnalysis();
 
-  ///
+  /**
+ * @brief Destroys the BeamAnalysis instance.
+ *
+ * Cleans up resources used by the BeamAnalysis singleton. No special actions are performed.
+ */
   ~BeamAnalysis() = default;
 
-  /// Delete the copy and move constructors
+  /**
+ * @brief Deleted copy constructor to prevent copying of the singleton instance.
+ */
   BeamAnalysis(const BeamAnalysis &) = delete;
 
-  BeamAnalysis &operator=(const BeamAnalysis &) = delete;
+  /**
+ * @brief Deleted copy assignment operator to prevent copying of BeamAnalysis instances.
+ */
+BeamAnalysis &operator=(const BeamAnalysis &) = delete;
 
-  BeamAnalysis(BeamAnalysis &&) = delete;
+  /**
+ * @brief Move constructor is deleted to prevent moving of BeamAnalysis instances.
+ */
+BeamAnalysis(BeamAnalysis &&) = delete;
 
-  BeamAnalysis &operator=(BeamAnalysis &&) = delete;
+  /**
+ * @brief Deleted move assignment operator to prevent moving of BeamAnalysis instances.
+ *
+ * Ensures the singleton nature of the BeamAnalysis class by disallowing move assignment.
+ */
+BeamAnalysis &operator=(BeamAnalysis &&) = delete;
 
   ///
   G4Cache<G4int> m_ntupleId;

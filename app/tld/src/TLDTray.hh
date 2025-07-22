@@ -39,22 +39,40 @@ class TLDTray : public VPatient {
     ///
     TLDTray(G4VPhysicalVolume *parentPV, const std::string& name);
 
-    ///
+    /**
+ * @brief Destroys the TLDTray instance.
+ *
+ * Default destructor; releases resources associated with the tray.
+ */
     ~TLDTray() {};
 
     ///
     void Construct(G4VPhysicalVolume *parentPV) override;
 
-    ///
+    /**
+ * @brief Placeholder for tray destruction logic.
+ *
+ * This method is intentionally left empty as no explicit destruction steps are required for the TLD tray.
+ */
     void Destroy() override {}
 
-    ///
+    /**
+ * @brief Confirms that the TLD tray state is up to date.
+ *
+ * @return Always returns true.
+ */
     G4bool Update() override { return true;}
 
-    ///
+    /**
+ * @brief Resets the TLD tray state.
+ *
+ * This override currently performs no action.
+ */
     void Reset() override {}
 
-    ///
+    /**
+ * @brief Placeholder for writing tray information; currently does nothing.
+ */
     void WriteInfo() override {}
     
     ///

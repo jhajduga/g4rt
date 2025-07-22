@@ -10,15 +10,27 @@
 #include "D3DCell.hh"
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs a WaterPhantom object with the default name.
+ *
+ * Initializes the WaterPhantom as a subclass of VPatient, setting its name to "WaterPhantom".
+ */
 WaterPhantom::WaterPhantom() : VPatient("WaterPhantom") {}
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Destructor for the WaterPhantom class.
+ *
+ * Cleans up resources by destroying the phantom's physical volume if it exists.
+ */
 WaterPhantom::~WaterPhantom() { Destroy(); }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Parses and loads water phantom configuration parameters from a TOML file.
+ *
+ * Reads geometry, material, and scoring settings for the water phantom from a TOML configuration file using a required prefix. Validates the existence of the configuration file and prefix, throwing a Geant4 exception if either is missing. Extracts phantom size, center position, voxelization, medium type, and scoring flags from the configuration.
+ */
 void WaterPhantom::ParseTomlConfig() {
   auto configFile = GetTomlConfigFile();
   auto configPrefix = GetTomlConfigPrefix();
@@ -66,11 +78,21 @@ void WaterPhantom::ParseTomlConfig() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Loads default parameterization for the water phantom.
+ *
+ * This implementation is a placeholder and always returns true without performing any action.
+ *
+ * @return G4bool Always returns true.
+ */
 G4bool WaterPhantom::LoadDefaultParameterization() { return true; }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Logs information about the water phantom's size and position.
+ *
+ * Outputs the phantom's dimensions, the patient isocenter coordinates, and the phantom's center position within the simulation environment.
+ */
 void WaterPhantom::WriteInfo() {
   auto configSvc = Service<ConfigSvc>();
   G4String info;
@@ -87,7 +109,11 @@ void WaterPhantom::WriteInfo() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Destroys the WaterPhantom physical volume and releases associated resources.
+ *
+ * Deletes the phantom's physical volume if it exists and resets the internal pointer to nullptr.
+ */
 void WaterPhantom::Destroy() {
   INFO_GEO("Destroying the WaterPhantom volume.");
   auto phantomVolume = GetPhysicalVolume();
@@ -98,7 +124,11 @@ void WaterPhantom::Destroy() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Loads the water phantom parameterization from a TOML configuration file if available, or applies default parameters.
+ *
+ * @return G4bool Always returns true.
+ */
 G4bool WaterPhantom::LoadParameterization() {
   // Configurable::ValidateConfig();
   if (IsTomlConfigExists()) {
@@ -110,7 +140,13 @@ G4bool WaterPhantom::LoadParameterization() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Constructs the water phantom geometry and places it in the simulation world.
+ *
+ * Creates a box-shaped water phantom with configured dimensions and material, places it at the specified center position within the parent world volume, assigns a dedicated Geant4 region with production cuts, and sets the phantom's volume for scoring.
+ *
+ * @param parentWorld The parent world physical volume in which the phantom is placed.
+ */
 void WaterPhantom::Construct(G4VPhysicalVolume* parentWorld) {
   LoadParameterization();
 
@@ -139,14 +175,24 @@ void WaterPhantom::Construct(G4VPhysicalVolume* parentWorld) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Updates the water phantom state.
+ *
+ * Currently a placeholder that always returns true.
+ *
+ * @return G4bool Always returns true.
+ */
 G4bool WaterPhantom::Update() {
   // TODO implement me.
   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Initializes the sensitive detector for the water phantom if it does not already exist.
+ *
+ * Creates a new `WaterPhantomSD` sensitive detector positioned at the combined translation of the phantom and its parent physical volumes, and assigns it to the phantom.
+ */
 void WaterPhantom::ConstructSensitiveDetector() {
   if (m_patientSD.Get() == 0) {
     // TODO: To be veryfied
@@ -158,7 +204,13 @@ void WaterPhantom::ConstructSensitiveDetector() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Creates a full-volume scoring region for the water phantom.
+ *
+ * Initializes the sensitive detector if necessary and adds a scoring volume covering the entire phantom, using the specified voxelization parameters.
+ *
+ * @param name Name assigned to the scoring volume.
+ */
 void WaterPhantom::ConstructFullVolumeScoring(const G4String& name) {
   if (m_patientSD.Get() == 0) ConstructSensitiveDetector();
   auto patientSD = m_patientSD.Get();
@@ -167,7 +219,13 @@ void WaterPhantom::ConstructFullVolumeScoring(const G4String& name) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Adds a Farmer chamber-shaped scoring volume to the sensitive detector.
+ *
+ * Creates a scoring volume with the dimensions of a Farmer ionization chamber (5.3 mm × 5.3 mm × 40 cm) and assigns it to the sensitive detector with the specified name, using a voxelization of 1 × 1 × 200.
+ *
+ * @param name The identifier for the scoring volume.
+ */
 void WaterPhantom::ConstructFarmerVolumeScoring(const G4String& name) {
   if (m_patientSD.Get() == 0) ConstructSensitiveDetector();
   auto patientSD = m_patientSD.Get();
@@ -175,7 +233,11 @@ void WaterPhantom::ConstructFarmerVolumeScoring(const G4String& name) {
   patientSD->AddScoringVolume(name, name, farmerBox, 1, 1, 200);
 }
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Sets up and assigns the sensitive detector for the water phantom logical volume.
+ *
+ * If not already created, constructs the sensitive detector and adds scoring volumes for full phantom and/or Farmer chamber scoring as configured. Assigns the sensitive detector to the "waterPhantomLV" logical volume.
+ */
 void WaterPhantom::DefineSensitiveDetector() {
   if (m_patientSD.Get() == 0) {
     if (m_watertankScoring) {
@@ -190,7 +252,15 @@ void WaterPhantom::DefineSensitiveDetector() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/**
+ * @brief Generates a map of hashed voxel or cell indices to VoxelHit objects for scoring data.
+ *
+ * Depending on the specified scoring type, returns a map where each key is a hashed index representing either a voxel (for voxel-based scoring) or the entire phantom cell (for cell-based scoring), and each value is a VoxelHit containing position, ID, volume, and mass information. If voxelization is not available for the requested scoring volume, returns an empty map.
+ *
+ * @param scoring_name Name of the scoring volume.
+ * @param type Scoring type (voxel-based or cell-based).
+ * @return std::map<std::size_t, VoxelHit> Map from hashed indices to initialized VoxelHit objects.
+ */
 std::map<std::size_t, VoxelHit> WaterPhantom::GetScoringHashedMap(const G4String& scoring_name, Scoring::Type type) const {
   std::map<std::size_t, VoxelHit> hashed_map_scoring;
 
