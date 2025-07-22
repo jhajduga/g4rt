@@ -1,0 +1,21 @@
+################# Launch parameters ############################
+# List of commands to be applied >> BEFORE << beamOn execution #
+################################################################
+
+################################################################
+# Am 5.39
+/gps/source/intensity 1
+/gps/direction 0 0 +1   # the 'beam' to be set travelling along the z-axis
+/gps/ang/type cos       # The cosine-law represents the distribution seen at a plane from a uniform 2π flux
+#/gps/ang/sigma_r 0.1 deg
+/gps/particle alpha
+/gps/energy 5.39 MeV
+/gps/ene/type Gauss
+/gps/ene/sigma 0.5 keV
+/gps/pos/type Plane
+/gps/pos/shape Rectangle
+/gps/pos/centre 0.0 0.0 -0.01 cm
+/gps/pos/halfx 2.0 mm
+/gps/pos/halfy 2.0 mm
+
+

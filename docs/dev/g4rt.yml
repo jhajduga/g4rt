@@ -1,0 +1,21 @@
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - geant4=11.2.2
+  - root=6.32.2
+  - traitlets=5.7.1
+  - xerces-c=3.2.5
+  - libffi=3.4.4
+  - gxx=12.4.0
+  - make=4.4.1
+  - cmake=3.29.5
+  - pthread-stubs=0.4
+  - pybind11
+  - spdlog=1.12.0
+  - gtest=1.14.0
+  - fmt=9.1.0
+  - hdf5=1.14.4
+  - pandas=2.2.2
+  - pydicom=2.4.3
+  - matplotlib=3.8.0

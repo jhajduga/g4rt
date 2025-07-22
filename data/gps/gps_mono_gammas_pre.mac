@@ -1,0 +1,28 @@
+################# Launch parameters ############################
+# List of commands to be applied >> BEFORE << beamOn execution #
+################################################################
+# https://github.com/ClarkMcGrew/edep-sim/blob/master/README.md
+/gps/particle gamma
+/gps/number 1           # number of particles [default 1] to simulate on each event.
+#/gps/direction 0 0 1
+/gps/position -1. 0. 0. mm
+#/gps/pos/centre 0. 0. 1. cm
+# the incident surface is in the y-z plane
+/gps/pos/rot1 0 1 0
+/gps/pos/rot2 0 0 1
+/gps/pos/type Plane
+/gps/pos/shape Circle
+/gps/pos/radius 1 mm
+/gps/ang/type beam1d     # angular distribution type
+/gps/ang/sigma_r 2 deg   # beam divergence
+# the beam is travelling along the x-axis
+/gps/ang/rot1 0 0 1
+/gps/ang/rot2 0 1 0
+#/gps/ang/mintheta 0 deg
+/gps/ang/maxtheta 2 deg
+/gps/ang/minphi 0 deg
+/gps/ang/maxphi 360 deg
+/gps/ene/type Gauss
+#/gps/ene/mono 661.6 keV
+/gps/ene/mono 100. keV
+/gps/ene/sigmae 0.5 keV

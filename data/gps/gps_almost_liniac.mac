@@ -1,0 +1,67 @@
+################# Launch parameters ############################
+# List of commands to be applied >> BEFORE << beamOn execution #
+################################################################
+
+/gps/particle gamma
+/gps/source/intensity 8
+/gps/direction 0 0 1
+/gps/pos/type Plane
+/gps/pos/shape Circle
+/gps/pos/centre 0. 0. -1.02 m
+/gps/pos/radius 4 cm
+/gps/ang/type beam1d
+/gps/ang/sigma_r 0 deg
+/gps/ang/rot1 0 1 0
+/gps/ang/rot2 1 0 0
+/gps/ene/type Brem
+/gps/ene/min 0.02 MeV
+/gps/ene/max 6.02 MeV
+/gps/ene/temp 9.2e9
+
+/gps/particle gamma
+/gps/source/add 3
+/gps/direction 0 0 1
+/gps/pos/type Plane
+/gps/pos/shape Circle
+/gps/pos/centre 0. 0. -1.02 m
+/gps/pos/radius 4 cm
+/gps/ang/type beam1d
+/gps/ang/sigma_r 0 deg
+/gps/ang/rot1 0 1 0
+/gps/ang/rot2 1 0 0
+/gps/ene/type Exp
+/gps/ene/min 0.2 MeV
+/gps/ene/max 6.02 MeV
+/gps/ene/ezero 1.01
+
+/gps/particle gamma
+/gps/source/add 1
+/gps/direction 0 0 1
+/gps/pos/type Plane
+/gps/pos/shape Circle
+/gps/pos/centre 0. 0. -1.02 m
+/gps/pos/radius 4 cm
+/gps/ang/type beam1d
+/gps/ang/sigma_r 0 deg
+/gps/ang/rot1 0 1 0
+/gps/ang/rot2 1 0 0
+/gps/ene/type Exp
+/gps/ene/min 0.5 MeV
+/gps/ene/max 6.02 MeV
+/gps/ene/ezero 1.01
+
+/gps/particle gamma
+/gps/source/add 1
+/gps/direction 0 0 1
+/gps/pos/type Plane
+/gps/pos/shape Circle
+/gps/pos/centre 0. 0. -1.02 m
+/gps/pos/radius 4 cm
+/gps/ang/type beam1d
+/gps/ang/sigma_r 0 deg
+/gps/ang/rot1 0 1 0
+/gps/ang/rot2 1 0 0
+/gps/ene/type Exp
+/gps/ene/min 0.9 MeV
+/gps/ene/max 6.02 MeV
+/gps/ene/ezero 1.01

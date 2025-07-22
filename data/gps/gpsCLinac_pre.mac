@@ -1,0 +1,194 @@
+################# Launch parameters ############################
+# List of commands to be applied >> BEFORE << beamOn execution #
+################################################################
+
+/gps/particle gamma
+/gps/pos/type Plane
+/gps/pos/shape Square
+/gps/pos/centre 0.0 0.0 -1.02 m
+/gps/pos/halfx 0.001 mm
+/gps/pos/halfy 0.001 mm
+/gps/direction 0 0 +1
+/gps/ang/user_coor true
+
+/gps/ang/type user
+/gps/hist/type theta
+/gps/hist/point 0.001 
+/gps/hist/point 0.0052 3393.00
+/gps/hist/point 0.0102 10118.00
+/gps/hist/point 0.0152 17053.00
+/gps/hist/point 0.0202 25881.00
+/gps/hist/point 0.0252 31998.00
+/gps/hist/point 0.0302 39474.00
+/gps/hist/point 0.0352 46936.00
+/gps/hist/point 0.0402 55781.00
+/gps/hist/point 0.0452 61506.00
+/gps/hist/point 0.0502 64516.00
+/gps/hist/point 0.0552 51402.00
+/gps/hist/point 0.0602 32297.00
+/gps/hist/point 0.0652 18483.00
+/gps/hist/point 0.0702 9020.00
+/gps/hist/point 0.0752 2894.00
+/gps/hist/point 0.0802 1959.00
+/gps/hist/point 0.0852 1667.00
+/gps/hist/point 0.0902 1791.00
+/gps/hist/point 0.0952 2227.00
+/gps/hist/point 0.1002 1684.00
+/gps/hist/point 0.1052 1543.00
+/gps/hist/point 0.1102 1739.00
+/gps/hist/point 0.1152 1115.00
+/gps/hist/point 0.1202 1908.00
+/gps/hist/point 0.1252 1526.00
+/gps/hist/point 0.1302 1470.00
+/gps/hist/point 0.1352 781.00
+/gps/hist/point 0.1402 759.00
+/gps/hist/point 0.1452 1214.00
+/gps/hist/point 0.1502 615.00
+/gps/hist/point 0.1552 1047.00
+/gps/hist/point 0.1602 495.00
+/gps/hist/point 0.1652 504.00
+/gps/hist/point 0.1702 433.00
+/gps/hist/point 0.1752 427.00
+/gps/hist/point 0.1802 417.00
+/gps/hist/point 0.1852 378.00
+/gps/hist/point 0.1902 357.00
+/gps/hist/point 0.1952 387.00
+/gps/hist/point 0.2002 348.00
+/gps/hist/point 0.2052 360.00
+/gps/hist/point 0.2102 284.00
+/gps/hist/point 0.2152 261.00
+/gps/hist/point 0.2202 326.00
+/gps/hist/point 0.2252 246.00
+/gps/hist/point 0.2302 277.00
+/gps/hist/point 0.2402 352.00
+/gps/hist/point 0.2452 299.00
+/gps/hist/point 0.2502 346.00
+/gps/hist/point 0.2552 334.00
+/gps/hist/point 0.2602 322.00
+/gps/hist/point 0.2652 293.00
+/gps/hist/point 0.2702 371.00
+/gps/hist/point 0.2752 307.00
+/gps/hist/point 0.2802 422.00
+/gps/hist/point 0.2852 373.00
+/gps/hist/point 0.2902 342.00
+/gps/hist/point 0.2952 425.00
+/gps/hist/point 0.3002 338.00
+/gps/hist/point 0.3052 353.00
+/gps/hist/point 0.3102 371.00
+/gps/hist/point 0.3152 407.00
+
+# TODO - czek ,e - /gps/ene/emspec 0???
+
+/gps/ene/type User
+/gps/hist/type energy
+/gps/hist/point 0.0 
+/gps/hist/point 0.05 92
+/gps/hist/point 0.10 1590
+/gps/hist/point 0.15 8232
+/gps/hist/point 0.20 29500
+/gps/hist/point 0.25 59620
+/gps/hist/point 0.30 81130
+/gps/hist/point 0.35 92200
+/gps/hist/point 0.40 96390
+/gps/hist/point 0.45 97310
+/gps/hist/point 0.50 95330
+/gps/hist/point 0.55 98140
+/gps/hist/point 0.60 89960
+/gps/hist/point 0.65 87020
+/gps/hist/point 0.70 83830
+/gps/hist/point 0.75 80840
+/gps/hist/point 0.80 77990
+/gps/hist/point 0.85 75530
+/gps/hist/point 0.90 72700
+/gps/hist/point 0.95 69720
+/gps/hist/point 1.00 67270
+/gps/hist/point 1.05 65130
+/gps/hist/point 1.10 62970
+/gps/hist/point 1.15 60530
+/gps/hist/point 1.20 58430
+/gps/hist/point 1.25 56300
+/gps/hist/point 1.30 54520
+/gps/hist/point 1.35 52540
+/gps/hist/point 1.40 51060
+/gps/hist/point 1.45 49010
+/gps/hist/point 1.50 47350
+/gps/hist/point 1.55 45970
+/gps/hist/point 1.60 44570
+/gps/hist/point 1.65 42830
+/gps/hist/point 1.70 41290
+/gps/hist/point 1.75 40010
+/gps/hist/point 1.80 38500
+/gps/hist/point 1.85 37340
+/gps/hist/point 1.90 35910
+/gps/hist/point 1.95 35060
+/gps/hist/point 2.00 33770
+/gps/hist/point 2.05 32490
+/gps/hist/point 2.10 31580
+/gps/hist/point 2.15 30580
+/gps/hist/point 2.20 29740
+/gps/hist/point 2.25 28670
+/gps/hist/point 2.30 27760
+/gps/hist/point 2.35 26860
+/gps/hist/point 2.40 25920
+/gps/hist/point 2.45 25190
+/gps/hist/point 2.50 24380
+/gps/hist/point 2.55 23710
+/gps/hist/point 2.60 22860
+/gps/hist/point 2.65 22330
+/gps/hist/point 2.70 21540
+/gps/hist/point 2.75 20860
+/gps/hist/point 2.80 20370
+/gps/hist/point 2.85 19720
+/gps/hist/point 2.90 19190
+/gps/hist/point 2.95 18450
+/gps/hist/point 3.00 17970
+/gps/hist/point 3.05 17430
+/gps/hist/point 3.10 16990
+/gps/hist/point 3.15 16460
+/gps/hist/point 3.20 15990
+/gps/hist/point 3.25 15610
+/gps/hist/point 3.30 14920
+/gps/hist/point 3.35 14610
+/gps/hist/point 3.40 14140
+/gps/hist/point 3.45 13770
+/gps/hist/point 3.50 13290
+/gps/hist/point 3.55 12920
+/gps/hist/point 3.60 12550
+/gps/hist/point 3.65 12220
+/gps/hist/point 3.70 11800
+/gps/hist/point 3.75 11530
+/gps/hist/point 3.80 11180
+/gps/hist/point 3.85 10720
+/gps/hist/point 3.90 10420
+/gps/hist/point 3.95 10080
+/gps/hist/point 4.00 9805
+/gps/hist/point 4.05 9493
+/gps/hist/point 4.10 9166
+/gps/hist/point 4.15 8842
+/gps/hist/point 4.20 8535
+/gps/hist/point 4.25 8318
+/gps/hist/point 4.30 7986
+/gps/hist/point 4.35 7744
+/gps/hist/point 4.40 7325
+/gps/hist/point 4.45 7100
+/gps/hist/point 4.50 6847
+/gps/hist/point 4.55 6620
+/gps/hist/point 4.60 6267
+/gps/hist/point 4.65 5988
+/gps/hist/point 4.70 5706
+/gps/hist/point 4.75 5494
+/gps/hist/point 4.80 5085
+/gps/hist/point 4.85 4896
+/gps/hist/point 4.90 4627
+/gps/hist/point 4.95 4306
+/gps/hist/point 5.00 4035
+/gps/hist/point 5.05 3728
+/gps/hist/point 5.10 3462
+/gps/hist/point 5.15 3116
+/gps/hist/point 5.20 2776
+/gps/hist/point 5.25 2452
+/gps/hist/point 5.30 2087
+/gps/hist/point 5.35 1606
+/gps/hist/point 5.40 950
+/gps/hist/point 5.45 343
+

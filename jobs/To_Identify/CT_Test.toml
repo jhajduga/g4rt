@@ -1,0 +1,63 @@
+[RunSvc]
+JobName = "CT_creator"
+BeamType = "IAEA" 
+# PhspInputFileName = "/mnt/c/Users/Jakub/Desktop/phsp/Cliniac2100s2-f0" # AGH JH File
+PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH JH File
+# GpsMacFileName = "gps/gpsCLinac.mac"
+PrintProgressFrequency = 0.05
+Physics = "LowE_Penelope"
+NTupleAnalysis = true 
+PrimariesAnalysis = true
+GenerateCT = false
+# FieldType = "Rectangular"
+FieldType = "Elipsoidal"
+FieldSizeA = 20 # mm
+FieldSizeB = 20 # mm
+
+[PatientGeometry]
+Type = "D3DDetector"
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 0.0
+EnviromentSizeX = 460.0
+EnviromentSizeY = 460.0
+EnviromentSizeZ = 460.0
+EnviromentMedium = "G4_WATER"
+
+# [D3DDetector_Detector]
+# TranslationInLocalFrame = [0.0,0.0,-200.0] # In mm
+# Geomertry = "CT_positioner/direction_cube.stl"
+# # Geomertry = "dose3d/geo/1x2x16_tower.stl"
+
+
+# [D3DDetector_Layer]
+# Positioning = "CT_positioner/positioning.csv"
+# # Positioning = "dose3d/geo/1x2x16_tower.csv"
+
+# [D3DDetector_Cell]
+# Medium = "RMPS470" #G4_WATER, PMMA
+# Voxelization = [2,2,2]
+# TracksAnalysis = true
+[D3DDetector_Detector]
+TranslationInLocalFrame = [0.0,0.0,-38.0] # In mm
+Voxelization = [6,6,6] # Number of cels in every direction
+
+[D3DDetector_Layer]
+MRowShift = false
+MLayerShift = false
+
+[D3DDetector_Cell]
+Medium = "RMPS470" #G4_WATER, PMMA
+Voxelization = [2,2,2]
+TracksAnalysis = true
+WriteCellTTree = true
+WriteVoxelisedCellTTree = true
+
+
+[RunSvc_Plan]
+Control_Points_In_Treatment_Plan = 1
+Gantry_Angle_Per_Control_Point = [45.0]
+Particle_Counter_Per_Control_Point = [2e3]
+
+[LogSvc_D3DCell]
+LogLevel = "debug"

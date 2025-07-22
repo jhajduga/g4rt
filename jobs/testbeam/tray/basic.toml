@@ -1,0 +1,78 @@
+[RunSvc]
+JobName = "tray_basic_setup"
+BeamType = "IAEA"
+PhspInputFileName = "/mnt/data/PHSP/TB_20X20_Merged"
+# PhspInputFileName = "/mnt/c/Users/brachwal-agh/Workspace/IAEA/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH Dell-XPS location
+# PhspInputFileName = "/etude/brachwal/iaea-phsp/TNSIM157_3x3s2-f0" # AGH LHCBD2 location
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_3x3s2-f0" # AGH BR location
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location 
+PhspEvtVrtxMultiplicityTreshold = 10
+PrintProgressFrequency = 0.05
+Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
+GenerateCT = false
+PrimariesAnalysis = false
+NTupleAnalysis = false
+RunAnalysis = true
+
+StoreTracks= false
+StorePositions= false
+StoreEnergies = false
+StorePrimaries = false
+StoreRunInfo= false
+MinimalMode= true
+
+[GeoSvc]
+BuildLinac = true
+BuildPatient = true
+MlcModel="Simplified"
+
+[Tray001]
+Rotation = [0.0, 180.0, 90.0] # in deg
+Position = [2033.55, 2814.9, -277.16] # relative to global (0,0,0)
+CellVoxelization = [2,2,2]
+
+[Tray002]
+Rotation = [0.0, 180.0, 90.0] # in deg
+Position = [2033.55, 2814.9, -257.16]
+CellVoxelization = [2,2,2]
+
+[Tray003]
+Rotation = [0.0, 180.0, 90.0] # in deg
+Position = [2033.55, 2814.9, 537.84]
+CellVoxelization = [2,2,2]
+
+[Tray004]
+Rotation = [0.0, 180.0, 90.0] # in deg
+Position = [2033.55, 2814.9, 577.84]
+CellVoxelization = [2,2,2]
+
+[Tray005]
+Rotation = [0.0, 180.0, 90.0] # in deg
+Position = [-1247.65, 4165.54, 211.95]
+CellVoxelization = [2,2,2]
+
+[Tray006]
+Rotation = [0.0, 180.0, 90.0] # in deg
+Position = [-1247.65, 4165.54, 231.95]
+CellVoxelization = [2,2,2]
+
+[Tray007]
+Rotation = [0.0, 180.0, 90.0] # in deg
+Position = [-2814.01, 2317.80, -202.75]
+CellVoxelization = [2,2,2]
+
+[Tray008]
+Rotation = [0.0, 180.0, 90.0] # in deg
+Position = [-2814.01, 2317.80, -222.75]
+CellVoxelization = [2,2,2]
+
+[Tray009]
+Rotation = [0.0, 180.0, 90.0] # in deg
+Position = [0.0, 0.0, 1297.0]
+CellVoxelization = [2,2,2]
+
+[RunSvc_Plan] 
+PlanInputFile = [
+    "plan/custom/rot00deg_0.1x320.dat"
+]
+

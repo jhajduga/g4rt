@@ -1,0 +1,17 @@
+################# Launch parameters ############################
+# List of commands to be applied >> AFTER << beamOn execution  #
+################################################################
+
+/score/dumpQuantityToFile mesh_x dose dose1dx.csv
+/score/dumpQuantityToFile mesh_y dose dose1dy.csv
+/score/dumpQuantityToFile mesh_z dose dose1dz.csv
+
+#/score/dumpQuantityToFile mesh2d dose dose2d.csv sparse
+#/score/dumpQuantityToFile mesh2d fluxa fluxa2d.csv sparse
+#/score/dumpQuantityToFile mesh2d fluxg fluxg2d.csv sparse
+#/score/dumpQuantityToFile mesh2d fluxe fluxe2d.csv sparse
+
+#/score/dumpQuantityToFile mesh_z_center_axis passageCellFlux_gamma pcf2_gamma.csv
+#/score/dumpQuantityToFile mesh_z_center_axis passageCellFlux_electron pcf2_electron.csv
+#/score/dumpQuantityToFile mesh_z_full_plane passageCellFlux_gamma pcf3_gamma.csv
+#/score/dumpQuantityToFile mesh_z_full_plane passageCellFlux_electron pcf3_electron.csv

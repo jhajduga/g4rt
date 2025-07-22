@@ -1,0 +1,70 @@
+################# Launch parameters ############################
+# List of commands to be applied >> BEFORE << beamOn execution #
+################################################################
+
+################################################################
+# Cd 88.03
+/gps/source/intensity 1
+/gps/direction 0 0 +1   # the 'beam' to be set travelling along the z-axis
+/gps/ang/type cos       # The cosine-law represents the distribution seen at a plane from a uniform 2π flux
+#/gps/ang/sigma_r 0.1 deg
+/gps/particle gamma
+/gps/energy 88.03 keV
+/gps/ene/type Gauss
+/gps/ene/sigma 0.5 keV
+/gps/pos/type Plane
+/gps/pos/shape Rectangle
+/gps/pos/centre 0. 0. -10. cm
+/gps/pos/halfx 3.0 mm
+/gps/pos/halfy 3.0 mm
+
+#
+## Cd 22.08
+#################################################################
+/gps/source/add 0.97 # intensity
+/gps/direction 0 0 +1
+/gps/ang/type cos
+#/gps/ang/sigma_r 0.1 deg
+/gps/particle gamma
+/gps/energy 22.08 keV
+/gps/ene/type Gauss
+/gps/ene/sigma 0.5 keV
+/gps/pos/type Plane
+/gps/pos/shape Rectangle
+/gps/pos/centre 0. 0. -10. cm
+/gps/pos/halfx 3.0 mm
+/gps/pos/halfy 3.0 mm
+
+# Cd 24.93
+################################################################
+/gps/source/add 0.44 # intensity
+/gps/direction 0 0 +1
+/gps/ang/type cos
+#/gps/ang/sigma_r 0.1 deg
+/gps/particle gamma
+/gps/energy 24.93 keV
+/gps/ene/type Gauss
+/gps/ene/sigma 0.5 keV
+/gps/pos/type Plane
+/gps/pos/shape Rectangle
+/gps/pos/centre 0. 0. -10 cm
+/gps/pos/halfx 3.0 mm
+/gps/pos/halfy 3.0 mm
+
+
+# Cd 25.45
+################################################################
+/gps/source/add 0.09 # intensity
+/gps/direction 0 0 +1
+/gps/ang/type cos
+#/gps/ang/sigma_r 0.1 deg
+/gps/particle gamma
+/gps/energy 25.45 keV
+/gps/ene/type Gauss
+/gps/ene/sigma 0.5 keV
+/gps/pos/type Plane
+/gps/pos/shape Rectangle
+/gps/pos/centre 0. 0. -10. cm
+/gps/pos/halfx 3.0 mm
+/gps/pos/halfy 3.0 mm
+

@@ -1,0 +1,18 @@
+[Log_Global]
+LogLevel = "debug"
+ConsolePattern = "%n [%^%l%$] %v"
+FilePattern = "[%Y-%m-%d %H:%M:%S.%e] %n [%^%l%$] %v"
+LogDir = "log/"
+Console = "true"
+LogFileName = "g4rt_global_info.log"
+
+[Log_RunSvc]
+LogLevel = "debug"
+Console = "true"
+LogFileName = "run_svc_info.log"
+
+[Log_GeoAndScoring]
+LogLevel = "debug"
+Console = "true"
+FilePattern = "[%Y-%m-%d %H:%M:%S.%e] %@ %n [%^%l%$] %v"
+LogFileName = "geo_and_scoring_debug.log"

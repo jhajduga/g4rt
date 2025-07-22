@@ -1,0 +1,42 @@
+[RunSvc]
+JobName = "Single file tompl run test"
+BeamType = "IAEA" # "gps" IAEA 
+SimConfigPrefix = "SimConditions"
+PhspInputFileName = "/data3/TN-Dose3D/data/mc/phsp/Clinac2300-PhSp-Primo/BestPHSPs1_10e8hist"
+PrintProgressFrequency = 0.001
+NTupleAnalysis = true 
+PrimariesAnalysis = false
+BeamAnalysis = false
+FieldSize = 360 # mm
+
+
+[PatientGeometry]
+Type = "Dose3D" # "WaterPhantom" "Dose3D"
+ConfigPrefix = "Dose3D" # WP  Dose3D
+PatientIsocentreX = 0.0
+PatientIsocentreY = 0.0
+PatientIsocentreZ = 0.0
+EnviromentSizeX = 400.0
+EnviromentSizeY = 400.0
+EnviromentSizeZ = 310.0
+EnviromentMedium = "Usr_G4AIR20C"
+
+[Dose3D_Detector]
+TranslationInLocalFrame = [0.0,0.0,-155.0] # In mm
+Geomertry = "dose3d/geo/full_tower.stl"
+
+[Dose3D_Layer]
+Positioning = "dose3d/geo/full_tower.csv"
+
+[Dose3D_Cell]
+Medium = "RMPS470" #G4_WATER, PMMA
+Voxelization = [2,2,2]
+
+
+[SimConditions_Plan]
+Control_Points_In_Treatment_Plan = 1
+Gantry_Angle_Per_Control_Point = [90.0]
+Particle_Counter_Per_Control_Point = [3e8]
+
+[Log_D3DCell]
+LogLevel = "debug"

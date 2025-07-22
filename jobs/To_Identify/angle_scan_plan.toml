@@ -1,0 +1,4 @@
+[SimConditions_Plan]
+Control_Points_In_Treatment_Plan = 1
+Gantry_Angle_Per_Control_Point = [-90.0,-75.0,-60.0,-45.0,-30.0,-15.0,0.0,15.0,30.0,45.0,60.0,75.0,90.0]
+Particle_Counter_Per_Control_Point = [1e4,1e6,1e6,1e6,1e6,1e6,1e6,1e6,1e6,1e6,1e6,1e6,1e6]

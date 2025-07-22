@@ -1,0 +1,100 @@
+# SpekpyWeb (Spekpy ver. 2.0.8)
+# 1) CZĄSTKA
+/gps/particle gamma
+
+# 2) POZYCJA ŹRÓDŁA:    płaska        powierzchnia (x-y), promień 5 mm, 90 mm przed targetem
+/gps/pos/type Plane
+/gps/pos/shape Circle
+/gps/pos/radius 0.5 mm
+/gps/pos/centre  0 0 0 mm # Dokładna pozycja ustawiona na poziomie konfiguracji zadania.
+
+# 3) KIERUNEK: emisja izotropowa, ograniczona do półkuli +Z - stożkowa
+/gps/ang/type iso
+/gps/ang/mintheta 0 deg
+/gps/ang/maxtheta 5 deg
+/gps/ang/minphi 0 deg
+/gps/ang/maxphi 360 deg
+
+
+/gps/ene/type User
+/gps/ene/emspec 0
+/gps/hist/type energy
+/gps/hist/point 1.125	68049116.43308938
+/gps/hist/point 1.375	93352483.90507567
+/gps/hist/point 1.625	117542593.46325415
+/gps/hist/point 1.875	137853585.60764423
+/gps/hist/point 2.125	152834491.6770496
+/gps/hist/point 2.375	162634727.9128627
+/gps/hist/point 2.625	63813961.41875071
+/gps/hist/point 2.875	49609050.24545297
+/gps/hist/point 3.125	52508138.861732855
+/gps/hist/point 3.375	58333856.65410485
+/gps/hist/point 3.625	63637676.55263136
+/gps/hist/point 3.875	68302849.83102982
+/gps/hist/point 4.125	72282923.78953469
+/gps/hist/point 4.375	75552435.05334055
+/gps/hist/point 4.625	77691315.23371612
+/gps/hist/point 4.875	78684829.33646497
+/gps/hist/point 5.125	79037318.12945369
+/gps/hist/point 5.375	78844465.1927084
+/gps/hist/point 5.625	78190538.459705
+/gps/hist/point 5.875	77162001.06670326
+/gps/hist/point 6.125	75833018.77508675
+/gps/hist/point 6.375	74270948.99786153
+/gps/hist/point 6.625	72520958.50473265
+/gps/hist/point 6.875	70633853.25003225
+/gps/hist/point 7.125	68655079.07449356
+/gps/hist/point 7.375	66615631.921266094
+/gps/hist/point 7.625	64535774.331603765
+/gps/hist/point 7.875	62437979.55963296
+/gps/hist/point 8.125	60342180.00901533
+/gps/hist/point 8.375	58262110.47890092
+/gps/hist/point 8.625	56205697.3709548
+/gps/hist/point 8.875	54181300.48346064
+/gps/hist/point 9.125	52196684.832970224
+/gps/hist/point 9.375	50255024.78124518
+/gps/hist/point 9.625	48358461.43479232
+/gps/hist/point 9.875	46508319.8580117
+/gps/hist/point 10.125	44708030.51395525
+/gps/hist/point 10.375	42957183.275641695
+/gps/hist/point 10.625	41257299.51716572
+/gps/hist/point 10.875	39605517.13057465
+/gps/hist/point 11.125	38002401.5584061
+/gps/hist/point 11.375	36447204.23279814
+/gps/hist/point 11.625	34939862.39741718
+/gps/hist/point 11.875	33474793.35208997
+/gps/hist/point 12.125	32053140.610376585
+/gps/hist/point 12.375	30672933.90300095
+/gps/hist/point 12.625	29334148.476816144
+/gps/hist/point 12.875	28032119.263825312
+/gps/hist/point 13.125	26766753.715503946
+/gps/hist/point 13.375	25536127.640149433
+/gps/hist/point 13.625	24341298.705485743
+/gps/hist/point 13.875	23175626.115138285
+/gps/hist/point 14.125	22041029.904201873
+/gps/hist/point 14.375	20935567.831367325
+/gps/hist/point 14.625	19860104.536523003
+/gps/hist/point 14.875	18806619.362090603
+/gps/hist/point 15.125	17778345.69208318
+/gps/hist/point 15.375	16774155.728502661
+/gps/hist/point 15.625	15796227.304798543
+/gps/hist/point 15.875	14835682.337258918
+/gps/hist/point 16.125	13894834.019692427
+/gps/hist/point 16.375	12973089.079817021
+/gps/hist/point 16.625	12072291.116406059
+/gps/hist/point 16.875	11181015.181994958
+/gps/hist/point 17.125	10303402.532445246
+/gps/hist/point 17.375	9437856.108327366
+/gps/hist/point 17.625	8587204.273418581
+/gps/hist/point 17.875	7736009.9439157685
+/gps/hist/point 18.125	6889952.4278808255
+/gps/hist/point 18.375	6046541.587901726
+/gps/hist/point 18.625	5208311.535463513
+/gps/hist/point 18.875	4360283.460478589
+/gps/hist/point 19.125	3506038.8908034354
+/gps/hist/point 19.375	2645293.4325787174
+/gps/hist/point 19.625	1751889.1592776494
+/gps/hist/point 19.875	875154.8056766132
+
+/gps/number 25
+

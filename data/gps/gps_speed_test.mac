@@ -1,0 +1,27 @@
+################# Launch parameters ############################
+# List of commands to be applied >> BEFORE << beamOn execution #
+################################################################
+
+/gps/particle gamma
+/gps/direction 0 0 1
+/gps/pos/type Plane
+/gps/pos/shape Rectangle
+/gps/pos/halfx 2.50 cm
+/gps/pos/halfy 2.50 cm
+/gps/pos/centre 0.0 0.0 -0.425 m
+
+/gps/ang/type user
+/gps/hist/type theta
+/gps/hist/point 0. 100.
+
+
+/gps/ene/type User
+/gps/ene/emspec 0
+/gps/hist/type energy
+/gps/hist/point 1.00 100
+/gps/hist/point 2.00 100
+/gps/hist/point 3.00 100
+/gps/hist/point 4.00 100
+/gps/hist/point 5.00 100
+/gps/hist/point 6.00 100
+

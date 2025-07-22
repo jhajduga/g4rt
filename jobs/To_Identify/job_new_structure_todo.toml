@@ -1,0 +1,24 @@
+[RunSvc]
+JobName = "Test job with imports"
+FieldType = "Elipsoidal" # "Rectangular" # "Elipsoidal", "RTPlan"
+FieldSizeA = 18 # mm
+FieldSizeB = 18 # mm
+PrintProgressFrequency = 0.001
+NTupleAnalysis = true
+BeamType = "IAEA"
+PhspInputFileName = "/mnt/d/Data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH JH File
+# PhspInputFileName = "/data3/TN-Dose3D/data/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH LHCBD1 location
+# PhspInputFileName = "/mnt/e/Data/dose3d/mc/phsp/Clinac2300-PhSp-Primo/TNSIM157_10x10s2-f0" # AGH BR location
+# PhspInputPosition = "s2"
+
+[RunSvc_Plan]
+Control_Points_In_Treatment_Plan = 2
+Gantry_Angle_Per_Control_Point = [120.0,30.0]
+Particle_Counter_Per_Control_Point = [2e6,2e6]
+
+[PatientGeometry]
+Type = "D3DDetector"
+ConfigFile = "/jobs/mlsr/patient_4x4x4_10x10x10_top0.0.toml"
+
+[ImportOpts]
+Files = ["file1.toml","file2.toml"]

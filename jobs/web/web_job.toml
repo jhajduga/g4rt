@@ -1,0 +1,42 @@
+[RunSvc]
+JobName = "web_job_example"
+BeamType = "gps" 
+GpsMacFileName = "gps/gpsCLinac_pre.mac"
+PhspEvtVrtxMultiplicityTreshold = 10
+PrintProgressFrequency = 0.05
+Physics = "LowE_Penelope" #  "LowE_Livermore" "LowE_Penelope" "emstandard_opt3"
+
+[GeoSvc]
+BuildLinac = true
+BuildPatient = true
+MlcModel="Simplified"
+
+[PatientGeometry]
+Type = "D3DDetector"
+EnviromentSizeX = 50.0
+EnviromentSizeY = 50.0
+EnviromentSizeZ = 80.0
+EnviromentMedium = "G4_Galactic"
+
+# PatientIsocentreX = 0.0
+# PatientIsocentreY = 0.0
+# PatientIsocentreZ = 0.0
+
+[D3DDetector_Detector]
+TranslationInLocalFrame = [0.0,0.0,-25.0] # In mm
+Voxelization = [3,2,5] # Number of cels in every direction
+
+[D3DDetector_Cell]
+Medium = "RMPS470" #G4_WATER, PMMA
+Voxelization = [5,5,5]
+TracksAnalysis = false
+CellVoxelisedScorer = true
+
+[RunSvc_Plan] # paths can be relative (to PROJECT_DATA) or absolute
+nControlPoints = 1      # This will limit number of ctrl points defined below!
+BeamRotation = 0        # This will overwrite Rotation value for all below plan files!
+nParticles = 500      # This will overwrite Rotation value for all below plan files!
+PlanInputFile = [
+    "plan/custom/rot00deg_10x10.dat"
+]
+

@@ -1,0 +1,127 @@
+################# Launch parameters ############################
+# List of commands to be applied >> BEFORE << beamOn execution #
+################################################################
+
+# enable to get tracking information
+#/tracking/verbose 1
+
+# enable to check geometry overlaps
+#/geometry/test/run
+
+################################################################
+
+### scoring along Z
+/score/create/boxMesh mesh_z
+
+# scoring mesh, detector dimensions depand on the field size, scan along beam axis
+/score/mesh/boxSize 0.25 0.25 20. cm # the numbers here are half-sizes
+/score/mesh/nBin 1 1 400
+/score/mesh/translate/xyz 0. 0. 20. cm # wrt. to the world centre
+# scored quantity
+/score/quantity/doseDeposit dose
+
+# closing the mesh
+/score/close
+
+################################################################
+
+### scoring along X
+/score/create/boxMesh mesh_x
+
+# scoring mesh, detector 41x0.5x0.2 cm, scan along X axis at depth 1.4cm
+/score/mesh/boxSize 20.5 .25 .1 cm # the numbers here are half-sizes
+/score/mesh/nBin 410 1 1
+/score/mesh/translate/xyz 0.0 0. 1.4 cm
+
+# scored quantity
+/score/quantity/doseDeposit dose
+
+# closing the mesh
+/score/close
+
+################################################################
+
+### scoring along Y
+/score/create/boxMesh mesh_y
+
+# scoring mesh, detector 0.5x41x0.2 cm, scan along Y axis at depth 1.4cm
+/score/mesh/boxSize .25 20.5 .1 cm # the numbers here are half-sizes
+/score/mesh/nBin 1 410 1
+/score/mesh/translate/xyz 0. 0. 1.4 cm
+
+# scored quantity
+/score/quantity/doseDeposit dose
+
+# closing the mesh
+/score/close
+
+################################################################
+### 2D SCORING - for debugging purposes, disabled by default to save CPU time
+#  detector 10x2x2 mm
+#/score/create/boxMesh mesh2d
+#/score/mesh/boxSize 0.5 25. 80. cm # the numbers here are half-sizes
+#/score/mesh/translate/xyz 0. 0. -30. cm
+#/score/mesh/nBin 1 500 1600
+
+# scored quantity
+#/score/quantity/doseDeposit dose
+
+#/score/quantity/passageCellFlux fluxg
+#/score/filter/particle gammaFilter gamma
+
+#/score/quantity/passageCellFlux fluxe
+#/score/filter/particle eMinusFilter e-
+
+#/score/quantity/passageCellFlux fluxa
+
+# closing the mesh
+#/score/close
+
+#/score/list
+
+# command below will make nice printout when multithreading is activated
+#/control/cout/useBuffer true
+
+#################################################################
+#### scoring transmission rate
+#/score/create/boxMesh mesh_z_center_axis
+#
+## scoring mesh, detector 10x10x1 mm, scan along beam axis
+#/score/mesh/boxSize .5 .5 80. cm # the numbers here are half-sizes
+#/score/mesh/nBin 1 1 1600
+#/score/mesh/translate/xyz 0. 0. -30. cm
+#
+## scored quantity
+#/score/quantity/doseDeposit dose
+#
+#/score/quantity/passageCellFlux passageCellFlux_gamma
+#/score/filter/particle gammaFilter gamma
+#
+#/score/quantity/passageCellFlux passageCellFlux_electron
+#/score/filter/particle eMinusFilter e-
+#
+## closing the mesh
+#/score/close
+#
+#
+#### scoring along Z
+#/score/create/boxMesh mesh_z_full_plane
+#
+## scoring mesh, detector 10x10x1 mm, scan along beam axis
+#/score/mesh/boxSize 25. 25. 80. cm # the numbers here are half-sizes
+#/score/mesh/nBin 1 1 1600
+#/score/mesh/translate/xyz 0. 0. -30. cm
+#
+## scored quantity
+#/score/quantity/doseDeposit dose
+#
+#/score/quantity/passageCellFlux passageCellFlux_gamma
+#/score/filter/particle gammaFilter gamma
+#
+#/score/quantity/passageCellFlux passageCellFlux_electron
+#/score/filter/particle eMinusFilter e-
+#
+#
+## closing the mesh
+#/score/close
+
