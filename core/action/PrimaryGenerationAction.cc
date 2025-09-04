@@ -30,9 +30,14 @@ PrimaryGenerationAction::PrimaryGenerationAction(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Sets the primary generator type based on the configured beam type.
+ * @brief Determine and set the primary generator type from configuration.
  *
- * Determines the primary generator type from configuration and updates internal state accordingly. Throws a fatal exception if the beam type is unrecognized.
+ * Reads the RunSvc "BeamType" value and sets m_generatorType accordingly.
+ * For "IAEA" also reads RunSvc "PhspEvtVrtxMultiplicityTreshold" into
+ * m_min_p_vrtx_vec_size. For unrecognized values a fatal G4Exception is raised.
+ *
+ * @throws G4Exception FatalErrorInArgument if the configured BeamType is not one of
+ *         "IAEA", "gps", or "ion".
  */
 void PrimaryGenerationAction::SetPrimaryGenerator() {
   auto configSvc = Service<ConfigSvc>();
@@ -116,11 +121,22 @@ PrimaryGenerationAction::~PrimaryGenerationAction(void) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Generates and configures primary vertices for a simulation event.
+ * @brief Generate and configure primary vertices for a single Geant4 event.
  *
- * Depending on the configured primary generator type, this method generates primary vertices for the given event, applies optional collimation filtering, and enforces a minimum vertex multiplicity for IAEA phase space sources. It then applies any configured rotation and translation to the vertex positions and momenta, attaches or updates user information for each primary particle, and optionally fills primary particle analysis data if enabled.
+ * Generates primaries according to the configured generator backend (IAEA phase-space reader, GPS, or IonGPS),
+ * applies beam collimation filtering and — for IAEA sources — enforces a configurable minimum vertex multiplicity
+ * by issuing repeated reader calls (with an internal safety cap). For every generated primary vertex this method:
+ * - optionally applies a Z translation using the global source isocentre distance,
+ * - optionally applies a global rotation (m_rotation_matrix) to vertex positions and primary momenta,
+ * - re-attaches IAEA-generated vertices to the event after transformation (non-IAEA generators leave vertices as created),
+ * - ensures each primary particle has a PrimaryParticleInfo user object (creating and filling one if absent).
  *
- * @param anEvent The Geant4 event to which primary vertices will be added and configured.
+ * If at least one vertex exists and primaries analysis is enabled in configuration, the primaries analysis
+ * singleton is invoked to record per-event primary data.
+ *
+ * The method is thread-safe with respect to primary-generator lifecycle and access (guarded by PrimGenMutex).
+ *
+ * @param anEvent The Geant4 event to populate and modify with transformed primary vertices and particle user info.
  */
 void PrimaryGenerationAction::GeneratePrimaries(G4Event *anEvent) {
   auto runSvc = Service<RunSvc>();

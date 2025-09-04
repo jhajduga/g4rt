@@ -50,11 +50,15 @@ void SciSlicePhantom::Destroy() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Constructs the SciSlicePhantom volume within the simulation world.
+ * @brief Create and place the SciSlicePhantom volume inside a parent world.
  *
- * Defines a box-shaped phantom made of PMMA material, creates its logical and physical volumes, and places it at the origin of the provided parent world volume. Assigns a dedicated Geant4 region with a 1 mm production cut to the phantom logical volume.
+ * Constructs a rectangular phantom (10 mm × 2 mm × 2 mm) using the PMMA material
+ * obtained from the configuration service, creates its logical and physical
+ * volumes, and places the phantom at the origin of the provided parent world.
+ * A dedicated Geant4 region ("SciSlicePhantomR") is attached to the phantom
+ * logical volume with a production cut of 1.0 mm.
  *
- * @param parentWorld The parent world physical volume in which the phantom is placed.
+ * @param parentWorld Parent world physical volume in which the phantom is placed.
  */
 void SciSlicePhantom::Construct(G4VPhysicalVolume *parentWorld) {
   G4cout << "[INFO]:: SciSlicePhantom construction... " << G4endl;
@@ -95,9 +99,16 @@ G4bool SciSlicePhantom::Update() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Attaches a sensitive detector to the SciSlicePhantom volume if not already present.
+ * @brief Attach and configure the sensitive detector for the SciSlicePhantom.
  *
- * Creates and configures a `SciSlicePhantomSD` sensitive detector, adds the phantom's box-shaped scoring volume with specified segmentation, and registers the detector with the logical volume. No action is taken if the sensitive detector already exists.
+ * If a patient sensitive detector is not already set, creates a SciSlicePhantomSD,
+ * registers the phantom's box-shaped logical volume as a scoring volume using
+ * a segmentation of 20 × 4 × 4, and installs the detector on the phantom logical
+ * volume. No action is taken if the sensitive detector already exists.
+ *
+ * Notes:
+ * - Expects the phantom's solid to be a G4Box; behavior is undefined for other solids.
+ * - Registers the detector under the logical volume name "SciSlicePhantomLV".
  */
 void SciSlicePhantom::DefineSensitiveDetector(){
   if(m_patientSD.Get()==0){

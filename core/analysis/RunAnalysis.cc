@@ -49,12 +49,13 @@ RunAnalysis *RunAnalysis::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Prepares analysis at the start of a Geant4 simulation run.
+ * @brief Initialize analysis at the start of a Geant4 run.
  *
- * Retrieves the current control point and logs the thread type (master or worker) at the beginning of the run. Scoring collection initialization is handled elsewhere.
+ * Retrieves and stores the current control point from RunSvc and logs whether this invocation runs on the master or a worker thread.
+ * Scoring-collection setup is performed separately by ControlPointRun::InitializeScoringCollection.
  *
  * @param runPtr Pointer to the current Geant4 run.
- * @param isMaster Indicates if the current thread is the master thread.
+ * @param isMaster True if called on the master thread.
  */
 void RunAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
     m_current_cp = Service<RunSvc>()->CurrentControlPoint();
@@ -78,9 +79,21 @@ void RunAnalysis::EndOfEventAction(const G4Event *evt){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Finalizes analysis and writes output data at the end of a Geant4 run.
+ * @brief Finalize analysis for a completed Geant4 run and write configured outputs.
  *
- * Triggers end-of-run processing for the current control point, then writes dose and field mask data to CSV and/or ROOT files depending on the initialized analysis modules and configuration settings. Optionally exports dose data in CT format if enabled.
+ * Performs end-of-run processing on the current control point's Run, then writes dose and
+ * optional field-mask outputs to the configured analysis backends. If CSV analysis is
+ * active, writes per-run dose (and, if enabled, field masks) to CSV and — when CT export
+ * is enabled — exports CT-formatted dose via PatientGeometry. If NTuple (ROOT) analysis is
+ * active, writes dose and field-mask data to the ROOT/NTuple file.
+ *
+ * Configuration-controlled behaviors:
+ * - RunSvc.WriteFieldMaskToCsv (bool): when true, write field masks to CSV.
+ * - RunSvc.GenerateCT (bool): when true, export CT-format dose via PatientGeometry.
+ *
+ * Side effects:
+ * - Calls m_current_cp->GetRun()->EndOfRun() to finalize run-level accumulation.
+ * - May create/modify files via CSV and NTuple backends and PatientGeometry export.
  *
  * @param runPtr Pointer to the completed Geant4 run.
  */

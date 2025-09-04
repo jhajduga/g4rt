@@ -4,7 +4,11 @@
 #include "Types.hh"
 
 /**
- * @brief Constructs a BWorldConstruction object with default initialization.
+ * @brief Default constructor.
+ *
+ * Constructs a BWorldConstruction instance with no custom initialization.
+ * This constructor performs only trivial construction; any heavy setup is
+ * performed later (e.g., in Create()). No resources are allocated here.
  */
 BWorldConstruction::BWorldConstruction(){}
 
@@ -16,11 +20,13 @@ BWorldConstruction::BWorldConstruction(){}
 BWorldConstruction::~BWorldConstruction(){}
 
 /**
- * @brief Returns the singleton instance of BWorldConstruction.
+ * @brief Return the singleton BWorldConstruction instance.
  *
- * Ensures only one instance of BWorldConstruction exists, managed externally by G4GeometryManager.
+ * Creates (on first call) and returns the single global BWorldConstruction used to build
+ * the simulation world. The instance's lifetime is managed externally (released by
+ * G4GeometryManager); callers should not delete it.
  *
- * @return Pointer to the singleton BWorldConstruction instance.
+ * @return WorldConstruction* Pointer to the singleton BWorldConstruction.
  */
 WorldConstruction* BWorldConstruction::GetInstance() {
     static auto instance = new BWorldConstruction(); // It's being released by G4GeometryManager
@@ -28,11 +34,18 @@ WorldConstruction* BWorldConstruction::GetInstance() {
 }
 
 /**
- * @brief Constructs the simulation world geometry, including world, bunker, and environment volumes.
+ * @brief Build the simulation world and its bunker environment.
  *
- * Creates the main world volume at the configured isocenter, adds a concrete bunker wall and an inner bunker environment, and places them hierarchically. Also constructs world modules and tray detectors within the bunker environment.
+ * Creates the top-level world volume positioned at the configured isocentre, then
+ * creates and places a concrete bunker wall and an inner bunker environment
+ * (air-filled). The method places those volumes into the world, stores the
+ * bunker wall and bunker-inside placements in m_bunker_wall and
+ * m_bunker_inside_pv respectively, and invokes construction of world modules
+ * and tray detectors inside the bunker interior.
  *
- * @return true Always returns true upon successful construction.
+ * The method reads geometry sizes and materials from the configuration service.
+ *
+ * @return true Always returns true after construction.
  */
 bool BWorldConstruction::Create() {
     
@@ -84,9 +97,10 @@ void BWorldConstruction::ConstructTrayDetectors(G4VPhysicalVolume *parentPV) {
 }
 
 /**
- * @brief Defines sensitive detectors and fields for the world and all tray detectors.
+ * @brief Set up sensitive detectors and fields for the world and all tray detectors.
  *
- * Calls the base class implementation to set up sensitive detectors and fields, then defines sensitive detectors for each tray in the simulation.
+ * Calls the base-class implementation to initialize global sensitive detectors and fields,
+ * then invokes DefineSensitiveDetector() on each tray in m_trays so their detectors are registered.
  */
 void BWorldConstruction::ConstructSDandField() {
     WorldConstruction::ConstructSDandField();
@@ -96,9 +110,12 @@ void BWorldConstruction::ConstructSDandField() {
 }
 
 /**
- * @brief Retrieves pointers to custom detectors associated with each tray.
+ * @brief Collects pointers to the custom patient detectors provided by each tray.
  *
- * @return std::vector<VPatient*> Vector of pointers to the detectors from all tray objects.
+ * Returns a vector of non-owning pointers to the VPatient detectors retrieved from each
+ * D3DTray in m_trays. The order of pointers matches the order of trays in m_trays.
+ *
+ * @return std::vector<VPatient*> Non-owning pointers to tray detectors.
  */
 std::vector<VPatient*> BWorldConstruction::GetCustomDetectors() const {
     std::vector<VPatient*> customDetectors;

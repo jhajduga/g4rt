@@ -29,9 +29,11 @@ G4bool TLD::m_set_tld_voxelised_scorer = true;
 // Enable or disable cell scorer for TLD
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Enables or disables cell-based scoring for TLD volumes.
+ * @brief Enable or disable cell-based scoring for all TLD volumes.
  *
- * @param val Set to true to enable cell scoring, false to disable.
+ * Sets the global flag that controls whether TLD volumes use per-cell scoring.
+ *
+ * @param val True to enable cell-based scoring for TLDs; false to disable it.
  */
 void TLD::CellScorer(G4bool val) {
   m_set_tld_scorer = val;
@@ -61,9 +63,17 @@ void TLD::CellVoxelisedScorer(G4bool val) {
 ////////////////////////////////////////////////////////////////////////////////
 // TLD constructor
 /**
- * @brief Constructs a TLD (Thermoluminescent Dosimeter) volume with specified label, center, material, and optional STL geometry.
+ * @brief Initialize a TLD instance with identity, placement and geometry metadata.
  *
- * Initializes a TLD instance for use in Geant4 simulations, setting its label, spatial center, material name, and STL geometry file path if provided.
+ * Constructs a TLD object by storing its label, nominal center position, material name,
+ * and optional STL geometry file path. This constructor only initializes object state;
+ * it does not create Geant4 volumes or register sensitive detectors. Call Construct()
+ * to build and place the geometry in a parent volume.
+ *
+ * @param label Human-readable identifier for the TLD instance (also used for run/collection naming).
+ * @param centre Centre position (global coordinates) used as the nominal placement point for the TLD.
+ * @param tldMediumName Name of the material/medium to assign to the TLD logical volume.
+ * @param stlGeometryFilePath Path to an STL geometry file to use for the TLD shape or "None" to use the built-in shape.
  */
 TLD::TLD(const G4String& label, const G4ThreeVector& centre, G4String tldMediumName, G4String stlGeometryFilePath)
     : VPatient(label), m_tld_medium(tldMediumName), m_stl_geometry_file_path(stlGeometryFilePath), m_centre(centre) {
@@ -73,9 +83,10 @@ TLD::TLD(const G4String& label, const G4ThreeVector& centre, G4String tldMediumN
 ////////////////////////////////////////////////////////////////////////////////
 // TLD destructor
 /**
- * @brief Destroys the TLD instance and releases allocated resources.
+ * @brief Destroy the TLD and release its resources.
  *
- * Calls the Destroy method to clean up the TLD volume and deletes the step limit object if it was allocated.
+ * Calls Destroy() to clean up geometry and placement created for this TLD instance,
+ * and deletes the optional step-limit object if one was allocated (m_step_limit).
  */
 TLD::~TLD() {
   Destroy();
@@ -145,11 +156,17 @@ void TLD::SetNVoxels(char axis, int nv) {
 ////////////////////////////////////////////////////////////////////////////////
 // Construct TLD geometry and place in the world
 /**
- * @brief Constructs and places the TLD geometry within the simulation world.
+ * @brief Construct and place the TLD volume inside the given parent world.
  *
- * Builds the TLD volume using either a provided STL mesh or a manual geometry (cylinder with a hemispherical cap), assigns the specified material, and places it at the configured center position within the parent world volume. Sets up a Geant4 region with production cuts and records the volume size.
+ * Builds the TLD logical volume from either a provided STL mesh (cleaning a possible UTF‑8 BOM and loading a tessellated mesh) or a fallback manual geometry (solid cylinder with an upper hemispherical cap). The constructed volume is placed at the TLD's configured global center (transformed to the instance local frame), a Geant4 region with production cuts (0.1 mm) is created and assigned to the logical volume, and the TLD's volume is recorded.
  *
- * @param parentWorld The parent world volume in which the TLD is placed.
+ * The function has the following observable effects:
+ * - If m_stl_geometry_file_path != "None", reads and sanitizes the STL file, writes a cleaned temporary STL, and loads it via CADMesh to create the solid.
+ * - Otherwise, creates a composite solid (tube + spherical cap) for the TLD shape.
+ * - Updates m_global_centre and m_centre (global→local transform), creates and places a G4PVPlacement for the volume under parentWorld, and assigns a G4Region with 0.1 mm production cuts to the logical volume.
+ * - Records the TLD volume as the product of the configured size components.
+ *
+ * @param parentWorld The parent physical volume in which the TLD physical volume is placed.
  */
 void TLD::Construct(G4VPhysicalVolume* parentWorld) {
   // Retrieve name and material
@@ -261,9 +278,28 @@ bool TLD::IsRunCollectionScoringVolumeVoxelised(const G4String& run_collection) 
 ////////////////////////////////////////////////////////////////////////////////
 // Define sensitive detector and scoring volume
 /**
- * @brief Defines and attaches a sensitive detector to the TLD logical volume.
+ * @brief Create and attach the TLD sensitive detector (SD) for dose scoring.
  *
- * Creates a sensitive detector for the TLD geometry, computes the bounding scoring box, determines voxelization parameters, and registers the scoring volume for dose scoring. Ensures thread safety and prevents duplicate detector creation.
+ * Creates a TLDSD instance for this TLD, computes an axis-aligned scoring box that bounds
+ * the TLD solid, and registers that box as a scoring volume with the detector. The SD is
+ * configured with voxelization parameters (1×1×1 by default or the instance voxel counts
+ * when voxelised scoring is enabled via TLD::m_set_tld_voxelised_scorer). The run collection
+ * name is derived from the TLD label as the substring before the first underscore; the hit
+ * collection name is the TLD label plus "_HC".
+ *
+ * Side effects:
+ * - Allocates and stores a TLDSD object in m_patientSD.
+ * - Calls AddScoringVolume on the TLDSD to register the scoring box and voxel grid.
+ * - Attaches the SD to the TLD logical volume via VPatient::SetSensitiveDetector.
+ *
+ * Thread-safety and idempotence:
+ * - The operation is guarded by TldMutex and will create the SD only once for this instance;
+ *   subsequent calls are no-ops.
+ *
+ * Notes:
+ * - The SD centre is positioned at the geometric centre of the solid's extent offset by the
+ *   TLD's current centre.
+ * - Debug output includes the TLD name, derived run-collection name, global centre, and voxel counts.
  */
 void TLD::DefineSensitiveDetector() {
   G4AutoLock lock(&TldMutex);

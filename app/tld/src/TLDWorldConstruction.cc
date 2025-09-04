@@ -16,11 +16,14 @@ WorldConstruction* TLDWorldConstruction::GetInstance() {
 }
 
 /**
- * @brief Constructs and initializes the simulation world volume and its main components.
+ * @brief Build the simulation world volume and initialize its components.
  *
- * Retrieves world size and air material from configuration, creates the world geometry, and places it at the origin. After setting the world physical volume, it constructs additional world modules and the TLD tray within the world.
+ * Creates the world geometry from configuration (WorldConstruction::WorldSize)
+ * using the configured air material (MaterialsSvc::Usr_G4AIR20C), places the
+ * world physical volume at the origin, stores it via SetPhysicalVolume(), and
+ * then constructs additional world modules and the TLD tray inside the world.
  *
- * @return true Always returns true upon successful creation.
+ * @return true on successful construction.
  */
 bool TLDWorldConstruction::Create() {
     
@@ -39,20 +42,24 @@ bool TLDWorldConstruction::Create() {
 }
 
 /**
- * @brief Creates and attaches a TLD tray as a child of the specified physical volume.
+ * @brief Create and attach a TLD tray under the given parent physical volume.
  *
- * Instantiates a `TLDTray` object with the given parent physical volume and stores it for later use.
+ * Instantiates a TLDTray positioned as a child of parentPV and stores the resulting
+ * object in the instance member m_tld_tray for later use (for example, to define
+ * its sensitive detector).
  *
- * @param parentPV The parent physical volume to which the TLD tray will be attached.
+ * @param parentPV Parent physical volume to attach the TLD tray to. Must be a valid
+ *                 G4VPhysicalVolume pointer.
  */
 void TLDWorldConstruction::ConstructTLDTray(G4VPhysicalVolume *parentPV) {
     m_tld_tray = new TLDTray(parentPV, "TLDTray");
 }
 
 /**
- * @brief Sets up sensitive detectors and fields for the simulation world.
+ * @brief Configure sensitive detectors and fields for the simulation world.
  *
- * Calls the base class implementation to construct sensitive detectors and fields, then defines a sensitive detector for the TLD tray component.
+ * Calls the base class implementation to construct standard sensitive detectors and fields,
+ * then defines the sensitive detector for the TLD tray member (m_tld_tray).
  */
 void TLDWorldConstruction::ConstructSDandField() {
     WorldConstruction::ConstructSDandField();

@@ -74,13 +74,22 @@ void MlcSimplified::SetRunConfiguration(const ControlPoint* control_point){
 }
 
 /**
- * @brief Determines whether a 3D position lies within the MLC-defined radiation field.
+ * @brief Determine whether a 3D point lies inside the current MLC-defined field.
  *
- * Checks if the given position is inside the current MLC field shape, optionally transforming the position to the isocentre plane. Supports rectangular, ellipsoidal, and polygonal (RTPlan/CustomPlan) field shapes. Returns false if the MLC is not initialized for the current control point or if the position is outside the field.
+ * Tests if the provided position is within the active MLC aperture for the current control point.
+ * The position may be checked directly in the mask (isocentre) plane or first transformed to that plane
+ * when @p transformToIsocentre is true. Supported field shapes: "Rectangular", "Elipsoidal", and
+ * polygonal apertures produced from RTPlan/CustomPlan (ray-casting).
  *
- * @param position The 3D position to test.
- * @param transformToIsocentre If true, transforms the position to the isocentre plane before testing.
- * @return true if the position is within the MLC field; false otherwise.
+ * If the point's z differs from the isocentre z and @p transformToIsocentre is false, the function
+ * returns false. If the MLC has not been initialized for the current control point this function
+ * raises a G4Exception.
+ *
+ * @param position  3D position to test (world coordinates). If @p transformToIsocentre is false the
+ *                  function expects this point to already lie in the isocentre/mask plane (matching z).
+ * @param transformToIsocentre  When true, the position is transformed to the isocentre/mask plane
+ *                              before the containment test.
+ * @return true if the (possibly transformed) position is inside the configured MLC field; false otherwise.
  */
 bool MlcSimplified::IsInField(const G4ThreeVector& position, bool transformToIsocentre) {
     auto maskLevelPosition = position;

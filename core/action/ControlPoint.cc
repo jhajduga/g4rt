@@ -30,20 +30,30 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Constructs a ControlPointConfig with the specified ID, number of events, and rotation angle.
+ * @brief Initialize a ControlPointConfig.
  *
- * @param id Unique identifier for the control point.
- * @param nevts Number of events associated with this control point.
- * @param rot Rotation angle in degrees for the control point.
+ * Initializes a control-point configuration with an identifier, the number of
+ * events to process for that control point, and its rotation angle in degrees.
+ *
+ * @param id Control-point identifier.
+ * @param nevts Number of events for this control point.
+ * @param rot Rotation angle in degrees.
  */
 ControlPointConfig::ControlPointConfig(int id, int nevts, double rot)
 : Id(id), NEvts(nevts),RotationInDeg(rot){}
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Initializes scoring collections for each run collection and scoring type.
+ * @brief Populate scoring maps for every registered run collection and scoring type.
  *
- * For each registered run collection and scoring type, attempts to retrieve the corresponding scoring map from the patient or custom detectors. Adds non-empty scoring collections to the internal map and removes empty ones.
+ * Initializes entries in the ControlPointRun internal m_hashed_scoring_map for each run collection name
+ * registered in ControlPoint::m_run_collections and for each scoring type returned by RunSvc.
+ * For each (run_collection, scoring_type) the function attempts to obtain a hashed scoring map first from
+ * GeoSvc::Patient and, if empty, from each custom detector in GeoSvc::CustomDetectors.
+ *
+ * Non-empty scoring maps are stored into m_hashed_scoring_map[run_collection_name][scoring_type].
+ * Empty maps are discarded (removed from the per-collection map). The function emits informational and
+ * warning logs to report initialization progress and missing scoring collections.
  */
 void ControlPointRun::InitializeScoringCollection(){
     std::string worker = G4Threading::IsWorkerThread() ? "worker" : "master";
@@ -93,9 +103,16 @@ void ControlPointRun::InitializeScoringCollection(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Merges scoring data and simulation mask points from a worker run into the current run.
+ * @brief Merge scoring and simulation mask data from a worker run into this run.
  *
- * Accumulates voxel and cell scoring data from the worker run into the master run, normalizing dose values as needed. After merging, clears the worker run's scoring data and simulation mask points, and transfers the mask points to the master run.
+ * Accumulates per-voxel and per-cell scoring entries from the given worker run into the current (master) run.
+ * For voxel-type scoring, dose values are normalized by the ratio voxel_volume / cell_volume when voxel_volume
+ * is smaller than the patient cell volume retrieved from GeoSvc. After merging, the worker run's scoring map
+ * is cleared and its simulation mask points are appended to this run's simulation mask points (worker mask cleared).
+ *
+ * The function expects `worker_run` to be a ControlPointRun instance (it is dynamically casted).
+ *
+ * @param worker_run Pointer to the worker G4Run whose scoring data and sim mask points will be merged.
  */
 void ControlPointRun::Merge(const G4Run* worker_run){
     
@@ -150,12 +167,14 @@ void ControlPointRun::Merge(const G4Run* worker_run){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Retrieves the scoring collection map for the specified collection name.
+ * @brief Return the scoring map for a registered run collection.
  *
- * Logs an error if the collection name is not found.
+ * Retrieves the ScoringMap associated with the given run-collection name.
+ * The name must correspond to a collection previously initialized/registered for this run.
  *
- * @param name Name of the scoring collection to retrieve.
- * @return Reference to the scoring map associated with the given name.
+ * @param name Run collection name to look up.
+ * @return ScoringMap& Reference to the associated scoring map.
+ * @throws std::out_of_range If the collection name is not present in the run's map.
  */
 ScoringMap& ControlPointRun::GetScoringCollection(const G4String& name){
     if (m_hashed_scoring_map.find(name) == m_hashed_scoring_map.end())
@@ -187,9 +206,16 @@ void ControlPointRun::EndOfRun(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Calculates and normalizes field and angle scaling factors for all hits in each scoring collection.
+ * @brief Compute and normalize per-hit field and angle scaling factors.
  *
- * For each hit, computes the field scaling factor and angle scaling factor using the current control point, then applies min-max normalization to both factors across the collection.
+ * For every scoring collection stored in m_hashed_scoring_map this routine:
+ * - Computes the field scaling factor (FSF) and angle scaling factor (ASF) for each hit
+ *   using the currently active ControlPoint (via GetFieldScalingFactor and GetAngleScalingFactor),
+ *   and stores those values on the hit.
+ * - Performs a per-scoring min–max normalization of FSF and ASF to the fixed range [0.02, 0.98].
+ *
+ * Operates in-place on the hits contained in m_hashed_scoring_map. Normalization is performed
+ * independently for each scoring (type) within each run collection.
  */
 void ControlPointRun::FillMlcFieldScalingFactor(){
     auto current_cp = Service<RunSvc>()->CurrentControlPoint();
@@ -237,9 +263,21 @@ void ControlPointRun::FillMlcFieldScalingFactor(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Calculates and stores the MLC-defined beam mask area and center of gravity for the current control point.
+ * @brief Compute and store MLC-derived beam mask area and center of gravity.
  *
- * Filters out closed MLC leaves, computes the total open field area and the geometric center of gravity based on the remaining open leaves, and stores these parameters for later use.
+ * Queries the current control point's MLC leaf positions (Y1 and Y2), removes leaves
+ * that are effectively closed (Y1 ≈ Y2), then computes the total open field area
+ * (sum of open leaf lengths × leaf width) and the geometric center (cx, cy) of the
+ * remaining open leaves. Results are stored in m_beam_mask_area (rounded to 3
+ * decimals) and m_beam_mask_gravity_centre as a pair (cx, cy), each rounded to 3
+ * decimals.
+ *
+ * Notes:
+ * - Uses a fixed leaf width of 2.5 mm.
+ * - Leaves with |Y1 - Y2| < 1e-5 are treated as closed and ignored.
+ * - If no open leaves remain the computed area will be 0 and gravity centre
+ *   computations will divide by the number of remaining leaves (caller code is
+ *   expected to ensure at least one open leaf exists).
  */
 void ControlPointRun::FillParameterization(){
     auto current_cp = Service<RunSvc>()->CurrentControlPoint();
@@ -295,9 +333,24 @@ void ControlPointRun::FillParameterization(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Constructs a ControlPoint instance from the given configuration.
+ * @brief Initialize a ControlPoint from configuration.
  *
- * Initializes scoring types, sets the rotation matrix, and, for RTPlan or CustomPlan field types, reads jaw apertures and MLC leaf positions from the plan file.
+ * Constructs a ControlPoint using values supplied in `config`. This sets up
+ * the internal rotation matrix, initializes the list of scoring types from
+ * the Run service, and (for plan-based fields) loads jaw apertures and MLC
+ * leaf positioning from the plan file.
+ *
+ * When `config.FieldType` is "RTPlan" or "CustomPlan", the constructor calls
+ * DicomSvc to read:
+ * - jaw apertures (X and Y) for the specified plan file, and
+ * - MLC Y1/Y2 leaf positioning for the specified plan file.
+ *
+ * Side effects:
+ * - Queries the global RunSvc and DicomSvc singletons.
+ * - May populate internal vectors/maps used by scoring and mask generation.
+ *
+ * @param config ControlPointConfig containing identifiers and plan/field settings
+ *               used to initialize rotation, scoring, and (if applicable) plan data.
  */
 ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
     G4cout << " DEBUG: ControlPoint:Ctr: nEvts: " << m_config.NEvts << G4endl;
@@ -320,11 +373,12 @@ ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Copy constructor for ControlPoint.
+ * @brief Copy constructor — creates an independent duplicate of a ControlPoint.
  *
- * Creates a new ControlPoint instance by copying the configuration, rotation matrix, scoring types, field mask points, jaw apertures, and MLC leaf positions from another ControlPoint.
+ * Constructs a new ControlPoint by copying the configuration and producing independent copies of mutable internal state:
+ * the rotation matrix is cloned and all containers (scoring types, plan mask points, jaw apertures, and MLC leaf positionings) are copied so the new instance can be modified without affecting the source.
  *
- * @param cp The ControlPoint instance to copy.
+ * @param cp Source ControlPoint to copy.
  */
 ControlPoint::ControlPoint(const ControlPoint& cp):m_config(cp.m_config){
     m_rotation = new G4RotationMatrix(*cp.m_rotation);
@@ -355,9 +409,10 @@ ControlPoint::ControlPoint(ControlPoint&& cp):m_config(cp.m_config){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Destructor for the ControlPoint class.
+ * @brief Destroy the ControlPoint object.
  *
- * Releases memory allocated for the rotation matrix, if present.
+ * Deletes the internally owned rotation matrix, if present, and clears the pointer.
+ * Safe to call on an object whose rotation matrix is already null.
  */
 ControlPoint::~ControlPoint() {
     if (m_rotation) delete m_rotation; m_rotation = nullptr;
@@ -366,12 +421,14 @@ ControlPoint::~ControlPoint() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Creates and stores a new ControlPointRun instance in a thread-safe manner.
+ * @brief Create and register a new ControlPointRun for this ControlPoint.
  *
- * If scoring is enabled, the new run is configured accordingly. The run is added to the thread-local collection and registered for the current control point.
+ * Thread-safe: allocates a new ControlPointRun configured with the given scoring flag,
+ * appends it to the thread-local run list, and registers it in this ControlPoint's
+ * per-thread storage so the control point manages the run for the current thread.
  *
- * @param scoring Whether to enable scoring for the new run.
- * @return Pointer to the newly created ControlPointRun.
+ * @param scoring Enable scoring on the created run when true.
+ * @return G4Run* Pointer to the newly created run (owned by the control point's thread-local storage).
  */
 G4Run* ControlPoint::GenerateRun(bool scoring){
     G4AutoLock lock(&CPMutex);
@@ -382,9 +439,12 @@ G4Run* ControlPoint::GenerateRun(bool scoring){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Sets the rotation matrix for the control point based on the specified rotation angle in degrees.
+ * @brief Set the control point's rotation.
  *
- * Updates the internal rotation matrix to represent a rotation around the Y-axis by the given angle.
+ * Updates the control point's stored rotation angle (in degrees) and installs a new
+ * internal rotation matrix representing a rotation about the Y axis by that angle.
+ * Any previously allocated rotation matrix is deleted and replaced; the control point
+ * takes ownership of the newly created rotation matrix.
  *
  * @param rotationInDegree Rotation angle in degrees.
  */
@@ -452,12 +512,17 @@ std::string ControlPoint::GetSimOutputTFileName(bool workerMT) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the field mask points for the specified type.
+ * @brief Retrieve the control point field mask points.
  *
- * Retrieves either the plan or simulation field mask points, generating the plan mask if necessary. If the type is unrecognized, a fatal exception is thrown.
+ * Returns a reference to the stored field mask points for the requested mask type.
+ * - "Plan": ensures the plan mask is generated (via FillPlanFieldMask) if the world is built and the plan mask is empty, then returns the plan mask points.
+ * - "Sim": returns the simulation mask points belonging to the current control-point run (may be empty).
  *
- * @param type The type of field mask to retrieve ("Plan" or "Sim").
- * @return Reference to the vector of field mask points.
+ * If the Geant4 world is not yet constructed the function will return the plan mask container (which may be empty) without attempting generation.
+ *
+ * @param type Either "Plan" or "Sim" to select which mask to retrieve.
+ * @return const std::vector<G4ThreeVector>& Reference to the requested mask points vector.
+ * @throws G4Exception if an unrecognized mask type is provided.
  */
 const std::vector<G4ThreeVector>& ControlPoint::GetFieldMask(const std::string& type) {
     if(!Service<GeoSvc>()->IsWorldBuilt()){
@@ -482,9 +547,14 @@ const std::vector<G4ThreeVector>& ControlPoint::GetFieldMask(const std::string& 
 ////////////////////////////////////////////////////////////////////////////////
 /// The field mask is formed at the isocentre Z position,
 /**
- * @brief Adds particle positions projected onto the mask plane (Z=0) to the simulation field mask.
+ * @brief Project primary vertices onto the mask plane and append them to the simulation field mask.
  *
- * For each provided primary vertex, its position is transformed to the mask plane and added to the simulation mask points, up to a threshold determined by the number of threads.
+ * If the current simulation mask contains fewer than (50000 / NumberOfThreads) points, each
+ * primary vertex in the provided vector is transformed to mask-plane coordinates via
+ * VMlc::GetPositionInMaskPlane(...) and appended to the control point's simulation mask.
+ * If the threshold is already reached or exceeded, the function does nothing.
+ *
+ * @param p_vrtx Vector of primary vertices to project and add to the simulation mask.
  */
 void ControlPoint::FillSimFieldMask(const std::vector<G4PrimaryVertex*>& p_vrtx){
     auto configSvc = Service<ConfigSvc>();
@@ -500,9 +570,15 @@ void ControlPoint::FillSimFieldMask(const std::vector<G4PrimaryVertex*>& p_vrtx)
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Fills the plan field mask points for the current control point.
+ * @brief Populate the plan field mask points for this control point.
  *
- * Generates the set of mask points at the isocenter Z position based on the configured field type. For rectangular or ellipsoidal fields, fills the mask using a regular grid; for RTPlan or custom plans, samples points according to the MLC-defined field. Throws a fatal exception if the mask remains empty after filling.
+ * Builds the set of 3D mask points projected on the isocentre Z plane according to the configured field type:
+ * - For "Rectangular" and "Elipsoidal": generate a regular grid (applies configured rotation).
+ * - For "RTPlan" and "CustomPlan": sample points using the MLC-defined field (MLC::IsInField).
+ *
+ * This is intended to run exactly once per control point; calling it again is treated as a fatal error.
+ *
+ * If no points are produced the function signals a fatal error via G4Exception.
  */
 void ControlPoint::FillPlanFieldMask(){
     // It should happen once for single control point at the time
@@ -544,11 +620,22 @@ void ControlPoint::FillPlanFieldMask(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Fills the plan field mask points for rectangular or ellipsoidal fields at a given Z position.
+ * @brief Generate plan mask points for regular (rectangular or ellipsoidal) fields at a given Z.
  *
- * Generates a grid of points within the defined field size, applying rotation if specified. For ellipsoidal fields, only points inside the ellipse are included; for rectangular fields, all grid points are used.
+ * Populates m_plan_mask_points with a uniform grid of points on the plane Z = current_z
+ * using spacing FIELD_MASK_POINTS_DISTANCE. Points are generated inside the rectangular
+ * bounding box defined by FieldSizeA (X extent) and FieldSizeB (Y extent). If
+ * m_config.FieldType equals "Elipsoidal", only points inside the ellipse are kept;
+ * otherwise (rectangular field) all grid points inside the bounding box are added.
  *
- * @param current_z The Z-coordinate at which the mask points are generated.
+ * The grid is sampled with a half-step offset from the minimum extents so points are
+ * centered within the cells. Each generated point is transformed by the control point's
+ * rotation (m_rotation) before being appended to m_plan_mask_points.
+ *
+ * If FieldSizeA or FieldSizeB is negative, a fatal G4Exception (FatalErrorInArgument)
+ * is raised.
+ *
+ * @param current_z Z coordinate at which mask points are generated.
  */
 void ControlPoint::FillPlanFieldMaskForRegularShapes(double current_z){
     double current_x,current_y;
@@ -593,11 +680,16 @@ void ControlPoint::FillPlanFieldMaskForRegularShapes(double current_z){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Fills the plan field mask with random points inside the MLC-defined field for input plans.
+ * @brief Populate the plan mask by randomly sampling points inside the MLC-defined field.
  *
- * Randomly samples up to 10 million points within a large square region at the specified Z position, adding those that fall inside the MLC field to the plan mask. Stops when 100,000 points have been collected or the sample limit is reached.
+ * Generates random (x,y) points at the plane z = current_z and appends those that fall
+ * inside the MLC field to the control point's plan mask (m_plan_mask_points).
  *
- * @param current_z The Z-coordinate at which to sample the field mask points.
+ * Sampling details:
+ * - Samples up to 10,000,000 random points uniformly in the square [-200 mm, 200 mm] × [-200 mm, 200 mm].
+ * - Stops early when 100,000 valid in-field points have been collected.
+ *
+ * @param current_z Z-coordinate (in the same units used by the geometry, typically mm) at which the field membership is tested.
  */
 void ControlPoint::FillPlanFieldMaskForInputPlan(double current_z){
     std::random_device rd;
@@ -619,12 +711,18 @@ void ControlPoint::FillPlanFieldMaskForInputPlan(double current_z){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Exports voxel scoring volume data to a CSV file.
+ * @brief Export voxel scoring-volume data to a CSV file for this control point.
  *
- * Writes the center position, mask plane-transformed position, and field scaling factor for each voxel in the provided scoring map to a CSV file named according to the control point ID and scoring volume name.
+ * Writes one CSV row per voxel containing the voxel center (X,Y,Z in mm),
+ * the voxel position transformed into the mask plane (mX,mY,mZ in mm),
+ * and the voxel's field-scaling factor.
  *
- * @param scoring_vol_name Name identifier for the scoring volume, used in the output filename.
- * @param volume_scoring Map of voxel indices to VoxelHit objects containing scoring and position data.
+ * The output file is created under RunSvc.OutputDir and named:
+ *   cp-<Id>_scoring_volume<scoring_vol_name>mask.csv
+ *
+ * @param scoring_vol_name Identifier appended to the output filename.
+ * @param volume_scoring Mapping of voxel index -> VoxelHit whose centre and
+ *        field-scaling data will be exported.
  */
 void ControlPoint::DumpVolumeMaskToFile(std::string scoring_vol_name, const std::map<std::size_t, VoxelHit>& volume_scoring) const { // TODEL? 
     auto output_dir = Service<ConfigSvc>()->GetValue<std::string>("RunSvc", "OutputDir");
@@ -647,12 +745,19 @@ void ControlPoint::DumpVolumeMaskToFile(std::string scoring_vol_name, const std:
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Calculates the field scaling factor at a given position based on MLC leaf positions.
+ * @brief Compute the MLC-based field scaling factor at a given point.
  *
- * Computes a scaling factor that quantifies the geometric influence of the multi-leaf collimator (MLC) leaf positions on a specified point in space. The factor is derived from the angular relationships between the point and each pair of opposing MLC leaves, summing the squared angles for both Y1 and Y2 leaf banks.
+ * Evaluates a geometric scaling factor that quantifies how the multi-leaf collimator
+ * (MLC) leaf positions influence a spatial point. For each pair of opposing leaves
+ * (Y1 vs Y2) the function computes the angle, in degrees, between the vector from
+ * the point to the MLC centre and the vector from the point to the leaf; it squares
+ * those angles and sums them across all non-coincident leaf pairs for both banks.
  *
- * @param position The spatial point at which to evaluate the field scaling factor.
- * @return G4double The computed field scaling factor for the given position.
+ * The MLC centre Z is taken from the first Y2 leaf position. Leaf pairs whose Y
+ * coordinates are effectively identical are ignored.
+ *
+ * @param position Point at which to evaluate the factor (global coordinates).
+ * @return G4double Sum of squared angular influence contributions (degrees^2).
  */
 G4double ControlPoint::GetFieldScalingFactor(const G4ThreeVector& position) const {
     auto mlc_positioning_y1 = MLC()->GetMlcPositioning("Y1");
@@ -766,9 +871,16 @@ void ControlPoint::FillEventCollections(G4HCofThisEvent* evtHC){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Accumulates hit data from a voxel hits collection into the specified run collection's scoring maps.
+ * @brief Accumulate hits from an event-level voxel hits collection into a run collection's scoring maps.
  *
- * For each hit in the provided collection, updates the corresponding scoring collection (cell or voxel) within the run collection by cumulating hit data based on the appropriate hashed identifier.
+ * Iterates all hits in the provided VoxelHitsCollection and cumulates each hit into every scoring
+ * map registered for the named run collection. For Scoring::Type::Cell the hit's global hashed
+ * identifier is used (and `exact_volume_match` is set to false); for Scoring::Type::Voxel the
+ * voxel-local hashed identifier is used (with `exact_volume_match` true). If the hits collection
+ * is empty the function returns immediately.
+ *
+ * @param run_collection Name of the run collection whose scoring maps will be updated.
+ * @param hitsColl Pointer to the event-level VoxelHitsCollection to process.
  */
 void ControlPoint::FillEventCollection(const G4String& run_collection, VoxelHitsCollection* hitsColl){
     int nHits = hitsColl->entries();
@@ -802,9 +914,15 @@ void ControlPoint::FillEventCollection(const G4String& run_collection, VoxelHits
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Registers a hit collection name under a specified run collection.
+ * @brief Register a hit-collection name under a run-collection entry.
  *
- * If the run collection does not exist, it is created. The hit collection name is then added to the run collection.
+ * Creates the run-collection entry if it does not exist, then appends the
+ * hit-collection name to that run-collection's list.
+ *
+ * @param run_collection_name Name of the run collection to register the hit collection under.
+ * @param hc_name             Hit collection name to append to the run collection.
+ *
+ * @note This function appends unconditionally (duplicates are not checked).
  */
 void ControlPoint::RegisterRunHCollection(const G4String& run_collection_name, const G4String& hc_name){
     if(m_run_collections.Get().find( run_collection_name ) == m_run_collections.Get().end()){
@@ -850,9 +968,11 @@ std::set<G4String> ControlPoint::GetHitCollectionNames() {
 }
 
 /**
- * @brief Returns the MLC (multi-leaf collimator) instance for the current control point.
+ * @brief Retrieve the MLC instance associated with this control point.
  *
- * Verifies that the MLC is properly initialized for this control point. If initialization fails, logs an error and terminates the program.
+ * Returns the VMlc pointer from GeoSvc after verifying the MLC is initialized
+ * for this control point. If the MLC is not initialized for this control point,
+ * logs an error and terminates the process with EXIT_FAILURE.
  *
  * @return VMlc* Pointer to the initialized MLC instance.
  */
@@ -868,12 +988,14 @@ VMlc* ControlPoint::MLC() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the MLC leaf positioning vector for the specified side.
+ * @brief Return the MLC leaf positions for the requested side.
  *
- * @param side The MLC side ("Y1" or "Y2").
- * @return const std::vector<double>& Reference to the vector of leaf positions for the given side.
+ * Returns a reference to the internal leaf-positioning vector for side "Y1" or "Y2".
  *
- * @note Exits the program if an unknown side is specified.
+ * @param side Which MLC side to retrieve ("Y1" or "Y2").
+ * @return const std::vector<double>& Reference to the leaf-position vector for the given side.
+ *
+ * @note If an unknown side is provided, the function logs an error and terminates the process (calls exit(EXIT_FAILURE)).
  */
 const std::vector<double>& ControlPoint::GetMlcPositioning(const std::string& side) const {
     auto dicomSvc = DicomSvc::GetInstance();

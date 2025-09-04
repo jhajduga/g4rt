@@ -37,9 +37,9 @@ class SavePhSpConstruction : public IPhysicalVolume {
 
   private:
   /**
- * @brief Constructs the SavePhSpConstruction object and initializes the base class with the name "WorldConstruction".
+ * @brief Private constructor that initializes the base IPhysicalVolume with the name "WorldConstruction".
  *
- * This constructor is private and used internally to enforce the singleton pattern.
+ * Used only internally to enforce the singleton pattern; not accessible externally.
  */
   SavePhSpConstruction():IPhysicalVolume("WorldConstruction"){}
 
@@ -59,7 +59,9 @@ class SavePhSpConstruction : public IPhysicalVolume {
 SavePhSpConstruction &operator=(const SavePhSpConstruction &) = delete;
 
   /**
- * @brief Move constructor is deleted to enforce singleton pattern.
+ * @brief Deleted move constructor to prevent moving the singleton instance.
+ *
+ * Prevents creating a new instance by move construction; enforces single-instance semantics.
  */
 SavePhSpConstruction(SavePhSpConstruction &&) = delete;
 

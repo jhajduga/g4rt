@@ -18,7 +18,10 @@ class IbaImRT: public IPhysicalVolume {
         IbaImRT();
 
         /**
- * @brief Destroys the IbaImRT singleton instance.
+ * @brief Defaulted private destructor.
+ *
+ * Defaulted and private to prevent external destruction of the singleton instance;
+ * lifetime and cleanup of the single instance are managed by the class internals.
  */
         ~IbaImRT() = default;
 
@@ -49,9 +52,9 @@ IbaImRT &operator=(IbaImRT &&) = delete;
         void Construct(G4VPhysicalVolume *parentPV) override;
 
         /**
- * @brief Destroys the physical volume.
+ * @brief No-op override of IPhysicalVolume::Destroy.
  *
- * This implementation does nothing.
+ * Intentionally does nothing — destruction is managed by the singleton lifecycle.
  */
         void Destroy() override {}
 

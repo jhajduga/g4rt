@@ -33,13 +33,19 @@ ModularWaterPhantom* ModularWaterPhantom::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Constructs the modular water phantom geometry within the specified parent physical volume.
+ * @brief Build the modular water phantom geometry inside the given parent physical volume.
  *
- * Depending on the configuration parameter `"PatientGeometry.EnviromentPatientEnvelop"`, this method either:
- * - Builds a simplified modular water phantom consisting of multiple aquarium-like boxes and water fillings arranged around the patient isocenter, or
- * - Delegates construction to the `GeometryBuilder` for a 3MF-based phantom.
+ * Constructs the phantom according to the configuration key
+ * "PatientGeometry.EnviromentPatientEnvelop". When set to
+ * "ModularWaterPhantom_simplified" this creates a set of six aquarium-like shells
+ * and corresponding water volumes positioned around the patient isocenter (coordinates
+ * read from the configuration). When set to "ModularWaterPhantom_3mf" construction
+ * is delegated to GeometryBuilder::Build for a 3MF-based phantom.
  *
- * @param parentPV The parent Geant4 physical volume in which the modular water phantom geometry will be placed.
+ * The simplified mode obtains wall and water materials from the configuration and
+ * places the assemblies using the instance rotation (m_rotation).
+ *
+ * @param parentPV Parent Geant4 physical volume into which the phantom volumes are placed.
  */
 void ModularWaterPhantom::Construct(G4VPhysicalVolume *parentPV) {
 

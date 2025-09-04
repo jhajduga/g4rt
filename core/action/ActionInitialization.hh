@@ -14,7 +14,10 @@
 class ActionInitialization : public G4VUserActionInitialization {
   public:
   /**
- * @brief Constructs an ActionInitialization object with default settings.
+ * @brief Default constructor for ActionInitialization.
+ *
+ * Creates an ActionInitialization instance with the class's default settings.
+ * No runtime initialization is performed here; action setup occurs in Build()/BuildForMaster().
  */
   ActionInitialization() = default;
 

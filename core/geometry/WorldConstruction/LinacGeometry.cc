@@ -101,9 +101,16 @@ bool LinacGeometry::design() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Destroys the linac gantry geometry and associated accelerator head volumes.
+ * @brief Destroy the Linac geometry and associated accelerator head.
  *
- * Releases and deletes the current physical volume and, if present, destroys the accelerator head instance and resets its pointer.
+ * Destroys the current accelerator head instance (if any), deletes the stored
+ * physical volume representing the gantry/world, and clears internal pointers
+ * so the geometry can be safely reconstructed or the object cleaned up.
+ *
+ * Side effects:
+ * - Calls `Destroy()` on the head instance and sets `m_headInstance` to nullptr.
+ * - Deletes the physical volume returned by `GetPhysicalVolume()` and calls
+ *   `SetPhysicalVolume(nullptr)`.
  */
 void LinacGeometry::Destroy() {
   G4cout << "[INFO]:: \t\tDestroing the Gantry volumes... " << G4endl;
@@ -133,9 +140,11 @@ G4bool LinacGeometry::Update() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Constructs the linac world volume and places the accelerator head within the simulation.
+ * @brief Construct the linac world volume and instantiate the selected accelerator head.
  *
- * Creates the accelerator world as a box with configurable size and material, places it relative to the parent physical volume, and delegates construction of the accelerator head geometry to the selected head instance.
+ * Constructs a box-shaped world volume sized using the "LinacEnvelopeBoxSize" configuration value and made from the configured material (defaults to "G4_Galactic"), places that world under the provided parent physical volume, and delegates construction of the accelerator head to the selected head instance.
+ *
+ * The created world physical volume is placed with a fixed translation of (0, 0, -1000). This method sets the LinacGeometry physical volume and relies on design() to select and create m_headInstance before delegating its construction.
  *
  * @param parentPV The parent physical volume to which the linac world volume is attached.
  */
@@ -182,9 +191,12 @@ void LinacGeometry::ResetHead() {
 
 
 /**
- * @brief Sets the isocentre distance for the linac geometry.
+ * @brief Set the global source-to-isocentre distance used by the linac geometry.
  *
- * @param distance_cm The source-to-isocentre distance in centimeters.
+ * Updates the static isocentre distance (in centimeters) read by geometry construction and positioning.
+ *
+ * @param distance_cm Source-to-isocentre distance in centimeters.
+ * @see LinacGeometry::GetIsocentreDistance
  */
 void LinacGeometry::SetIsocentreDistance(double distance_cm) {
   s_isocentre_distance_cm = distance_cm;

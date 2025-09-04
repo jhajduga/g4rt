@@ -36,9 +36,11 @@ void DishCubePhantom::WriteInfo() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Destroys the DishCubePhantom physical volume and releases associated resources.
+ * @brief Destroy the DishCubePhantom physical volume and free its resources.
  *
- * Deletes the current physical volume if it exists and resets the internal pointer to nullptr.
+ * Deletes the currently attached physical volume (if any) and clears the internal
+ * physical-volume pointer so the object no longer references the deleted volume.
+ * Safe to call multiple times; calling when no physical volume is present is a no-op.
  */
 void DishCubePhantom::Destroy() {
   G4cout << "[INFO]:: \tDestroing the DishCubePhantom volume. " << G4endl;
@@ -51,11 +53,18 @@ void DishCubePhantom::Destroy() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Constructs the DishCubePhantom geometry within the given parent world volume.
+ * @brief Build the DishCubePhantom geometry inside the given parent world.
  *
- * Creates a phantom volume by subtracting three pairs of cylindrical holes from the parent solid, assigns the PMMA material, places the resulting logical volume at the origin, and associates it with a dedicated Geant4 region with production cuts.
+ * Constructs the phantom by subtracting three pairs of cylindrical holes (upper and bottom dishes)
+ * from the parent world's logical solid, creates a PMMA logical volume from the result, places it
+ * at the origin of the provided parent volume, and assigns a dedicated G4Region with a 1.0 mm
+ * production cut to that logical volume.
  *
- * @param parentWorld The parent world physical volume in which the phantom is constructed.
+ * The method obtains the PMMA material from the configuration service. The provided parentWorld's
+ * logical volume is used as the base solid for successive G4SubtractionSolid operations; therefore
+ * parentWorld must be the envelope/box in which the phantom is to reside (as managed by PatientGeometry).
+ *
+ * @param parentWorld Physical volume whose logical volume supplies the base solid and which will host the phantom.
  */
 void DishCubePhantom::Construct(G4VPhysicalVolume *parentWorld) {
   G4cout << "[INFO]:: DishCubePhantom construction... " << G4endl;
@@ -96,9 +105,13 @@ void DishCubePhantom::Construct(G4VPhysicalVolume *parentWorld) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Placeholder for updating the DishCubePhantom; currently unimplemented.
+ * @brief No-op update routine for DishCubePhantom.
  *
- * @return Always returns true.
+ * Currently this function performs no state changes; it exists as the update hook
+ * for the phantom. Future implementations may apply geometry or parameter updates
+ * and return false if an update fails.
+ *
+ * @return G4bool Always returns true to indicate success for the current no-op implementation.
  */
 G4bool DishCubePhantom::Update() {
   // TODO implement me.
@@ -107,9 +120,12 @@ G4bool DishCubePhantom::Update() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Attaches a sensitive detector to the phantom volume for scoring.
+ * @brief Attach a sensitive detector to the phantom for dose/score collection.
  *
- * Initializes and assigns a `DishCubePhantomSD` sensitive detector to the phantom if one is not already set. The entire phantom volume is added as a scoring volume with a 10x10x20 segmentation. Placeholders exist for adding scoring regions for individual dishes.
+ * If no sensitive detector is already assigned, creates a DishCubePhantomSD, adds
+ * the full phantom as a scoring volume using the phantom's bounding box (10×10×20
+ * segmentation), and registers the detector with the patient under the name
+ * "SciSlicePhantomLV". Placeholders remain for adding per-dish scoring regions.
  */
 void DishCubePhantom::DefineSensitiveDetector(){
   if(m_patientSD.Get()==0){

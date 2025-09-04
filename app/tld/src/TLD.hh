@@ -39,9 +39,9 @@ class TLD : public VPatient {
     G4bool Update() override;
 
     /**
- * @brief Placeholder for resetting the TLD state.
+ * @brief Reset the TLD's internal state.
  *
- * Currently not implemented; outputs a message indicating the need for implementation.
+ * Placeholder implementation: currently not implemented. Calling this will print a notice and does not modify the object's state.
  */
     void Reset() override { G4cout << "Implement me." << G4endl; }
 
@@ -81,9 +81,9 @@ G4int GetIdZ() const { return m_id_z; }
     G4ThreeVector GetCentre() const { return m_centre; }
 
     /**
- * @brief Returns the global center position of the TLD volume in the simulation geometry.
+ * @brief Return the TLD's centre position in global simulation coordinates.
  *
- * @return G4ThreeVector Global coordinates of the TLD's center.
+ * @return G4ThreeVector Global centre of the TLD volume.
  */
     G4ThreeVector GetGlobalCentre() const { return m_global_centre; }
 
@@ -92,9 +92,11 @@ G4int GetIdZ() const { return m_id_z; }
     static G4double SIZE;
 
     /**
- * @brief Placeholder for TOML configuration parsing.
+ * @brief No-op TOML configuration parser for TLD.
  *
- * This method is intentionally left empty as TOML configuration parsing is not implemented for this class.
+ * This override intentionally performs no parsing; TLD does not use TOML-based configuration.
+ * Kept as an override to satisfy the configurable interface. Implement in a subclass if TOML
+ * support is required.
  */
     void ParseTomlConfig() override {}
 
@@ -102,9 +104,9 @@ G4int GetIdZ() const { return m_id_z; }
     bool IsRunCollectionScoringVolumeVoxelised(const G4String& run_collection) const;
 
     /**
- * @brief Returns the number of voxels along the x-axis for the TLD volume.
+ * @brief Get the configured number of voxels along the TLD's local X axis.
  *
- * @return int Number of voxels in the x direction.
+ * @return int The number of voxels in the X direction (>=1).
  */
     int GetNXVoxels() const { return m_tld_voxelization_x; }
     /**
@@ -114,9 +116,9 @@ G4int GetIdZ() const { return m_id_z; }
  */
 int GetNYVoxels() const { return m_tld_voxelization_y; }
     /**
- * @brief Returns the number of voxels along the z-axis for the TLD volume.
+ * @brief Get the configured number of voxels along the TLD's z-axis.
  *
- * @return int Number of voxels in the z direction.
+ * @return int Current voxel count in the z direction.
  */
 int GetNZVoxels() const { return m_tld_voxelization_z; }
 
@@ -128,9 +130,11 @@ int GetNZVoxels() const { return m_tld_voxelization_z; }
 
   private:
     /**
- * @brief Sets the global center position of the TLD volume.
+ * @brief Set the TLD's global center position.
  *
- * Updates the global center coordinate of the TLD within the simulation geometry.
+ * Update the TLD's global centre in the simulation geometry.
+ *
+ * @param centre Global coordinates for the TLD centre.
  */
     void SetGlobalCentre(const G4ThreeVector& centre) {m_global_centre = centre; }
 

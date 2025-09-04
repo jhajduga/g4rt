@@ -55,9 +55,16 @@ void D3DTray::DefineSensitiveDetector() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Loads and applies configuration settings for the D3D tray and its detector.
+ * @brief Load default geometry and detector settings, apply TOML overrides, and pass the final configuration to the detector.
  *
- * Sets default geometry, position, rotation, and detector parameters, then overrides them with values from a TOML configuration file if present. The resulting configuration is applied to the associated detector instance.
+ * Loads a set of sensible defaults for the tray (rotation, world half-size, global center) and detector parameters
+ * (voxel counts, medium, STL file paths), then calls ParseTomlConfig() to override any values present in the TOML
+ * configuration. The finalized configuration is injected into the contained D3DDetector via SetConfig().
+ *
+ * Side effects:
+ * - May read and parse a TOML file; ParseTomlConfig() will log a fatal error and terminate the program if a required
+ *   TOML configuration file is missing.
+ * - Updates member state: m_rot, m_tray_world_halfSize, m_global_centre, and m_det_config.
  */
 void D3DTray::LoadConfiguration(){
 

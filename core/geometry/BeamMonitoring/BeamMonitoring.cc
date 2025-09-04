@@ -41,11 +41,16 @@ void BeamMonitoring::Configure() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Sets default configuration values for the specified unit.
+ * @brief Populate default configuration values for a named configuration unit.
  *
- * For the "Label" unit, assigns the default label "Beam monitoring". For the "ScoringZPositions" unit, initializes a vector of doubles with default Z positions at -30 cm and -15 cm.
+ * Sets sensible defaults used when no user configuration is provided:
+ * - "Label": sets the descriptive label "Beam monitoring".
+ * - "ScoringZPositions": creates and initializes a shared vector of Z positions (in Geant4 length units)
+ *   with two default planes at -30 cm and -15 cm.
  *
- * @param unit The configuration unit to set default values for.
+ * The function only acts for the two unit names above; other unit names are ignored.
+ *
+ * @param unit Name of the configuration unit to initialize ("Label" or "ScoringZPositions").
  */
 void BeamMonitoring::DefaultConfig(const std::string &unit) {
 
@@ -64,9 +69,11 @@ void BeamMonitoring::DefaultConfig(const std::string &unit) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Placeholder for writing beam monitoring information.
+ * @brief Emit information about the beam-monitoring configuration and state.
  *
- * Intended for future implementation to output or log relevant information about the beam monitoring setup.
+ * Currently a no-op placeholder; intended to be implemented to report or log
+ * details about the beam-monitoring setup (for example: configured scoring
+ * plane positions, created volumes, and sensitive-detector assignment).
  */
 void BeamMonitoring::WriteInfo() {
   /// implement me.
@@ -74,9 +81,10 @@ void BeamMonitoring::WriteInfo() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Destroys all scoring plane physical volumes managed by BeamMonitoring.
+ * @brief Destroy all scoring plane physical placements.
  *
- * Deletes each scoring plane physical volume and resets its pointer to nullptr to release resources.
+ * Deletes every G4PVPlacement stored in m_scoringPlanesPV and sets each pointer to nullptr,
+ * releasing the physical-volume resources used for beam-scoring planes.
  */
 void BeamMonitoring::Destroy() {
   G4cout << "[INFO]:: \tDestroing the BeamMonitoring volume(s). " << G4endl;
@@ -88,11 +96,18 @@ void BeamMonitoring::Destroy() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Constructs beam monitoring scoring planes within the parent world volume.
+ * @brief Create and place beam-monitoring scoring planes inside the given parent world.
  *
- * Creates thin scoring plane volumes at configured Z positions, including an additional plane just above the patient environment. Each scoring plane is placed as a physical volume within the parent world and stored for later management. If the scoring positions configuration is unavailable, logs an error.
+ * Constructs thin scoring-plane logical volumes (1 µm thick, spanning the world XY extents)
+ * and places a physical plane at each configured Z position. Also appends a single extra
+ * plane immediately above the patient environment (derived from PatientGeometry::EnviromentSizeZ
+ * and PatientGeometry::PatientIsocentreZ) before placing planes. All created G4PVPlacement
+ * pointers are recorded in m_scoringPlanesPV for later management/destruction.
  *
- * @param parentWorld Pointer to the parent world physical volume where scoring planes will be placed.
+ * If the configured scoring positions are unavailable (expired), no planes are created and an
+ * error is reported.
+ *
+ * @param parentWorld Physical volume that will contain the scoring-plane placements.
  */
 void BeamMonitoring::Construct(G4VPhysicalVolume *parentWorld) {
   G4cout << "[INFO]:: BeamMonitoring construction... " << G4endl;
@@ -126,9 +141,11 @@ void BeamMonitoring::Construct(G4VPhysicalVolume *parentWorld) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Handles configuration updates for the BeamMonitoring instance.
+ * @brief Handle configuration updates for this BeamMonitoring instance.
  *
- * Checks if the configuration has been updated and logs updated parameters. Always returns true.
+ * Queries the configuration status and, if updated, emits informational messages
+ * identifying which configuration units changed. The method does not alter
+ * configuration state; it only reports updates.
  *
  * @return G4bool Always returns true.
  */

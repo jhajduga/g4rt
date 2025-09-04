@@ -17,9 +17,13 @@ AnalysisFlagRegistry* AnalysisFlagRegistry::Instance() {
 
 
 /**
- * @brief Prints the status of all analysis flags to the console.
+ * @brief Print the enabled/disabled state of every global analysis flag.
  *
- * Outputs each global analysis flag's name and whether it is enabled or disabled, formatted for readability.
+ * Iterates all values of the AnalysisFlag enumeration and writes each flag's
+ * name and boolean state ("true"/"false") to standard output in a human-
+ * readable, column-aligned format.
+ *
+ * @note Uses IsEnabled(flag) to determine each flag's state.
  */
 void AnalysisFlagRegistry::PrintAllFlags() const {
   std::cout << "[AnalysisFlagRegistry] Active global flags:\n";

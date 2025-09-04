@@ -35,9 +35,11 @@ class D3DCell : public VPatient {
     G4bool Update() override;
 
     /**
- * @brief Placeholder method for resetting the cell state.
+ * @brief Reset the cell to its initial state.
  *
- * Currently not implemented; outputs a message indicating the need for implementation.
+ * Currently a no-op: it writes "Implement me." to G4cout and does not modify
+ * internal state. Intended to be implemented to restore voxel indices, scoring
+ * accumulators, and any transient runtime state.
  */
     void Reset() override { G4cout << "Implement me." << G4endl; }
 
@@ -51,35 +53,44 @@ class D3DCell : public VPatient {
     void SetIDs(G4int x, G4int y, G4int z);
     
     /**
- * @brief Returns the voxel index of the cell along the x-axis.
+ * @brief Get the voxel index along the local x-axis.
  *
- * @return G4int Voxel index in the x direction.
+ * Returns the integer index of this cell in the X voxel grid.
+ * A value of -1 indicates the index has not been set.
+ *
+ * @return G4int Voxel index along X (or -1 if unset).
  */
     G4int GetIdX() const { return m_id_x; }
     /**
- * @brief Returns the voxel index of the cell along the y-axis.
+ * @brief Return the voxel index of this cell along the Y axis.
  *
- * @return G4int Voxel index in the y direction.
+ * Returns the integer index of the voxel in the Y direction for this cell.
+ * A value of -1 indicates the index has not been set.
+ *
+ * @return G4int Voxel index along Y (or -1 if unset).
  */
 G4int GetIdY() const { return m_id_y; }
     /**
- * @brief Returns the voxel index of the cell along the z-axis.
+ * @brief Get the voxel index of this cell along the z axis.
  *
- * @return G4int Voxel index in the z direction.
+ * Returns the integer voxel index assigned to this cell for the z coordinate.
+ * A negative value (default -1) indicates the index has not been set.
+ *
+ * @return G4int Voxel index along z (or negative if unset).
  */
 G4int GetIdZ() const { return m_id_z; }
 
     /**
- * @brief Returns the local center position of the cell.
+ * @brief Get the cell center in the local (mother-volume) coordinate frame.
  *
- * @return G4ThreeVector The local center coordinates of the cell.
+ * @return G4ThreeVector Local center coordinates of the cell (copy).
  */
     G4ThreeVector GetCentre() const { return m_centre; }
 
     /**
- * @brief Returns the global center position of the cell.
+ * @brief Get the cell center position expressed in global (world) coordinates.
  *
- * @return G4ThreeVector Global coordinates of the cell center.
+ * @return G4ThreeVector The cell center position in the global coordinate frame.
  */
     G4ThreeVector GetGlobalCentre() const { return m_global_centre; }
 
@@ -88,9 +99,10 @@ G4int GetIdZ() const { return m_id_z; }
     static G4ThreeVector SIZE;
 
     /**
- * @brief Placeholder for TOML configuration parsing.
+ * @brief No-op TOML configuration hook required by the interface.
  *
- * This method is intentionally left empty and does not perform any configuration parsing.
+ * Exists to satisfy the VPatient interface; this implementation does not
+ * parse or apply any TOML configuration.
  */
     void ParseTomlConfig() override {}
 
@@ -98,9 +110,9 @@ G4int GetIdZ() const { return m_id_z; }
     bool IsRunCollectionScoringVolumeVoxelised(const G4String& run_collection) const;
 
     /**
- * @brief Returns the number of voxels along the x-axis for this cell.
+ * @brief Number of voxels configured along the cell's local X axis.
  *
- * @return int Number of voxels in the x direction.
+ * @return int The configured voxel count along X.
  */
     int GetNXVoxels() const { return m_cell_voxelization_x; }
     /**

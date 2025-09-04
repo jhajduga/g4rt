@@ -7,11 +7,14 @@ namespace { G4Mutex sdMutex = G4MUTEX_INITIALIZER; }
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Constructs a BeamMonitoringSD sensitive detector with the specified name.
+ * @brief Create a BeamMonitoringSD sensitive detector with the given name.
  *
- * Initializes the sensitive detector and acquires a thread-safe instance of the analysis manager.
+ * Forwards the name to the G4VSensitiveDetector base and initializes the
+ * analysisManager member by obtaining the G4AnalysisManager singleton.
+ * The acquisition is performed while holding the internal sdMutex to ensure
+ * thread-safe initialization.
  *
- * @param sdName Name of the sensitive detector.
+ * @param sdName The sensitive detector name exposed to Geant4.
  */
 BeamMonitoringSD::BeamMonitoringSD(const G4String& sdName) : G4VSensitiveDetector(sdName) {
 

@@ -24,9 +24,9 @@ class D3DTray : public IPhysicalVolume, public TomlConfigModule {
     D3DTray(G4VPhysicalVolume *parentPV, const std::string& name);
 
     /**
- * @brief Destroys the D3DTray object.
+ * @brief Destructor for D3DTray.
  *
- * No special cleanup is performed.
+ * Releases object resources; no special cleanup is required by this class.
  */
     ~D3DTray() {};
 
@@ -68,9 +68,9 @@ class D3DTray : public IPhysicalVolume, public TomlConfigModule {
 
 
     /**
- * @brief Returns the detector volume associated with the tray.
+ * @brief Get the detector volume contained in this tray.
  *
- * @return Pointer to the VPatient detector object contained within the tray.
+ * @return VPatient* Pointer to the contained detector, or nullptr if no detector is present.
  */
 VPatient* GetDetector() const { return m_detector; }
 

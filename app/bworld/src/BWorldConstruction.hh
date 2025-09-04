@@ -34,7 +34,9 @@ private:
  */
 BWorldConstruction &operator=(const BWorldConstruction &) = delete;
     /**
- * @brief Move constructor is deleted to prevent moving of BWorldConstruction instances.
+ * @brief Deleted move constructor — instances of BWorldConstruction are not movable.
+ *
+ * This prevents transfer of internal ownership/state by move operations.
  */
 BWorldConstruction(BWorldConstruction &&) = delete;
     /**

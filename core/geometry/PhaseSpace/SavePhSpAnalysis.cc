@@ -11,11 +11,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the singleton instance of the SavePhSpAnalysis class.
+ * @brief Return the singleton instance of SavePhSpAnalysis.
  *
- * Ensures that only one instance of SavePhSpAnalysis exists throughout the program.
+ * The instance is created on first call and the same pointer is returned on
+ * subsequent calls. Initialization of the function-local static is thread-safe
+ * (since C++11) and the instance has static storage lifetime (destroyed at
+ * program termination).
  *
- * @return Pointer to the singleton SavePhSpAnalysis instance.
+ * @return SavePhSpAnalysis* Pointer to the single SavePhSpAnalysis instance.
  */
 SavePhSpAnalysis *SavePhSpAnalysis::GetInstance() {
   static SavePhSpAnalysis instance = SavePhSpAnalysis();
@@ -25,9 +28,16 @@ SavePhSpAnalysis *SavePhSpAnalysis::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Initializes phase space analysis at the start of a simulation run.
+ * @brief Prepare phase-space output before a simulation run.
  *
- * Opens the output file for phase space data, sets up the ntuple directory, and defines the ntuple structure for recording particle phase space information, including spatial coordinates, direction cosines, energy, particle type, and index.
+ * Initializes the Geant4 analysis manager for phase-space recording: opens the output
+ * file (name read from configuration key "RunSvc"."PhspOutputFileName"), sets the
+ * ntuple directory to "phasespaces", creates an ntuple named "Space1" and defines
+ * columns for particle position (x,y,z), direction cosines (u,v,w), energy (E),
+ * particle type, and an index. The created ntuple id is stored in m_ntupleId.
+ *
+ * @param runPtr Pointer to the current run (unused by this implementation).
+ * @param isMaster True when running in the master thread/process (intended for master-only logging).
  */
 void SavePhSpAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
   // Extract from VPatient geometry information, and define NTuples structure
@@ -60,11 +70,16 @@ void SavePhSpAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Placeholder for filling phase space data from a simulation step.
+ * @brief Fill the phase-space ntuple with data from a simulation step.
  *
- * Intended to record phase space information using data from the provided simulation step.
+ * Extracts phase-space information (position, direction cosines, energy,
+ * particle type/index, etc.) from the provided G4Step and records it to the
+ * analysis ntuple prepared in BeginOfRun. Currently unimplemented — left as a
+ * TODO placeholder (intended to mirror the behavior of SavePhSpSD::ProcessHits).
  *
- * @param step Pointer to the current simulation step containing particle data.
+ * @param step Pointer to the current Geant4 simulation step containing the
+ *             particle state to be recorded. May be null-checked by callers;
+ *             this function currently performs no action.
  */
 void SavePhSpAnalysis::FillPhSp(G4Step* step) {
   // TODO :: put here the stuff from SavePhSpSD::ProcessHits

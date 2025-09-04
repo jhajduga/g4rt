@@ -39,11 +39,12 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule{
     VPatient() = delete;
     
     /**
-     * @brief Constructs a VPatient object with the specified name.
+     * @brief Create a VPatient with the given name.
      *
-     * Initializes the base classes with the given name and sets the sensitive detector pointer cache to nullptr.
+     * Initializes IPhysicalVolume and TomlConfigModule with the provided name and sets the internal
+     * sensitive-detector cache to nullptr.
      *
-     * @param name The name of the patient volume.
+     * @param name Logical name of this patient volume.
      */
     explicit VPatient(const std::string& name):IPhysicalVolume(name),TomlConfigModule(name){
       m_patientSD.Put(nullptr);
@@ -81,18 +82,22 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule{
       return std::map<std::size_t, VoxelHit>();
     }
     /**
- * @brief Returns the pointer to the associated sensitive detector.
+ * @brief Get the associated sensitive detector.
  *
- * @return VPatientSD* Pointer to the sensitive detector, or nullptr if not set.
+ * Returns the (non-owning) pointer to the patient sensitive detector stored in the per-thread cache.
+ * May be nullptr if no sensitive detector has been set.
+ *
+ * @return VPatientSD* Pointer to the sensitive detector, or nullptr if none is configured.
  */
 VPatientSD* GetSD() const { return m_patientSD.Get(); }
 
     /**
-     * @brief Returns an empty scoring hashed map for the specified scoring type.
+     * @brief Default fallback: return an empty scoring hashed map for the requested scoring type.
      *
-     * This default implementation issues a warning and returns an empty map. Intended to be overridden in derived classes to provide scoring data.
+     * The base implementation logs a warning and returns an empty std::map. Derived patient volumes
+     * should override this to return actual voxel scoring data for the given scoring type.
      *
-     * @return An empty map of voxel hits.
+     * @return std::map<std::size_t, VoxelHit> Empty map when no scoring is available.
      */
     virtual std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String&,Scoring::Type) const {
       WARN_GEO("Returning empty scoring hashed map!");
@@ -100,9 +105,12 @@ VPatientSD* GetSD() const { return m_patientSD.Get(); }
     }
 
     /**
- * @brief Sets the total volume of the patient in cubic millimeters.
+ * @brief Set the patient's total volume.
  *
- * @param volume The volume value to assign.
+ * Records the patient volume (used by GetVolume() and the default
+ * GetCellVolume()).
+ *
+ * @param volume Total volume in cubic millimeters (mm^3).
  */
     void SetVolume(G4double volume) {m_volume = volume; };
 

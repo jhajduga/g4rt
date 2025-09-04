@@ -103,11 +103,15 @@ bool VMlc::Initialized(const ControlPoint* control_point) const {
 }
 
 /**
- * @brief Calculates the centroid of the open region in the MLC mask.
+ * @brief Computes the centroid of the open MLC leaf region.
  *
- * Determines the geometric center (x, y) of all open leaf positions by averaging the coordinates of leaves on both Y1 and Y2 sides where the leaf gap is nonzero. The z-coordinate is taken from the first leaf position.
+ * Computes the geometric center by averaging the x and y coordinates of all open leaf edge positions
+ * from both Y1 and Y2 sides (a leaf is considered open when its Y1−Y2 gap is nonzero).
+ * The z component of the returned vector is taken from the first Y1 leaf position.
  *
- * @return G4ThreeVector The centroid position of the open MLC mask region.
+ * Assumes at least one open leaf exists; behavior is undefined if no open leaves are present.
+ *
+ * @return G4ThreeVector Centroid position (x, y, z) of the open MLC mask region.
  */
 G4ThreeVector VMlc::GetMaskCentre() const{
     auto mlc_y1 = GetMlcPositioning("Y1");
@@ -136,12 +140,14 @@ G4ThreeVector VMlc::GetMaskCentre() const{
 
 
 /**
- * @brief Returns the 3D positions of MLC leaves for the specified side.
+ * @brief Get 3D positions of MLC leaves for the specified side.
  *
- * Retrieves the positions of the multi-leaf collimator (MLC) leaves on the given side ("Y1" or "Y2") as a vector of 3D coordinates. If the internal x-positions are uninitialized or if the number of x-positions does not match the number of y-positions from the current control point, an empty vector is returned. The y-coordinates are negated to ensure correct orientation.
+ * Projects stored leaf X positions and the per-side Y positions from the current control point into 3D coordinates at the MLC Z plane.
+ * The Y values are negated to match the simulation's orientation.
+ * If the internal X positions are uninitialized or the counts of X and Y positions differ, an empty vector is returned.
  *
- * @param side The MLC side ("Y1" or "Y2") for which to retrieve leaf positions.
- * @return std::vector<G4ThreeVector> Vector of 3D positions for the specified MLC side's leaves, or an empty vector if data is uninitialized or mismatched.
+ * @param side Side identifier — expected "Y1" or "Y2".
+ * @return std::vector<G4ThreeVector> 3D positions for each leaf, or an empty vector if data is unavailable or mismatched.
  */
 std::vector<G4ThreeVector> VMlc::GetMlcPositioning(const std::string& side) const{
     // std::cout << "VMlc::GetMlcPositioning for " << side << std::endl;

@@ -28,9 +28,15 @@ void ActionInitialization::BuildForMaster() const {
 
 /////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Configures user actions for a worker thread in a Geant4 simulation.
+ * @brief Configure user actions for a worker thread in a multithreaded Geant4 run.
  *
- * Sets the thread name, assigns a custom score writer, and registers user actions for primary particle generation, run-level, event-level, and step-level processing. The event and stepping actions are linked to enable event-specific step handling.
+ * Sets the worker thread name, installs a custom score writer, and registers the
+ * user actions required for this thread: primary generation, run handling,
+ * event handling, and stepping. The SteppingAction is constructed with a
+ * reference to the EventAction so step-level processing can record event-specific
+ * information.
+ *
+ * @note This is the per-worker-thread initialization (not for the master thread).
  */
 void ActionInitialization::Build() const {
 

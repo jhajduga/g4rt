@@ -12,9 +12,10 @@ using namespace py::literals;
 /**
  * @brief Returns the singleton instance of CsvRunAnalysis.
  *
- * Ensures only one instance of CsvRunAnalysis exists throughout the application.
+ * Returns a pointer to a Meyers-style singleton; the instance is created on first call
+ * and lives for the lifetime of the program.
  *
- * @return Pointer to the singleton CsvRunAnalysis instance.
+ * @return CsvRunAnalysis* Pointer to the single CsvRunAnalysis instance.
  */
 CsvRunAnalysis *CsvRunAnalysis::GetInstance() {
     static CsvRunAnalysis instance = CsvRunAnalysis();
@@ -23,9 +24,22 @@ CsvRunAnalysis *CsvRunAnalysis::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Exports dose scoring data from a run to CSV files.
+ * @brief Export dose-scoring data from a run to CSV files.
  *
- * For each scoring collection and scoring type in the current control point, writes detailed dose information for each voxel or volume hit to a CSV file. The output includes metadata such as field area and gravity center, as well as per-hit data: label, cell IDs, voxel IDs (if applicable), spatial coordinates, dose, and scaling factors. Output files are named according to the collection and scoring type.
+ * For each scoring collection and scoring type in the current control point, writes one CSV file containing
+ * per-hit dose data and a small set of run-level metadata. Each CSV contains a header and one row per
+ * VoxelHit (or volume hit) with the following fields:
+ * - Label, Cell IdX, Cell IdY, Cell IdZ
+ * - (if voxelized) Voxel IdX, Voxel IdY, Voxel IdZ
+ * - X [mm], Y [mm], Z [mm], Dose [Gy], FieldScalingFactor, AngleScalingFactor
+ *
+ * Output files are created using the control point's output file base name with suffixes for the collection
+ * name and scoring type: "<outputBase>_<collection>_<type>.csv". Two run-level metadata comment lines are
+ * written at the top: FieldArea and FieldGravCentre.
+ *
+ * Side effects: creates and writes one CSV file per scoring collection/type.
+ *
+ * @param runPtr Pointer to the G4Run to export dose data for (used in conjunction with the current control point).
  */
 void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
     auto writeVolumeHitDataRaw = [](std::ofstream& file, const VoxelHit& hit, bool voxelised){
@@ -85,11 +99,19 @@ void CsvRunAnalysis::WriteDoseToCsv(const G4Run* runPtr){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Exports field mask data for each data type to CSV files and generates corresponding PNG images.
+ * @brief Export field-mask points to CSV and generate PNG visualizations.
  *
- * For each available data type in the current control point, writes the 3D coordinates of the field mask points to a CSV file. After writing, generates a PNG image of the field mask using an embedded Python module.
+ * Writes the 3D coordinates (X,Y,Z in mm) of the control point's field mask for each available data type
+ * to a CSV file named "<outputFileName>_field_mask_<type>.csv". After a CSV is written, the function imports
+ * the Python module "field_mask_png" and calls its `save_mask_as_png(file)` function to produce a PNG
+ * representation of the mask.
  *
- * @param runPtr Pointer to the current Geant4 run (used for context).
+ * Side effects:
+ * - Creates one CSV file per non-empty field mask type.
+ * - Invokes embedded Python (pybind11) to generate a PNG from each CSV; this requires the Python module
+ *   "field_mask_png" to be available at runtime.
+ *
+ * @param runPtr Pointer to the current Geant4 run (provided for API/context; not used by this implementation).
  */
 void CsvRunAnalysis::WriteFieldMaskToCsv(const G4Run* runPtr){
     auto cp = Service<RunSvc>()->CurrentControlPoint();

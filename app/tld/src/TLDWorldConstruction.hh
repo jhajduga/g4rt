@@ -24,9 +24,11 @@ private:
  */
     TLDWorldConstruction() = default;
     /**
- * @brief Destroys the TLDWorldConstruction instance.
+ * @brief Defaulted destructor for TLDWorldConstruction.
  *
- * Cleans up resources associated with the TLD world construction when the singleton instance is destroyed.
+ * Defaulted and private to enforce the singleton pattern. When the singleton
+ * instance is destroyed, this destructor releases owned resources (for
+ * example the internally held TLDTray) and performs any required cleanup.
  */
 ~TLDWorldConstruction() = default;
 

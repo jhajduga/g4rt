@@ -17,11 +17,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the singleton instance of the PrimariesAnalysis class.
+ * @brief Returns the global singleton instance of PrimariesAnalysis.
  *
- * Ensures that only one instance of PrimariesAnalysis exists throughout the application.
+ * Provides access to the single, shared PrimariesAnalysis object used by the application.
+ * The instance is created on first use and has static lifetime (Meyers singleton); initialization
+ * is thread-safe in conforming C++11 (and later) implementations.
  *
- * @return Pointer to the singleton PrimariesAnalysis instance.
+ * @return PrimariesAnalysis* Pointer to the singleton PrimariesAnalysis instance.
  */
 PrimariesAnalysis *PrimariesAnalysis::GetInstance() {
   static PrimariesAnalysis instance = PrimariesAnalysis();
@@ -30,9 +32,16 @@ PrimariesAnalysis *PrimariesAnalysis::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Initializes the analysis and books the ntuple for primary particle data at the start of a Geant4 run.
+ * @brief Initialize analysis and book the "PrimariesTree" ntuple at the start of a Geant4 run.
  *
- * Defines the structure of the "PrimariesTree" ntuple, creating columns for counts and energies of gamma, electron, positron, neutron, and proton primaries, as well as detailed kinematic and positional data for all primary particles. Resets all particle counters to zero in preparation for the run.
+ * Books an ntuple titled "PrimariesTree" containing integer count columns for gamma, electron,
+ * positron, neutron, proton and total primaries, and double/vector columns for per-primary
+ * energies, kinematic components, vertex coordinates, momentum magnitude/components, polar angle,
+ * vertex index, and weight. Resets all per-run counters to zero and binds internal vectors to the
+ * ntuple columns so they will be written when rows are added during event processing.
+ *
+ * @param runPtr Pointer to the current G4Run (may be null in some contexts).
+ * @param isMaster True when called for the master thread/process; currently unused.
  */
 void PrimariesAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
 
@@ -80,9 +89,14 @@ void PrimariesAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Finalizes and records primary particle data at the end of an event.
+ * @brief Finalize per-event primary data: write to ntuple and clear event buffers.
  *
- * Writes the collected primary particle information to the ntuple and resets all event-specific data in preparation for the next event.
+ * Writes the currently collected primary-particle information into the booked ntuple
+ * and then resets all per-event counters and containers so the object is ready for
+ * the next event.
+ *
+ * @param evt Pointer to the finished G4 event; not accessed by this implementation
+ *            (present to match the action interface).
  */
 void PrimariesAnalysis::EndOfEventAction(const G4Event *evt){
   FillPrimariesNTuple();
@@ -91,9 +105,13 @@ void PrimariesAnalysis::EndOfEventAction(const G4Event *evt){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Resets all primary particle counters and clears stored event data.
+ * @brief Reset per-event primary counters and clear stored primary data.
  *
- * Clears all counters and vectors related to primary particle counts, energies, momenta, positions, angles, vertex IDs, and weights in preparation for the next event.
+ * @details Sets all per-event integer counters (gamma, electron, positron,
+ * neutron, proton, and total primaries) to zero and clears all vectors that
+ * hold per-primary energies, momentum components, positions, angles,
+ * vertex indices, and weights. Call at the end of an event to prepare for
+ * collecting data from the next event.
  */
 void PrimariesAnalysis::ClearPrimariesEventData(){
   m_gammaN.Put(0);
@@ -124,9 +142,16 @@ void PrimariesAnalysis::ClearPrimariesEventData(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Extracts and stores primary particle data from a Geant4 event.
+ * @brief Extracts primary particle information from a Geant4 event and stores it for later ntuple filling.
  *
- * Iterates over all primary vertices in the event, identifies the type of each primary particle, and updates counters and energy lists for gamma, electron, positron, neutron, and proton primaries. Collects detailed kinematic and positional information for each primary, applies an isocenter-to-simulation coordinate transformation to vertex positions, and stores all relevant data for later ntuple filling.
+ * Iterates over all primary vertices in the provided event, processes the first primary at each vertex, and
+ * updates per-type counters (gamma, electron, positron, neutron, proton) and per-event storage vectors with
+ * kinematic and vertex information. For each processed primary the function records total energy, mass-related
+ * energy components (Ex, Ey), momentum magnitude and components, polar angle (theta), transformed vertex
+ * coordinates (isocenter-to-simulation shift applied and converted to cm), vertex index, and primary weight.
+ *
+ * Note: The isocenter-to-simulation translation is obtained from the configuration service; only the first
+ * primary of each vertex (index 0) is used.
  *
  * @param evt Pointer to the Geant4 event containing primary vertices and particles.
  */

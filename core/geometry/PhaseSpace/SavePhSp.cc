@@ -4,9 +4,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Constructs a SavePhSp object and initializes its configuration.
+ * @brief Create a SavePhSp instance and initialize its configuration.
  *
- * Initializes the SavePhSp phase space volume by invoking the configuration setup upon creation.
+ * Constructs the SavePhSp physical-volume manager, initializing its IPhysicalVolume
+ * and Configurable bases with the name "SavePhSp" and immediately invoking
+ * Configure() to apply default and registered configuration settings.
  */
 SavePhSp::SavePhSp(): IPhysicalVolume("SavePhSp"), Configurable("SavePhSp"){
   Configure();
@@ -14,9 +16,10 @@ SavePhSp::SavePhSp(): IPhysicalVolume("SavePhSp"), Configurable("SavePhSp"){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Destructor for the SavePhSp class.
+ * @brief Destroy the SavePhSp instance, unregistering its configuration and freeing resources.
  *
- * Unregisters the configuration associated with this instance and releases all allocated phase space physical volumes.
+ * Unregisters this object's configuration from the configuration service and destroys any
+ * phase-space physical volumes created and tracked by this instance to prevent resource leaks.
  */
 SavePhSp::~SavePhSp() {
   configSvc()->Unregister(thisConfig()->GetName());
@@ -53,9 +56,12 @@ void SavePhSp::DefaultConfig(const std::string &unit) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Placeholder for writing phase space volume information.
+ * @brief Write information about the saved phase-space volumes.
  *
- * This method is not yet implemented.
+ * Reserved placeholder for emitting human- or machine-readable metadata about
+ * the configured/constructed phase-space volumes managed by SavePhSp.
+ *
+ * Currently unimplemented and performs no action.
  */
 void SavePhSp::WriteInfo() {
   /// implement me.
@@ -63,9 +69,12 @@ void SavePhSp::WriteInfo() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Deletes all dynamically allocated phase space physical volumes managed by this instance.
+ * @brief Release and delete all user-defined phase-space placements.
  *
- * Frees memory for each user-defined phase space physical volume stored in the internal vector.
+ * Deletes each G4PVPlacement pointer stored in m_usrPhspPV, freeing their memory.
+ * After this call the pointers in m_usrPhspPV are deleted (the container itself is not modified),
+ * so callers must not dereference or use those pointers afterwards.
+ * An informational message is emitted when destruction starts.
  */
 void SavePhSp::Destroy() {
   G4cout << "[INFO]:: \tDestroing the SavePhSp volume. " << G4endl;
@@ -102,9 +111,10 @@ void SavePhSp::Construct(G4VPhysicalVolume *parentWorld) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Updates the configuration status and reports any changes.
+ * @brief Handle configuration changes and report updated configuration units.
  *
- * Checks if the configuration is active and, if so, outputs informational messages for each updated configuration parameter. Always returns true.
+ * If the configuration is active, iterates the configuration unit names and reports which unit-level parameters are active.
+ * The function performs only status reporting and always returns true.
  *
  * @return G4bool Always returns true.
  */

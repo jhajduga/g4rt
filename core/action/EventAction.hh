@@ -19,7 +19,9 @@ class EventAction : public G4UserEventAction {
   EventAction();
 
   /**
- * @brief Destroys the EventAction instance.
+ * @brief Defaulted destructor.
+ *
+ * No custom cleanup is required; the compiler-generated destructor is used.
  */
 ~EventAction() = default;
 

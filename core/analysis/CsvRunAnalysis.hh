@@ -13,14 +13,17 @@ class G4Run;
 class CsvRunAnalysis {
     private:
         /**
- * @brief Constructs a CsvRunAnalysis instance.
+ * @brief Private default constructor.
  *
- * This constructor is private to enforce the singleton pattern and prevent direct instantiation.
+ * Enforces the singleton pattern by preventing direct instantiation outside the class.
  */
         CsvRunAnalysis() = default;
 
         /**
- * @brief Destroys the CsvRunAnalysis singleton instance.
+ * @brief Private destructor for CsvRunAnalysis.
+ *
+ * Defaulted destructor kept private to enforce controlled singleton lifetime;
+ * destruction is managed by the class internals and performs no special cleanup.
  */
         ~CsvRunAnalysis() = default;
 
@@ -29,7 +32,7 @@ class CsvRunAnalysis {
  */
         CsvRunAnalysis(const CsvRunAnalysis &) = delete;
         /**
- * @brief Deleted copy assignment operator to prevent copying of CsvRunAnalysis instances.
+ * @brief Deleted copy assignment operator — copying is disallowed to enforce singleton semantics.
  */
 CsvRunAnalysis &operator=(const CsvRunAnalysis &) = delete;
         /**

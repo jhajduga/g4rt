@@ -22,9 +22,10 @@ class BeamAnalysis {
   BeamAnalysis();
 
   /**
- * @brief Destroys the BeamAnalysis instance.
+ * @brief Destroys the BeamAnalysis singleton.
  *
- * Cleans up resources used by the BeamAnalysis singleton. No special actions are performed.
+ * Defaulted destructor; it is private to enforce singleton ownership and
+ * performs no non-trivial cleanup beyond automatic destruction of members.
  */
   ~BeamAnalysis() = default;
 

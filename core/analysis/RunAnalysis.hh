@@ -28,9 +28,10 @@ class RunAnalysis {
     RunAnalysis();
 
     /**
- * @brief Destroys the RunAnalysis instance.
+ * @brief Destructor for RunAnalysis.
  *
- * Cleans up resources associated with the RunAnalysis singleton when it is destroyed.
+ * Releases RunAnalysis-owned resources. The destructor is private and invoked
+ * only when the singleton instance is destroyed.
  */
     ~RunAnalysis() = default;
 

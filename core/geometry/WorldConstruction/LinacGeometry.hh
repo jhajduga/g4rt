@@ -61,7 +61,9 @@ class LinacGeometry : public Configurable, public IPhysicalVolume {
   LinacGeometry(const LinacGeometry &) = delete;
 
   /**
- * @brief Deleted copy assignment operator to prevent copying of LinacGeometry instances.
+ * @brief Deleted copy assignment operator to prevent copying of the singleton LinacGeometry.
+ *
+ * Copy assignment is explicitly deleted to enforce singleton semantics and avoid duplicating internal state.
  */
 LinacGeometry &operator=(const LinacGeometry &) = delete;
 

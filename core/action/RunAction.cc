@@ -19,9 +19,11 @@
 // behavior in multi-threading mode.
 /////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Constructs a RunAction object and configures analysis settings for the simulation run.
+ * @brief Initialize run-action and configure the Geant4 analysis manager.
  *
- * Initializes the analysis manager singleton, sets ntuple merging and verbosity based on configuration, and enables run scoring if specified.
+ * Acquires the G4AnalysisManager singleton, disables ntuple merging when NTupleAnalysis
+ * is enabled in RunSvc, sets the analysis manager verbosity to 0, and enables
+ * run-level scoring when RunAnalysis is enabled.
  */
 RunAction::RunAction() : G4UserRunAction(), fAnalysisManager(nullptr) {
   fAnalysisManager = G4AnalysisManager::Instance();
@@ -49,9 +51,11 @@ RunAction::~RunAction(){
 
 /////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Generates and returns a new simulation run using the current control point.
+ * @brief Create a new G4Run using the current RunSvc control point.
  *
- * If called on the master thread, prints informational messages about the new run, including the number of events and any defined rotation. Delegates run creation to the current control point, passing the run scoring flag.
+ * Retrieves the current control point from RunSvc and delegates run creation to it,
+ * passing the internal run-scoring flag. When invoked on the master thread, emits
+ * informational messages about the run (number of events and, if present, rotation).
  *
  * @return G4Run* Pointer to the newly generated run.
  */
@@ -69,11 +73,21 @@ G4Run* RunAction::GenerateRun(){
 }
 /////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Prepares analysis modules and output files at the start of a simulation run.
+ * @brief Initialize analyses and output at the beginning of a Geant4 run.
  *
- * Opens the analysis output file, prints run start information distinguishing master and worker threads, and initializes enabled analysis modules based on configuration. If running as master, outputs geometry information. Starts the internal run timer.
+ * Prepares the analysis manager and enabled analysis modules for a new run:
+ * sets and opens the analysis output file, prints a master/worker run-start message,
+ * invokes BeginOfRun on each enabled analysis module (SavePhSpAnalysis, RunAnalysis,
+ * PrimariesAnalysis, BeamAnalysis, StepAnalysis, NTupleEventAnalisys when applicable),
+ * and starts the internal run timer. When executing on the master thread, also
+ * writes geometry information to the console.
  *
- * @param aRun Pointer to the current Geant4 run.
+ * Side effects:
+ * - Opens the analysis output file via the analysis manager.
+ * - Starts the internal timer (m_timer).
+ * - May produce console output.
+ *
+ * @param aRun Pointer to the current Geant4 run (used for run ID and passed to analyses).
  */
 void RunAction::BeginOfRunAction(const G4Run* aRun) {
   auto configSvc = Service<ConfigSvc>();
@@ -120,9 +134,14 @@ void RunAction::BeginOfRunAction(const G4Run* aRun) {
 
 /////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Finalizes the simulation run, writes analysis data, and reports elapsed time.
+ * @brief Finalize a run: stop timing, write/close analysis output, and finish run-level analyses.
  *
- * Stops the internal timer, prints the elapsed time for the run (distinguishing between master and worker threads), writes and closes the analysis output file, and, if enabled and on the master thread, finalizes run-level analysis.
+ * Stops the internal run timer and prints the real elapsed time (reports "Global-loop" on the master
+ * thread and "Local-loop" on workers). Writes and closes the analysis manager's output file. If
+ * run-level analysis is enabled in RunSvc and executing on the master thread, invokes
+ * RunAnalysis::EndOfRun for finalization.
+ *
+ * @param aRun Pointer to the completed G4Run (passed to RunAnalysis::EndOfRun when invoked).
  */
 void RunAction::EndOfRunAction(const G4Run* aRun) {
   m_timer.Stop();

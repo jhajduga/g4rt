@@ -22,9 +22,13 @@ EventAction::EventAction()
 
 /////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Initializes the total number of events at the start of each event.
+ * @brief Record the run's total number of events at the start of an event.
  *
- * Retrieves and sets the total number of events from the current control point using the run service.
+ * Queries the RunSvc for the current control point and stores its total event
+ * count into EventAction::totalNoOfEvents. The provided event pointer is not
+ * used.
+ *
+ * @param evt Pointer to the current G4Event (unused).
  */
 void EventAction::BeginOfEventAction(const G4Event *) {
   totalNoOfEvents = Service<RunSvc>()->CurrentControlPoint()->GetNEvts();
@@ -35,9 +39,11 @@ void EventAction::BeginOfEventAction(const G4Event *) {
 // to be more precise we do a bit of hacking and include also microseconds
 // following https://stackoverflow.com/questions/24686846/get-current-time-in-milliseconds-or-hhmmssmmm-format/35157784
 /**
- * @brief Returns the current date and time as a string with millisecond precision.
+ * @brief Return the current local date and time with millisecond precision.
  *
- * @return std::string Formatted as "YYYY-MM-DD HH:MM:SS.mmm", where "mmm" represents milliseconds.
+ * Returns a timestamp formatted as "YYYY-MM-DD HH:MM:SS.mmm" (milliseconds = `mmm`), using the local timezone.
+ *
+ * @return std::string Timestamp string with millisecond precision.
  */
 std::string time_in_HH_MM_SS_MMM() {
   using namespace std::chrono;
@@ -66,11 +72,11 @@ std::string time_in_HH_MM_SS_MMM() {
 /////////////////////////////////////////////////////////////////////////////
 /// Print progress information according to progress frequency defined by user
 /**
- * @brief Handles end-of-event processing, including progress reporting and triggering analysis modules.
+ * @brief Perform end-of-event processing: progress reporting and analysis dispatch.
  *
- * Prints progress updates at configured intervals or at the last event, displaying percentage completed, event count, and a timestamp with millisecond precision. Conditionally invokes end-of-event actions on enabled analysis modules based on configuration settings.
+ * Prints a timestamped progress line (millisecond precision) when the current event index hits the configured reporting cadence or when the run finishes. After reporting, conditionally calls EndOfEventAction(evt) on enabled analysis modules according to RunSvc configuration; NTuple analysis is invoked only if any TTree is defined.
  *
- * @param evt Pointer to the current event object.
+ * @param evt Pointer to the current Geant4 event.
  */
 void EventAction::EndOfEventAction(const G4Event *evt) {
   auto eventID = evt->GetEventID();

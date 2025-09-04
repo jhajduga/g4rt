@@ -35,9 +35,13 @@ class D3DDetector : public VPatient, public GeoComponet {
     G4bool Update() override;
 
     /**
- * @brief Placeholder method for resetting the detector state.
+ * @brief Reset detector state to its initial condition.
  *
- * Currently not implemented.
+ * This is a placeholder implementation and does not modify detector state.
+ * Currently it emits a message to G4cout indicating it is unimplemented.
+ *
+ * Implementations should restore any mutable runtime state (counters, cached
+ * data, per-run accumulators, etc.) to their defaults.
  */
     void Reset() override { G4cout << "Implement me." << G4endl; }
 
@@ -102,9 +106,11 @@ class D3DDetector : public VPatient, public GeoComponet {
     void SetConfig(const D3DDetector::Config& config);
 
     /**
- * @brief Returns the current configuration of the D3DDetector.
+ * @brief Return a read-only reference to the detector configuration.
  *
- * @return Reference to the detector's configuration object.
+ * Provides const access to the internal D3DDetector::Config used by this instance.
+ *
+ * @return const D3DDetector::Config& Reference to the internal configuration object.
  */
     const D3DDetector::Config& GetConfig() const { return m_config; }
 

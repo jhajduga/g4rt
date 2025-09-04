@@ -40,7 +40,11 @@ NTupleRunAnalysis &operator=(const NTupleRunAnalysis &) = delete;
  */
 NTupleRunAnalysis(NTupleRunAnalysis &&) = delete;
         /**
- * @brief Deleted move assignment operator to prevent moving of NTupleRunAnalysis instances.
+ * @brief Deleted move-assignment operator.
+ *
+ * Deleted to enforce singleton semantics: prevents move-assignment of
+ * NTupleRunAnalysis instances so ownership cannot be transferred and
+ * multiple instances cannot be created via move operations.
  */
 NTupleRunAnalysis &operator=(NTupleRunAnalysis &&) = delete;
 

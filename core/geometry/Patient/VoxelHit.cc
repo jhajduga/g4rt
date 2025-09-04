@@ -21,9 +21,20 @@ G4ThreadLocal G4Allocator<VoxelHit>* VoxelHitAllocator = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Initializes or updates voxel hit data from a Geant4 step.
+ * @brief Initialize a new voxel hit or update an existing one from a Geant4 step.
  *
- * If the voxel is new, sets its position, calculates mass, accumulates energy deposition, updates dose, records track information, and stores primary particle type and energy. If the voxel has already been initialized, updates its data with the new step.
+ * If the voxel has not been initialized (primary ID < 0) this method:
+ * - sets/updates the voxel gravitational center from the step pre-step position,
+ * - computes voxel mass from material density and stored volume (if volume > 0),
+ * - accumulates total and per-step energy deposition and updates dose (dose computed as Edep / mass in Grays),
+ * - records track-related information via FillTrack(),
+ * - records the incident (primary) particle type and kinetic energy.
+ *
+ * If the voxel is already initialized the method delegates to Update(aStep) to apply the step's changes.
+ *
+ * @param aStep Pointer to the Geant4 step providing position, material, energy deposit and track info.
+ *
+ * @note Dose is not updated when computed mass is zero; a warning is emitted instead.
  */
 void VoxelHit::Fill(G4Step* aStep) {
   if (m_Voxel.m_primaryID < 0) {
@@ -64,9 +75,15 @@ void VoxelHit::Fill(G4Step* aStep) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Updates the voxel hit with new energy deposition and track information from a Geant4 step.
+ * @brief Update this voxel with information from a Geant4 step.
  *
- * Adds the energy deposited in the current step to the voxel, updates the dose if mass is set, recalculates the gravitational center, and records track information.
+ * Update the voxel's gravitational center using the step's pre-step position, accumulate
+ * the step energy deposition into the voxel total, record per-step deposits (only if > 0),
+ * and update the voxel dose when mass is set. Also records track-related data for the step.
+ *
+ * @param aStep The Geant4 step providing position, deposited energy, and track information.
+ *
+ * @note If the voxel mass is zero, the dose is not updated and a warning is emitted.
  */
 void VoxelHit::Update(G4Step* aStep) {
   // Fill current position
@@ -88,18 +105,19 @@ void VoxelHit::Update(G4Step* aStep) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns an integer code representing the particle type of the track in the given Geant4 step.
+ * @brief Determine a discrete particle-type code for the track in the provided Geant4 step.
  *
- * The returned code is:
- * - 1 for gamma
- * - 2 for electron
- * - 3 for positron
- * - 4 for neutron
- * - 5 for proton
- * - 6 for alpha
- * - -1 if the particle type is unknown or not one of the above.
+ * Maps the track's particle definition to a small integer code useful for compact storage:
+ *  - 1: gamma
+ *  - 2: electron
+ *  - 3: positron
+ *  - 4: neutron
+ *  - 5: proton
+ *  - 6: alpha
+ *  - -1: unknown or not one of the above
  *
- * @return G4int Integer code for the particle type.
+ * @param aStep Geant4 step whose track's dynamic particle is queried.
+ * @return G4int Integer code representing the particle type (see mapping above).
  */
 G4int VoxelHit::GetTrackIdType(G4Step* aStep) const {
   auto dynamic = aStep->GetTrack()->GetDynamicParticle();
@@ -121,11 +139,41 @@ G4int VoxelHit::GetTrackIdType(G4Step* aStep) const {
 ///
 /// @param aStep – the current Geant4 simulation step.
 /**
- * @brief Returns an integer code representing the physical process type that occurred at the given simulation step.
+ * @brief Map a Geant4 step's post-step process to a discrete process-type code.
  *
- * The returned code identifies the main interaction or process (e.g., electromagnetic, nuclear, optical) that defined the step, based on the process name in Geant4. Returns -1 if no process is defined, or 99 if the process is unknown.
+ * Returns an integer code representing the dominant physical process that defined the given step,
+ * based on the post-step process name. The codes are stable identifiers used for compact storage and
+ * comparisons (not exhaustive of every Geant4 process).
  *
- * @return G4int Integer code corresponding to the physical process type at this step.
+ * @param aStep Pointer to the Geant4 step whose post-step process will be classified.
+ * @return G4int Process-type code:
+ *   - -1: no process defined for the step
+ *   -  0: UserStepMax or Transportation
+ *   -  1: phot (photoelectric)
+ *   -  2: compt (Compton)
+ *   -  3: conv (pair production)
+ *   -  4: Rayl (Rayleigh)
+ *   -  5: eIoni (electron ionization)
+ *   -  6: msc (multiple scattering)
+ *   -  7: annihil (annihilation)
+ *   -  8: eBrem (bremsstrahlung)
+ *   -  9: RadioactiveDecay
+ *   - 10: hadElastic
+ *   - 11: neutronInelastic
+ *   - 12: nCapture
+ *   - 13: protonInelastic
+ *   - 14: alphaInelastic
+ *   - 15: ionIoni (ionization by heavy ions)
+ *   - 16: Auger
+ *   - 17: phot_fluo (fluorescence)
+ *   - 18: pixe
+ *   - 19: muIoni
+ *   - 20: muBrems
+ *   - 21: muPairProd
+ *   - 22: Cerenkov
+ *   - 23: Scintillation
+ *   - 24: SynchrotronRadiation
+ *   - 99: unknown / other process
  */
 
 G4int VoxelHit::GetTrkIdProcessType(G4Step* aStep) const {
@@ -207,21 +255,23 @@ G4int VoxelHit::GetTrkIdProcessType(G4Step* aStep) const {
 ///
 /// @param aStep – the current Geant4 simulation step, to readout a track – the G4Track object representing the electron.
 /**
- * @brief Returns an integer code indicating the origin process of a secondary electron in a Geant4 step.
+ * @brief Determine the origin process code for an electron produced in the given Geant4 step.
  *
- * For electron tracks, identifies the physical process that created the electron, such as photoelectric effect, Compton scattering, pair production, Auger effect, fluorescence, ionization, or radioactive decay.
+ * Examines the step's track and, if the particle is an electron, maps its creator process (or lack thereof)
+ * to a small integer code that classifies how the electron was produced.
  *
- * @return G4int Code representing the electron's origin process:
+ * @param aStep Pointer to the Geant4 step whose track/creator will be inspected.
+ * @return G4int Integer code for the electron origin:
  *   - -1: Not an electron
  *   - 0: Primary electron (no creator process)
  *   - 1: Photoelectric effect
  *   - 2: Compton scattering
- *   - 3: Pair production
+ *   - 3: Pair production (conversion)
  *   - 4: Auger electron
- *   - 5: Fluorescent electron
+ *   - 5: Fluorescent (atomic de-excitation) electron
  *   - 6: Electron ionization
  *   - 7: Ion-induced ionization
- *   - 8: Radioactive decay
+ *   - 8: Electron from radioactive decay
  *   - 99: Other or unknown process
  */
 
@@ -248,9 +298,23 @@ G4int VoxelHit::GetTrkIdElectronOriginType(G4Step* aStep) const { // TODO: !!! W
 ////////////////////////////////////////////////////////////////////////////////
 /// 
 /**
- * @brief Records track information from a Geant4 step into the voxel hit.
+ * @brief Record per-track information from the current Geant4 step into the voxel.
  *
- * If track storage is enabled, inserts the track ID from the current step. For new tracks, stores particle type, process type, electron origin type, kinetic energy, momentum angle, track length, and pre-step position. Updates the global event time from the track.
+ * When track storage is enabled (m_store_tracks == true) this routine inserts the
+ * current track ID into the voxel's track set and, if the track is new to this voxel,
+ * appends the track's type code, post-step process code, electron-origin code,
+ * kinetic energy, momentum polar angle (theta), cumulative track length, and the
+ * pre-step position into the corresponding per-track vectors. Regardless of whether
+ * the track was newly inserted, the voxel's global event time (m_global_time) is
+ * updated from the track.
+ *
+ * Side effects:
+ * - Mutates m_Voxel.m_trksId and the parallel per-track vectors (m_trksTypeId,
+ *   m_trksProcessTypeId, m_trksElectronOriginTypeId, m_trksE, m_trksTheta,
+ *   m_trksLength, m_trksPosition) when a new track is encountered.
+ * - Updates m_global_time from the track's global time.
+ *
+ * @param aStep Current Geant4 step providing track and step-point information.
  */
 void VoxelHit::FillTrack(G4Step* aStep) {
   if (m_store_tracks) {
@@ -417,9 +481,13 @@ void VoxelHit::Print() {INFO_GEO("Voxel ID ({},{},{})/({},{},{}) \n\tMass {}, Vo
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns a list mapping track IDs to their kinetic energies for all tracks recorded in the voxel.
+ * @brief Return track ID → kinetic energy pairs for all tracks stored in this voxel.
  *
- * @return Vector of pairs, each containing a track ID and its corresponding kinetic energy.
+ * The returned vector contains pairs in the same order as the internal track storage: each
+ * pair is (trackID, kineticEnergy). Assumes the internal parallel containers of track IDs
+ * and energies are consistent; returns an empty vector if no tracks are recorded.
+ *
+ * @return std::vector<std::pair<G4int, G4double>> List of (track ID, kinetic energy) pairs.
  */
 std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdEnergyMappingList() const {
   std::vector<std::pair<G4int, G4double>> trkIdE;
@@ -430,9 +498,13 @@ std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdEnergyMappingList() co
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns a list mapping track IDs to their momentum theta angles.
+ * @brief Return a list mapping stored track IDs to their momentum theta angles.
  *
- * @return Vector of pairs, each containing a track ID and its corresponding momentum theta angle.
+ * The returned vector preserves the same order as the internal track-ID list; each element
+ * is a pair {trackId, theta}. This function assumes the internal parallel arrays for track
+ * IDs and thetas are synchronized.
+ *
+ * @return std::vector<std::pair<G4int, G4double>> Vector of (track ID, theta) pairs.
  */
 std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdThetaMappingList() const {
   std::vector<std::pair<G4int, G4double>> trkIdTheta;
@@ -443,9 +515,14 @@ std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdThetaMappingList() con
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns a list mapping track IDs to their corresponding track lengths within the voxel.
+ * @brief Get mapping of track IDs to their recorded track lengths in this voxel.
  *
- * @return Vector of pairs, each containing a track ID and its associated track length.
+ * Returns a vector of (trackID, length) pairs constructed by iterating the
+ * internal parallel containers that store track IDs and their lengths.
+ * The i-th pair corresponds to the i-th entry in the internal track ID and
+ * length arrays. If no tracks are stored the result is empty.
+ *
+ * @return std::vector<std::pair<G4int, G4double>> Pairs of track ID and track length.
  */
 std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdLengthMappingList() const {
   std::vector<std::pair<G4int, G4double>> trkIdLength;
@@ -456,9 +533,16 @@ std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdLengthMappingList() co
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns a list mapping user track IDs to their corresponding user track lengths.
+ * @brief Return mapping of user track IDs to their stored user-track lengths.
  *
- * @return Vector of pairs, each containing a user track ID and its associated user track length.
+ * Returns a vector of (userTrackId, userTrackLength) pairs built from the
+ * internal parallel containers m_Voxel.m_usrTrksId and m_Voxel.m_usrTrksLength.
+ * The i-th pair contains the i-th ID and the i-th length.
+ *
+ * @return std::vector<std::pair<G4int, G4double>> Vector of (userTrackId, userTrackLength) pairs.
+ *
+ * @note The function assumes the ID and length containers are kept in sync; if their
+ * sizes differ, behavior follows the shorter container (no bounds checks are performed).
  */
 std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdUserLengthMappingList() const {
   std::vector<std::pair<G4int, G4double>> trkIdLength;
@@ -469,11 +553,15 @@ std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdUserLengthMappingList(
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns a list mapping track lengths to their corresponding pre-step positions.
+ * @brief Returns the mapping between stored track lengths and their pre-step positions.
  *
- * @return Vector of pairs, each containing a track length and its associated pre-step position.
+ * Each element is a pair (trackLength, preStepPosition) taken from the parallel vectors
+ * holding per-track lengths and positions. The returned list preserves the iteration order
+ * of those internal vectors.
  *
- * @note The mapping uses track lengths as keys, which may be unintended; typically, track IDs are used for such mappings.
+ * @return std::vector<std::pair<G4int, G4ThreeVector>> Vector of (trackLength, preStepPosition) pairs.
+ *
+ * @note The mapping uses track length as the key (not the track ID); track lengths may be non-unique.
  */
 std::vector<std::pair<G4int, G4ThreeVector>> VoxelHit::GetTrkIdPositionMappingList() const {
   std::vector<std::pair<G4int, G4ThreeVector>> trkPosition;
@@ -484,9 +572,13 @@ std::vector<std::pair<G4int, G4ThreeVector>> VoxelHit::GetTrkIdPositionMappingLi
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns a list mapping track IDs to their particle type codes for this voxel.
+ * @brief Return a list mapping stored track IDs to their particle-type codes.
  *
- * @return Vector of pairs, each containing a track ID and its corresponding particle type code.
+ * The returned vector contains pairs (trackId, particleTypeCode) in the same order
+ * as tracks were recorded (i.e., the parallel ordering of m_trksId and m_trksTypeId).
+ * It assumes the two internal arrays are aligned.
+ *
+ * @return std::vector<std::pair<G4int, G4int>> List of (track ID, particle type code).
  */
 std::vector<std::pair<G4int, G4int>> VoxelHit::GetTrackIdTypeMappingList() const {
   std::vector<std::pair<G4int, G4int>> trkTypeId;
@@ -498,9 +590,15 @@ std::vector<std::pair<G4int, G4int>> VoxelHit::GetTrackIdTypeMappingList() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns a list of pairs containing the track ID and the physical process type that occurred in that track.
 /**
- * @brief Returns a list mapping track IDs to their corresponding process type codes for this voxel.
+ * @brief Build a mapping of tracked particle IDs to their post-step process type codes.
  *
- * @return Vector of pairs, each containing a track ID and its associated process type code.
+ * The returned vector preserves the internal order of stored tracks: each element is
+ * a pair where first is the track ID and second is the process-type code recorded for
+ * that track. The method assumes the internal containers that hold track IDs and
+ * process-type codes are parallel and aligned; if no tracks are stored, an empty
+ * vector is returned.
+ *
+ * @return std::vector<std::pair<G4int,G4int>> List of (track ID, process type code) pairs.
  */
 std::vector<std::pair<G4int, G4int>> VoxelHit::GetTrkIdProcessTypeMappingList() const {
   // Vector to store the resulting pairs (Track ID, Process Type ID)
@@ -551,9 +649,12 @@ G4double VoxelHit::GetPrimaryTrkEnergy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the mean energy deposited per step in the voxel.
+ * @brief Compute the mean energy deposited per recorded step in this voxel.
  *
- * @return The average energy deposited per step, or -1 if no steps have been recorded.
+ * Computes the arithmetic mean of all entries stored in m_Voxel.m_stepsEdep.
+ * Returns -1 when no per-step energy-deposition records exist.
+ *
+ * @return Mean energy deposited per step (in the simulation's energy units), or -1 if no steps recorded.
  */
 G4double VoxelHit::GetMeanEnergyDeposit() const {
   if (m_Voxel.m_stepsEdep.size() > 0) {
@@ -565,9 +666,11 @@ G4double VoxelHit::GetMeanEnergyDeposit() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Prints the energies of incident primary particles for the current event.
+ * @brief Print incident primary particle energies recorded for this event.
  *
- * Outputs the energy of each primary particle stored in the event to the console.
+ * Iterates the stored per-event primary incident energies and writes each value to G4cout.
+ *
+ * @note Energies are printed in kiloelectronvolts (keV) and output is sent to Geant4's G4cout stream.
  */
 void VoxelHit::PrintEvtInfo() const {
   for (int i = 0; i < m_evtPrimariesIncidentE.size(); ++i) {
@@ -628,13 +731,20 @@ bool VoxelHit::IsAligned(const VoxelHit& other, bool global_and_local) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Cumulates dose and related data from another VoxelHit if aligned.
+ * @brief Cumulate dose from another voxel hit when indices align.
  *
- * If the provided VoxelHit is aligned (based on the specified alignment check), adds its dose to this voxel hit. For global-only alignment, the dose is weighted by the ratio of the other voxel's volume to this voxel's volume. For both global and local alignment, doses are added directly. If the voxel hits are not aligned, a warning is printed and no cumulation occurs.
+ * If the other VoxelHit is aligned with this one, its dose is added to this voxel's dose.
+ * - When only global alignment is required (global_and_local_allignemnt_check == false),
+ *   the other dose is scaled by (other.GetVolume() / GetVolume()) before adding.
+ * - When both global and local alignment are required (global_and_local_allignemnt_check == true),
+ *   doses are added directly via operator+=.
  *
- * @param other The VoxelHit to cumulate data from.
- * @param global_and_local_allignemnt_check If true, requires both global and local indices to match for cumulation; if false, only global indices are checked.
- * @return Reference to this VoxelHit after cumulation.
+ * No changes are made if the two hits are not aligned.
+ *
+ * @param other Source VoxelHit whose dose will be cumulated into this hit.
+ * @param global_and_local_allignemnt_check If true, require both global and local indices to match;
+ *                                           if false, require only global indices (apply volume weighting).
+ * @return VoxelHit& Reference to this VoxelHit after cumulation.
  */
 VoxelHit& VoxelHit::Cumulate(const VoxelHit& other, bool global_and_local_allignemnt_check) {
   // if(!global_and_local_allignemnt_check)
@@ -663,11 +773,14 @@ VoxelHit& VoxelHit::Cumulate(const VoxelHit& other, bool global_and_local_allign
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Adds the dose from another voxel hit to this voxel hit.
+ * @brief Additively accumulates dose from another VoxelHit.
  *
- * Increases this voxel's dose by the dose value from the other voxel hit.
+ * Increments this voxel's stored dose by the dose value from the provided
+ * VoxelHit. This operation does not modify the other operand and does not
+ * perform any alignment or volume-based scaling — it performs a direct dose
+ * addition.
  *
- * @return Reference to this voxel hit after accumulation.
+ * @return Reference to this VoxelHit after accumulation.
  */
 VoxelHit& VoxelHit::operator+=(const VoxelHit& other) {
   // TODO: m_Voxel.m_Dose+=other.GetDose()*other.GetVolume() / GetVolume(); Tu też?

@@ -22,10 +22,10 @@ StepMax::~StepMax() {}
 
 
 /**
- * @brief Determines if the step limitation process applies to the given particle.
+ * @brief Returns whether this process applies to the given particle (applies to charged particles).
  *
- * @param particle The particle definition to check.
- * @return G4bool True if the particle has nonzero electric charge; otherwise, false.
+ * @param particle Particle definition to test.
+ * @return G4bool True if the particle has nonzero electric charge; otherwise false.
  */
 G4bool StepMax::IsApplicable(const G4ParticleDefinition& particle) 
 { 
@@ -35,21 +35,27 @@ G4bool StepMax::IsApplicable(const G4ParticleDefinition& particle)
 
     
 /**
- * @brief Sets the maximum allowed step length for charged particles.
+ * @brief Set the maximum step length enforced for charged particles.
  *
- * @param step The maximum step length to be enforced for charged particles.
+ * This sets the internal MaxChargedStep value used by the process to limit
+ * the proposed step length for charged particles. The default is DBL_MAX.
+ *
+ * @param step Maximum allowed step length (stored verbatim).
  */
 void StepMax::SetMaxStep(G4double step) {MaxChargedStep = step;}
 
 
 
 /**
- * @brief Returns the maximum allowed step length for charged particles after a simulation step.
+ * @brief Provide the advisory maximum step length for the process.
  *
- * Sets the force condition to "NotForced" and provides the current maximum step length, which acts as an advisory limit for charged particle steps.
+ * Sets the force condition to NotForced and returns the currently configured
+ * maximum charged-particle step length. The function ignores the input track
+ * and proposed step length; it only supplies the advisory limit stored in
+ * MaxChargedStep.
  *
- * @param condition Pointer to the force condition, set to NotForced.
- * @return G4double The maximum allowed step length for charged particles.
+ * @param condition Output pointer that will be set to NotForced.
+ * @return G4double The configured maximum step length for charged particles.
  */
 G4double StepMax::PostStepGetPhysicalInteractionLength(const G4Track&,
                                                 G4double,

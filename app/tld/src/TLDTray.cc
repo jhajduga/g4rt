@@ -99,9 +99,21 @@ void TLDTray::LoadConfiguration(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Parses and applies TLD tray configuration from a TOML file.
+ * @brief Parse and apply tray configuration from a TOML file.
  *
- * Reads configuration parameters such as global position, voxelization, world size, grid dimensions, rotation, TLD medium, and geometry file path from a TOML file. Updates the tray's internal configuration accordingly. Exits the program if the configuration file is missing.
+ * Reads configuration entries under the TOML prefix for this tray and updates
+ * the internal configuration used when constructing the tray and its TLD
+ * detectors. The method will:
+ * - locate the TOML configuration file (via SetTomlConfigFile/GetTomlConfigFile) and abort with a fatal log + exit(1) if the file is missing;
+ * - parse the TOML file and read fields under the configured prefix;
+ * - set the tray global centre from `Position` (three-element array);
+ * - set per-detector voxelization counts from `TLDVoxelization` only when all three values are positive;
+ * - set the tray world half-size from `World_Size` only when all three values are positive;
+ * - set the TLD grid dimensions from `TLDGrid` only when both values are positive;
+ * - apply rotation angles from `Rotation` (X, Y, Z) in degrees when values are non-zero;
+ * - override the TLD medium (`TLDMedium`) and the STL geometry path (`TLD_Geometry_File_Path`) when provided.
+ *
+ * Only non-default/valid values in the TOML file are applied; missing entries leave existing configuration unchanged.
  */
 void TLDTray::ParseTomlConfig(){
     SetTomlConfigFile(); // it set the job main file for searching this configuration

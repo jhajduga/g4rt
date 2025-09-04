@@ -33,9 +33,9 @@ BeamCollimation::BeamCollimation() : IPhysicalVolume("BeamCollimation"){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Destructor for the BeamCollimation class.
+ * @brief Releases resources held by BeamCollimation.
  *
- * Cleans up allocated resources by calling Destroy().
+ * Ensures constructed volumes and MLC-related state are cleaned up. 
  */
 BeamCollimation::~BeamCollimation() {
   Destroy();
@@ -43,11 +43,13 @@ BeamCollimation::~BeamCollimation() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the singleton instance of the BeamCollimation class.
+ * @brief Returns the singleton (Meyers) instance of BeamCollimation.
  *
- * Ensures only one instance of BeamCollimation exists throughout the application.
+ * The instance is created on first call and the local static ensures
+ * safe initialization in C++11 and later. Use this to obtain the single
+ * global BeamCollimation object for the process.
  *
- * @return Pointer to the singleton BeamCollimation instance.
+ * @return BeamCollimation* Pointer to the singleton instance.
  */
 BeamCollimation *BeamCollimation::GetInstance() {
   static BeamCollimation instance;
@@ -66,9 +68,11 @@ void BeamCollimation::AcceptRunVisitor(RunSvc *visitor){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Outputs the nominal beam energy and current jaw aperture sizes to the console.
+ * @brief Print nominal beam energy and jaw apertures to the Geant4 output stream.
  *
- * Displays the nominal beam energy and the X and Y jaw apertures in centimeters for informational purposes.
+ * Prints the configured nominal beam energy (from ConfigSvc "RunSvc"/"idEnergy") and the current jaw
+ * apertures for Jaw1X, Jaw2X, Jaw1Y and Jaw2Y converted to centimeters. This is a diagnostics/info
+ * helper and does not modify object state.
  */
 void BeamCollimation::WriteInfo() {
   G4cout << "\n\n\tnominal beam energy: " << Service<ConfigSvc>()->GetValue<int>("RunSvc", "idEnergy") << G4endl;
@@ -118,11 +122,18 @@ void BeamCollimation::Reset() {
 }
 
 /**
- * @brief Updates jaw aperture settings and positions based on the provided control point.
+ * @brief Apply a control-point's jaw aperture settings and, when applicable, reposition jaws.
  *
- * Clears and sets jaw aperture values from the control point. For custom plan fields with a supported MLC model, recalculates and applies jaw positions and rotations according to the new apertures.
+ * Reads jaw aperture values from the provided control point into the component's internal
+ * aperture map. If the control point's field type is "CustomPlan" and the active MLC model
+ * supports custom jaw positioning (i.e., not Simplified or None), recalculates each jaw's
+ * center, half-size and rotation from the new apertures via SetJawAperture and applies the
+ * updated translation and rotation to the corresponding physical volume.
  *
- * @param control_point The control point containing field type and jaw aperture information.
+ * This function mutates internal state: it updates m_apertures and modifies the translations
+ * and rotations of m_physicalVolume entries for Jaw1X, Jaw2X, Jaw1Y and Jaw2Y.
+ *
+ * @param control_point Control point providing field type and jaw aperture values.
  */
 void BeamCollimation::SetRunConfiguration(const ControlPoint* control_point){
   auto inputType = control_point->GetFieldType();
@@ -154,11 +165,18 @@ void BeamCollimation::SetRunConfiguration(const ControlPoint* control_point){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Filters and processes primary particle vertices based on angular and geometric collimation criteria.
+ * @brief Filter and preprocess primary vertices according to collimation rules.
  *
- * Removes primary vertices whose particle momentum exceeds the angular threshold or, for the simplified MLC model, are outside the MLC field. For other MLC models, adjusts particle positions to a plane before the jaws. Updates the simulation field mask with the filtered vertices.
+ * Iterates the provided primary-vertex list, removing (deleting) vertices whose
+ * particle direction exceeds the angular threshold or—when the simplified MLC
+ * model is active—are outside the MLC field. For non-simplified MLC models,
+ * surviving vertices are repositioned to the plane immediately before the jaws.
+ * After filtering, null entries are erased from the vector and the current
+ * control point's simulation field mask is updated.
  *
- * @param p_vrtx Vector of pointers to primary vertices to be filtered and processed. Modified in place.
+ * @param p_vrtx Vector of primary-vertex pointers to process. Entries may be
+ *               deleted and the vector is modified in place to remove removed
+ *               vertices.
  */
 
 void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
@@ -188,13 +206,16 @@ void BeamCollimation::FilterPrimaries(std::vector<G4PrimaryVertex*>& p_vrtx) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Repositions a primary vertex to a specified Z-plane along its momentum direction.
+ * @brief Move a primary vertex along its momentum to intersect a plane at a given Z.
  *
- * Calculates the intersection point of the particle's trajectory with a plane at the given Z-coordinate and updates the vertex position accordingly.
+ * Computes the intersection of the primary particle's straight-line trajectory with the plane z = finalZ,
+ * updates the vertex position to that intersection, and returns the new position.
  *
- * @param vrtx The primary vertex to reposition.
- * @param finalZ The Z-coordinate of the target plane.
- * @return G4ThreeVector The new position of the vertex on the specified Z-plane.
+ * @param vrtx Primary vertex to reposition.
+ * @param finalZ Z coordinate of the target plane (same units as the vertex position).
+ * @return G4ThreeVector New vertex position on the plane z = finalZ.
+ *
+ * @note Behavior is undefined if the primary's momentum direction has a zero Z component (division by zero).
  */
 G4ThreeVector BeamCollimation::SetParticlePositionBeforeCollimators(G4PrimaryVertex* vrtx, G4double finalZ) {
   G4ThreeVector position = vrtx->GetPosition();
@@ -210,14 +231,22 @@ G4ThreeVector BeamCollimation::SetParticlePositionBeforeCollimators(G4PrimaryVer
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Adjusts the position, size, and rotation of a jaw based on its aperture and geometric configuration.
+ * @brief Compute and apply jaw translation and rotation for a given aperture.
  *
- * Updates the provided center position, half-size dimensions, and rotation matrix for the specified jaw to reflect the current aperture setting and isocenter geometry. Supports four jaw names: "Jaw1X", "Jaw2X", "Jaw1Y", and "Jaw2Y".
+ * Updates the jaw center position and rotation to reflect the current aperture stored in m_apertures for the
+ * specified jaw. Supported jaw identifiers are "Jaw1X", "Jaw2X", "Jaw1Y", and "Jaw2Y". The function reads the
+ * isocenter distance from the GeoSvc configuration to compute an angular displacement and applies a rotation
+ * about the jaw's local X or Y axis as appropriate.
  *
- * @param name The identifier of the jaw ("Jaw1X", "Jaw2X", "Jaw1Y", or "Jaw2Y").
- * @param centre Reference to the jaw's center position, which will be updated.
- * @param halfSize Reference to the jaw's half-size vector, which will be updated.
- * @param cRotation Pointer to the jaw's rotation matrix, which will be updated.
+ * The caller-provided centre and cRotation are modified in-place to the new position and orientation.
+ * The function also computes new half-size components consistent with the rotated jaw geometry; however,
+ * note that in the current signature halfSize is passed by value, so changes to halfSize do not propagate
+ * back to the caller.
+ *
+ * @param name Jaw identifier ("Jaw1X" | "Jaw2X" | "Jaw1Y" | "Jaw2Y").
+ * @param centre Reference to the jaw center position; updated to the rotated/translated centre.
+ * @param halfSize Jaw half-size vector (computed internally); not modified for the caller due to pass-by-value.
+ * @param cRotation Pointer to the jaw rotation matrix; rotated in-place to reflect the aperture-induced tilt.
  */
 void BeamCollimation::SetJawAperture(const std::string& name, G4ThreeVector &centre, G4ThreeVector halfSize,
                                       G4RotationMatrix *cRotation) {

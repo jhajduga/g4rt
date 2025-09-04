@@ -10,14 +10,16 @@ class ModularWaterPhantom: public IPhysicalVolume {
         ModularWaterPhantom();
 
         /**
- * @brief Destroys the ModularWaterPhantom instance.
+ * @brief Private defaulted destructor.
  *
- * Default destructor with no custom cleanup.
+ * Uses the compiler-generated destructor for normal cleanup and prevents external deletion of the singleton instance.
  */
         ~ModularWaterPhantom() = default;
 
         /**
- * @brief Deleted copy constructor to enforce singleton pattern.
+ * @brief Deleted copy constructor — copying is disallowed.
+ *
+ * Prevents creating a copy of the singleton instance to enforce single-instance semantics.
  */
         ModularWaterPhantom(const ModularWaterPhantom &) = delete;
         /**
@@ -67,9 +69,14 @@ ModularWaterPhantom &operator=(ModularWaterPhantom &&) = delete;
         void WriteInfo() override {};
 
         /**
- * @brief Sets the rotation matrix for the modular water phantom.
+ * @brief Set the rotation matrix that defines the phantom's orientation.
  *
- * Updates the internal rotation matrix pointer used to define the phantom's orientation.
+ * Stores the given rotation matrix pointer as the phantom's internal rotation.
+ * The pointer may be nullptr to indicate no rotation. The function stores the
+ * pointer as-is (no copy); ownership is not transferred and the caller is
+ * responsible for the pointer's lifetime.
+ *
+ * @param rotation Pointer to a G4RotationMatrix representing the desired rotation, or nullptr.
  */
         void SetRotation(G4RotationMatrix* rotation) { m_rotation = rotation; }
 

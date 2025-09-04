@@ -89,9 +89,13 @@ void BeamAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Handles end-of-event processing for beam monitoring data.
+ * @brief Process end-of-event beam monitoring actions.
  *
- * Writes collected particle data for the current event to the ntuple and clears internal buffers to prepare for the next event.
+ * Writes all accumulated per-event particle measurements into the configured ntuple
+ * and resets internal per-event buffers so the next event starts empty.
+ *
+ * @param evt Pointer to the G4Event for which data are being finalized.
+ *            (Currently unused by this function; provided for interface consistency.)
  */
 void BeamAnalysis::EndOfEventAction(const G4Event *evt){
   FillParticlesNTuple();
@@ -124,12 +128,17 @@ void BeamAnalysis::ClearParticlesEventData(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Collects and stores particle data from a simulation step for beam monitoring.
+ * @brief Collects per-particle observables from a Geant4 step and stores them for the current event.
  *
- * Extracts particle properties such as position, momentum, energy, particle type, and track ID from the provided Geant4 step, associates them with the specified scoring plane, and appends them to internal buffers for later analysis.
+ * If `step` is non-null, extracts particle kinematics and identifiers from the step/track
+ * (position, momentum components, energy, mass, PDG code, track ID), maps the PDG code to
+ * the internal particle ID, associates the record with `scoringPlaneId`, increments the
+ * per-event particle counter, and appends all values to the internal per-event buffers.
  *
- * @param step Pointer to the Geant4 step containing particle information.
- * @param scoringPlaneId Identifier for the scoring plane where the particle is recorded.
+ * Energy stored in m_particleE is recorded in keV. If `step` is null the function is a no-op.
+ *
+ * @param step Pointer to the Geant4 step containing the particle and track information.
+ * @param scoringPlaneId Identifier of the scoring plane where this particle was recorded.
  */
 void BeamAnalysis::FillParticles(G4Step *step, G4int scoringPlaneId){
   if(step){

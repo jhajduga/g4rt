@@ -8,9 +8,9 @@
 
 /////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Constructs a SteppingAction object with a reference to the given EventAction.
+ * @brief Initialize a SteppingAction tied to an EventAction.
  *
- * @param eventAct Pointer to the EventAction instance associated with this stepping action.
+ * @param eventAct Pointer to the EventAction associated with this SteppingAction; stored for later use by stepping callbacks.
  */
 SteppingAction::SteppingAction(EventAction* eventAct):G4UserSteppingAction(), m_EventAction(eventAct){}
 

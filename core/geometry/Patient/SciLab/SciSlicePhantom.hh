@@ -31,9 +31,11 @@ class SciSlicePhantom : public VPatient {
     G4bool Update() override;
 
     /**
- * @brief Placeholder for resetting the phantom state.
+ * @brief Reset the phantom to its initial state.
  *
- * Currently not implemented; outputs a message indicating the need for implementation.
+ * This method is a placeholder and not yet implemented. Currently it writes
+ * "Implement me." to G4cout; when implemented it should restore the phantom's
+ * internal state and geometry to defaults so it can be reused or reconstructed.
  */
     void Reset() override { G4cout << "Implement me." << G4endl; }
 

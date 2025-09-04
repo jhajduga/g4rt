@@ -45,15 +45,20 @@ std::pair<float, float> parsePair(const std::string& input) {
 }
 
 /**
- * @brief Entry point for the RT-Plan DICOM to .dat file conversion application.
+ * @brief Command-line entry point for converting a DICOM RT-Plan (.dcm) into per-control-point .dat files.
  *
- * Initializes the environment, parses command-line arguments, and processes a DICOM RT-Plan file to extract beam and control point data. Applies optional field centralization and field size constraints, then writes the resulting jaw and MLC leaf positions to .dat files in the specified output directory. Reports statistics on processed and filtered control points.
+ * Parses command-line options, validates inputs, reads an RT-Plan via the DicomSvc, and for each beam/control point
+ * extracts jaw apertures and MLC leaf positions. Optionally centralizes fields, applies an (X,Y) field-size constraint,
+ * and writes per-control-point .dat files containing jaw and MLC positions. Prints processing statistics and exits
+ * with a non-zero code for option parsing or invalid required arguments.
  *
- * Exits with failure if required arguments are missing or invalid, or if command-line parsing fails.
+ * Notes:
+ * - Forces the POSIX "C" locale (LC_ALL="C") for consistent numeric formatting.
+ * - Initializes an embedded Python interpreter and the logging service early in execution.
  *
  * @param argc Number of command-line arguments.
- * @param argv Array of command-line argument strings.
- * @return int Exit status code.
+ * @param argv Null-terminated array of command-line argument strings.
+ * @return int Process exit code (EXIT_SUCCESS on success, non-zero for failures such as option parsing or invalid inputs).
  */
 int main(int argc, const char *argv[]) {
   // Force POSIX "C" locale to ensure consistent scientific notation (e.g., 1.23e-12).

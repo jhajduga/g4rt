@@ -15,9 +15,11 @@ class MlcMillennium {
       MlcMillennium() = delete;
 
       /**
- * @brief Constructs an MlcMillennium object associated with a parent physical volume.
+ * @brief Construct an MlcMillennium associated with a parent physical volume.
  *
- * @param parentPV Pointer to the parent G4VPhysicalVolume to which this object is related.
+ * Constructs an MlcMillennium instance tied to the specified parent G4VPhysicalVolume.
+ *
+ * @param parentPV Pointer to the parent G4VPhysicalVolume with which this object is associated.
  */
       MlcMillennium(G4VPhysicalVolume* parentPV){};
 
