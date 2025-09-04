@@ -16,12 +16,13 @@ WaterPhantomSD::WaterPhantomSD(const G4String& sdName):VPatientSD(sdName){}
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
-   * @brief Constructs a WaterPhantomSD sensitive detector with a specified name and center position.
+   * @brief Construct a WaterPhantom sensitive detector at a given center.
    *
-   * Initializes the detector's internal coordinate IDs to zero.
+   * Delegates construction to VPatientSD(sdName, centre) and initializes
+   * the internal voxel coordinate IDs (m_id_x, m_id_y, m_id_z) to zero.
    *
-   * @param sdName Name of the sensitive detector.
-   * @param centre Center position of the detector in 3D space.
+   * @param sdName Sensitive detector name.
+   * @param centre Detector center position in world coordinates.
    */
 WaterPhantomSD::WaterPhantomSD(const G4String& sdName, const G4ThreeVector& centre)
   : VPatientSD(sdName,centre){
@@ -35,12 +36,22 @@ WaterPhantomSD::WaterPhantomSD(const G4String& sdName, const G4ThreeVector& cent
 /// Note: Handling the G4Step/Hits it's important that different logical volumes
 ///       cane share one SD object!
 /**
- * @brief Processes a Geant4 step within the water phantom sensitive detector.
+ * @brief Process a Geant4 step for the WaterPhantom sensitive detector.
  *
- * Handles hit processing for each step in the water phantom volume, including track information management, hit collection processing, and optional step analysis based on configuration settings.
+ * Determines the pre-step volume, optionally records per-track PatientTrackInfo,
+ * dispatches the step to all configured hit collections, and optionally forwards
+ * the step to the step analysis subsystem.
  *
- * @param aStep The current Geant4 step to process.
- * @return G4bool Always returns true to indicate successful processing.
+ * If the RunSvc "StoreTracks" flag is enabled, the function ensures the track has
+ * a PatientTrackInfo attached: it updates an existing one or allocates a new
+ * PatientTrackInfo and attaches it to the track (the Geant4 kernel is expected
+ * to clean up the allocated object when the track ends).
+ *
+ * If the RunSvc "StepAnalysis" flag is enabled, the step is passed to
+ * StepAnalysis::GetInstance()->FillStep().
+ *
+ * @param aStep The current Geant4 step (PreStepPoint is used to determine the volume).
+ * @return G4bool Always returns true.
  */
 G4bool WaterPhantomSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   

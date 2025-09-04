@@ -44,9 +44,11 @@ class SavePhSp : public IPhysicalVolume, public Configurable {
   G4bool Update() override;
 
   /**
- * @brief Placeholder for resetting the phase space planes.
+ * @brief Reset the phase-space planes to their initial state.
  *
- * Currently not implemented; outputs a message indicating the need for implementation.
+ * This is a placeholder and currently not implemented; calling it emits
+ * "Implement me." to G4cout. Intended to clear or reinitialize internal
+ * placements so the object can be reused.
  */
   void Reset() override { G4cout << "Implement me." << G4endl; }
 

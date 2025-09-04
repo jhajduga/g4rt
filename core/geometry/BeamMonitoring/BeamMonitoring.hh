@@ -44,9 +44,12 @@ class BeamMonitoring : public IPhysicalVolume, public Configurable {
   G4bool Update() override;
 
   /**
- * @brief Placeholder for resetting the beam monitoring volume state.
+ * @brief Reset the beam monitoring volume to its initial runtime state.
  *
- * Currently not implemented; outputs a message indicating the need for implementation.
+ * This should clear or reinitialize any runtime counters, histograms, or
+ * per-run accumulators associated with the beam monitoring volume so the
+ * detector is ready for a new run or test. Currently this function is a
+ * placeholder and does not perform any reset.
  */
   void Reset() override { G4cout << "Implement me." << G4endl; }
 

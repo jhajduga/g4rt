@@ -22,9 +22,22 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Constructs and configures the PhysicsList with selected physics models and processes.
+ * @brief Construct and configure the Geant4 physics list used for the run.
  *
- * Initializes the physics list with a default cut value and verbosity level. Selects the electromagnetic (EM) physics model and enables optional extra physics processes (hadronic, ion, stopping, optical) based on configuration parameters. Instantiates core physics components for decay and radioactive decay, and, if enabled, additional physics modules for detailed particle interactions. Registers the optical physics module when extra processes are enabled. Sets up a global step limiter process to apply to all particles.
+ * Initializes default production cuts and verbosity, selects the electromagnetic
+ * (EM) physics model from configuration, and instantiates core physics modules
+ * for decay and radioactive decay. Optionally constructs and registers additional
+ * physics modules (EM extras, hadronic, ion, stopping, optical) when enabled
+ * via configuration, and creates a global step limiter applied to all particles.
+ *
+ * Configuration keys read from RunSvc:
+ * - "Physics" : EM physics model name to activate.
+ * - "EnableExtraProcesses" : enable construction/registration of extra physics modules.
+ * - "StepMax" : global maximum step length applied (in mm).
+ *
+ * Side effects:
+ * - Registers the optical physics module when extra processes are enabled.
+ * - Prepares physics modules for later ConstructParticle/ConstructProcess calls.
  */
 PhysicsList::PhysicsList() {
 
@@ -79,9 +92,17 @@ void PhysicsList::ConstructParticle() {
 }
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Adds a user-defined hard step limiter process to applicable particles.
+ * @brief Attach a global hard step-limiter process to applicable particles.
  *
- * This method creates and configures a StepMax process to enforce a strict maximum step length for all non-short-lived particles where the process is applicable. The step limiter overrides the electromagnetic step size if the specified maximum is shorter.
+ * Creates a StepMax process configured with the PhysicsList's m_stepMax (in mm)
+ * and registers it as a discrete process for every particle type for which the
+ * StepMax is applicable and that is not short-lived. When active, this hard
+ * limiter enforces an upper bound on the step length and will take effect when
+ * its maximum is shorter than any competing (e.g., EM) step constraints.
+ *
+ * Side effects:
+ * - Allocates a StepMax instance and registers the same process pointer with
+ *   multiple particle process managers via AddDiscreteProcess.
  */
 void PhysicsList::AddStepMax()
 {

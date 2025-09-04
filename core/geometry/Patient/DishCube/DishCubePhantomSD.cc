@@ -7,20 +7,28 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Constructs a DishCubePhantomSD sensitive detector with the specified name.
+ * @brief Create a DishCubePhantomSD sensitive detector with the given name.
  *
- * Initializes the sensitive detector by passing the given name to the base class VPatientSD.
+ * Constructs the sensitive detector and forwards the provided name to the VPatientSD base class.
+ *
+ * @param sdName Name assigned to this sensitive detector instance.
  */
 DishCubePhantomSD::DishCubePhantomSD(const G4String& sdName):VPatientSD(sdName){}
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Processes a simulation step within the sensitive detector volume.
+ * @brief Handle a Geant4 step occurring inside the DishCube phantom sensitive volume.
  *
- * Updates or creates user track information for the current step, processes all relevant hit collections, and optionally records step data for analysis if enabled in the configuration. Returns true to indicate successful processing.
+ * Updates per-track user information for the traversing particle (creating and attaching
+ * a PatientTrackInfo if none exists), processes all configured hit collections for this step,
+ * and—if enabled via configuration—records the step for offline analysis.
  *
- * @param aStep The current Geant4 step occurring in the sensitive detector.
- * @return G4bool True if the hit was processed successfully.
+ * This function has the side effect of allocating and attaching a PatientTrackInfo to the
+ * track when one is not already present. It may also emit a debug message when the step's
+ * pre-step volume name is not "DishCubePhantomPV".
+ *
+ * @param aStep The current Geant4 step in the sensitive detector.
+ * @return G4bool Always returns true to indicate the hit was processed.
  */
 G4bool DishCubePhantomSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   

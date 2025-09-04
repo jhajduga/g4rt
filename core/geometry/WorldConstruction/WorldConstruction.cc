@@ -37,11 +37,13 @@ WorldConstruction::~WorldConstruction() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the singleton instance of the WorldConstruction class.
+ * @brief Return the singleton WorldConstruction instance.
  *
- * Ensures only one instance of WorldConstruction exists, managed for the lifetime of the application.
+ * Creates and returns the single global WorldConstruction used by the application.
+ * The instance is allocated once on first call and retained for the program lifetime;
+ * ownership is effectively managed by Geant4's geometry manager.
  *
- * @return Pointer to the singleton WorldConstruction instance.
+ * @return WorldConstruction* Non-null pointer to the singleton instance.
  */
 WorldConstruction *WorldConstruction::GetInstance() {
   static auto instance = new WorldConstruction(); // It's being released by G4GeometryManager
@@ -50,9 +52,15 @@ WorldConstruction *WorldConstruction::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Defines configuration parameters for the simulation world.
+ * @brief Register and initialize all configurable units used by the simulation world.
  *
- * Registers all configurable units and parameters required for constructing and managing the simulation world, including geometry, isocentre, phase space, rotation, and parameterized volumes. Sets up their default values using the base configuration mechanism.
+ * Defines the named configuration units required to construct and manage the world geometry
+ * (world size, isocentre, coordinate transforms, phase‑space settings, rotations and
+ * parameterized volumes) and then populates them with their default values by invoking
+ * the base Configurable::DefaultConfig().
+ *
+ * This method has the side effect of registering these units with the configuration
+ * subsystem so they become available for runtime queries and overrides.
  */
 void WorldConstruction::Configure() {
   G4cout << "\n\n[INFO]::  Default configuration of the " << thisConfig()->GetName() << G4endl;
@@ -79,11 +87,32 @@ void WorldConstruction::Configure() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Sets default configuration values for the specified world construction parameter.
+ * @brief Set a default value for a named world-construction configuration unit.
  *
- * Assigns a default value to the given configuration unit, such as world size, isocentre position, phase space parameters, rotation, or parameterized volumes. Used to initialize or reset configuration settings for the simulation world environment.
+ * Initializes a single configuration entry identified by its name to a sensible default
+ * used by the world construction subsystem. The function updates the active configuration
+ * via thisConfig()->SetValue(...) for the requested unit name.
  *
- * @param unit The name of the configuration parameter to set to its default value.
+ * Supported unit names and their default meanings:
+ * - "Label": human-readable label ("World Construction Environment").
+ * - "WorldSize": world box full dimensions (G4ThreeVector) in mm — default (2000,2000,2000).
+ * - "Isocentre": isocentre position (G4ThreeVector) in mm — default (0,0,0).
+ * - "IsoToSimTransformation": transform vector (G4ThreeVector) — default (0,0,0).
+ * - "SourceZPosition": source Z position (G4double) in mm — default 1000.
+ * - "centrePhaseSpace": center of phase-space plane (G4ThreeVector) in mm — default (0,0,550).
+ * - "halfSizePhaseSpace": half-size of phase-space plane (G4ThreeVector) in mm — default (200,200,1).
+ * - "ForcePhaseSpaceBeforeJaws": force phase-space before jaws (G4bool) — default true.
+ * - "PhaseSpaceOutFile": phase-space output filename (G4String) — default "PhSp_Acc1".
+ * - "SavePhaseSpace": enable phase-space saving (G4bool) — default false.
+ * - "StopAtPhaseSpace": stop particle at phase-space (G4bool) — default false.
+ * - "max_N_particles_in_PhSp_File": max particles in phase-space file (G4int) — default 10,000,000.
+ * - "nMaxParticlesInRamPlanePhaseSpace": max particles buffered in RAM (G4int) — default 100,000.
+ * - "Rotate90Y": rotate accelerator 90° about Y (G4bool) — default false.
+ * - "rotationX": rotation angle about X (G4double) in degrees — default 0.
+ * - "ParameterizedVolumes": set of parameterized volume names (std::set<std::string>*) — default empty set.
+ *
+ * @param unit The configuration unit name to initialize. If the name is unrecognized the function
+ *             performs no action.
  */
 void WorldConstruction::DefaultConfig(const std::string &unit) {
 
@@ -148,9 +177,13 @@ void WorldConstruction::DefaultConfig(const std::string &unit) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Destroys the world geometry and its submodules, preparing for cleanup.
+ * @brief Destroy the world geometry and tear down submodules.
  *
- * Releases geometry resources by opening the geometry for modification, destroys gantry and phantom environments if present, and unregisters the configuration for this instance.
+ * Opens the Geant4 geometry for modification, invokes Destroy() on constructed
+ * submodules (gantry and phantom) if present, and unregisters this instance's
+ * configuration from the configuration service. The top-level world physical
+ * volume is not deleted here because its lifetime is managed by the Geant4
+ * run manager.
  */
 void WorldConstruction::Destroy() {
 
@@ -221,12 +254,20 @@ bool WorldConstruction::Create() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Constructs and initializes world submodules based on configuration flags.
+ * @brief Instantiate and attach configured world submodules.
  *
- * Creates and attaches the gantry geometry, patient geometry, phase space saving planes, and beam monitoring modules to the world volume if their corresponding configuration options are enabled.
+ * Constructs enabled submodules (gantry, patient/phantom, phase-space planes, and beam-monitoring)
+ * and attaches them to the provided parent physical volume. Each created module is stored in the
+ * class' member pointers (e.g., m_gantryEnv, m_phantomEnv, m_savePhSpEnv, m_beamMonitoring).
  *
- * @param parentPV Pointer to the parent physical volume to which submodules are attached.
- * @return true after all enabled submodules are constructed.
+ * The presence of each submodule is determined by configuration flags:
+ * - GeoSvc::BuildLinac -> gantry (LinacGeometry)
+ * - GeoSvc::BuildPatient -> patient/phantom (PatientGeometry)
+ * - RunSvc::SavePhSp -> phase-space planes (SavePhSpConstruction)
+ * - RunSvc::BeamAnalysis -> beam monitoring (BeamMonitoring)
+ *
+ * @param parentPV Parent physical volume to which submodules are attached.
+ * @return true Always returns true after attempting construction of enabled submodules.
  */
 bool WorldConstruction::ConstructWorldModules(G4VPhysicalVolume *parentPV) {
   // ___________________________________________________________________
@@ -333,9 +374,17 @@ G4bool WorldConstruction::Update(int runId) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Checks for overlaps in the world geometry up to three levels of daughter volumes.
+ * @brief Check for geometry overlaps in the world volume up to three daughter levels.
  *
- * Iterates through the world volume's daughters, their daughters, and their daughters' daughters, invoking `CheckOverlaps()` on each to detect and report any geometry overlaps.
+ * Traverses the world physical volume's immediate daughters, their daughters, and their
+ * daughters' daughters, calling each volume's CheckOverlaps() to report any overlapping
+ * placements. Does not recurse beyond the third level of descendants.
+ *
+ * Preconditions:
+ * - A valid world physical volume must be present (GetPhysicalVolume() must not be null).
+ *
+ * This function has no return value; overlap diagnostics are produced by the underlying
+ * Geant4 CheckOverlaps() calls.
  */
 void WorldConstruction::checkVolumeOverlap() {
   // loop inside all the daughters volumes
@@ -395,14 +444,16 @@ bool WorldConstruction::newGeometry() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Exports the specified world geometry to a GDML file.
+ * @brief Export a world geometry to a GDML file.
  *
- * Writes the geometry of the physical volume identified by `worldName` to a GDML file at the given path and file name. If the specified world volume is not found, logs an error and returns the intended file path without exporting.
+ * Exports the physical volume identified by |worldName| to a GDML file located at
+ * path/filename. If a file already exists at that path it is removed before writing.
+ * If |worldName| is non-empty but no matching physical volume is found, no export
+ * is performed (an error is logged) and the intended file path is still returned.
  *
- * @param path Directory where the GDML file will be saved.
- * @param fileName Name of the GDML file to create.
- * @param worldName Name of the world volume to export.
- * @return std::string Full path to the exported GDML file.
+ * The function returns the full path that was used for the export (or intended export).
+ *
+ * @return std::string Full path to the GDML file (path + "/" + fileName).
  */
 std::string WorldConstruction::ExportToGDML(const std::string& path, const std::string& fileName, const std::string& worldName) {
   auto file = path+"/"+fileName;

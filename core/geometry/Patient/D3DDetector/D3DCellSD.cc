@@ -8,15 +8,16 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Constructs a 3D sensitive detector cell with specified name, center, and grid indices.
+ * @brief Create a 3D sensitive detector cell with a name, position, and grid indices.
  *
- * Initializes the detector cell with a unique name, its center position in 3D space, and integer indices identifying its location within the grid.
+ * Constructs the cell by forwarding the detector name and center to the base VPatientSD
+ * and stores integer indices identifying the cell's position in the 3D grid.
  *
- * @param sdName Name of the sensitive detector.
- * @param centre Center position of the cell in 3D space.
- * @param idX X-axis index of the cell in the grid.
- * @param idY Y-axis index of the cell in the grid.
- * @param idZ Z-axis index of the cell in the grid.
+ * @param sdName Sensitive detector name.
+ * @param centre Cell center position in global coordinates.
+ * @param idX Cell index along the X axis.
+ * @param idY Cell index along the Y axis.
+ * @param idZ Cell index along the Z axis.
  */
 D3DCellSD::D3DCellSD(const G4String& sdName, const G4ThreeVector& centre, G4int idX, G4int idY, G4int idZ)
 :VPatientSD(sdName,centre){
@@ -27,12 +28,16 @@ D3DCellSD::D3DCellSD(const G4String& sdName, const G4ThreeVector& centre, G4int 
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Processes a Geant4 step occurring in this sensitive detector cell.
+ * @brief Handle a Geant4 step occurring inside this 3D sensitive detector cell.
  *
- * Updates track information if configured, and processes hits for all relevant scoring volumes associated with this detector cell. Returns true to indicate successful handling of the step.
+ * Processes aStep for scoring: optionally updates or attaches PatientTrackInfo to the current track
+ * when StoreTracks is enabled, and forwards the step to each hit collection owned by this SD
+ * (calls ProcessHitsCollection for matching hit collection names).
+ *
+ * The step's PreStepPoint touchable is used to identify the physical volume containing the step.
  *
  * @param aStep The current Geant4 step within the sensitive volume.
- * @return G4bool True if the hit was processed successfully.
+ * @return G4bool True when the step was processed.
  */
 G4bool D3DCellSD::ProcessHits(G4Step* aStep, G4TouchableHistory*) {
   // The TouchableHistory is used to obtain the physical volume of the hit

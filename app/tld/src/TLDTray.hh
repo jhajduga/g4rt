@@ -40,9 +40,9 @@ class TLDTray : public VPatient {
     TLDTray(G4VPhysicalVolume *parentPV, const std::string& name);
 
     /**
- * @brief Destroys the TLDTray instance.
+ * @brief Default destructor for TLDTray.
  *
- * Default destructor; releases resources associated with the tray.
+ * No special cleanup is performed.
  */
     ~TLDTray() {};
 

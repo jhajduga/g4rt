@@ -12,11 +12,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the singleton instance of the SavePhSpConstruction class.
+ * @brief Obtain the singleton SavePhSpConstruction instance.
  *
- * Ensures that only one instance of SavePhSpConstruction exists throughout the application.
+ * Returns a pointer to the single, lazily-constructed SavePhSpConstruction
+ * instance used application-wide. The instance is created on first call and
+ * lives until program termination. Construction of the local static is thread-safe
+ * (since C++11).
  *
- * @return Pointer to the singleton SavePhSpConstruction instance.
+ * @return SavePhSpConstruction* Pointer to the singleton instance.
  */
 SavePhSpConstruction* SavePhSpConstruction::GetInstance() {
   static SavePhSpConstruction instance;
@@ -84,9 +87,10 @@ G4bool SavePhSpConstruction::Update() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Writes phase space information using the associated SavePhSp instance.
+ * @brief Instructs the internal phase-space model to write its metadata/output.
  *
- * Delegates to the WriteInfo() method of the internal SavePhSp object if it exists.
+ * Calls SavePhSp::WriteInfo() if the internal SavePhSp instance has been created;
+ * otherwise this is a no-op.
  */
 void SavePhSpConstruction::WriteInfo() {
   if(m_savePhSp) m_savePhSp->WriteInfo();

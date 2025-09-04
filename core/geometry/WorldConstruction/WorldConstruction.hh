@@ -60,15 +60,21 @@ class WorldConstruction : public G4VUserDetectorConstruction,
   void WriteInfo() override;
 
   /**
- * @brief Returns a pointer to the patient geometry environment.
+ * @brief Access the patient (phantom) geometry environment.
  *
- * @return PatientGeometry* Pointer to the patient geometry component managed by the world construction.
+ * Returns the pointer to the PatientGeometry instance managed by this WorldConstruction.
+ * The pointer may be nullptr if the patient environment has not been created.
+ *
+ * @return PatientGeometry* Pointer to the patient geometry or nullptr.
  */
   PatientGeometry* PatientEnvironment() { return m_phantomEnv; }
   /**
- * @brief Returns a pointer to the linac geometry environment.
+ * @brief Returns the linac (gantry) geometry managed by WorldConstruction.
  *
- * @return Pointer to the LinacGeometry instance managed by the world construction.
+ * Returns a raw pointer to the LinacGeometry instance owned by WorldConstruction,
+ * or nullptr if the linac environment has not been created.
+ *
+ * @return LinacGeometry* Pointer to the LinacGeometry, or nullptr.
  */
 LinacGeometry* LinacEnvironment() { return m_gantryEnv; }
 
@@ -87,11 +93,13 @@ LinacGeometry* LinacEnvironment() { return m_gantryEnv; }
   void Configure() override;
 
   /**
-   * @brief Returns a list of custom patient detectors.
+   * @brief Return custom patient detectors used by the world.
    *
-   * The default implementation returns an empty vector. Override this method to provide custom detectors for the simulation.
+   * By default returns an empty vector. Override to supply any custom
+   * VPatient detectors that should be integrated into the simulation.
    *
-   * @return std::vector<VPatient*> Vector of pointers to custom patient detectors.
+   * @return std::vector<VPatient*> A vector of non-owning pointers to custom detectors.
+   *         Returned pointers must remain valid for the lifetime of the world construction.
    */
   virtual std::vector<VPatient*> GetCustomDetectors() const {
     return std::vector<VPatient*>();

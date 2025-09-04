@@ -7,19 +7,24 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Constructs an IbaImRT phantom geometry object.
+ * @brief Construct the IbaImRT phantom wrapper.
  *
- * Initializes the IbaImRT instance as a named physical volume for use in Geant4 simulations.
+ * Creates an IbaImRT physical-volume object and initializes the base
+ * IPhysicalVolume with the name "IbaImRT". The instance represents the
+ * phantom geometry container used when building and placing the phantom
+ * in the Geant4 world.
  */
 IbaImRT::IbaImRT():IPhysicalVolume("IbaImRT"){}
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the singleton instance of the IbaImRT class.
+ * @brief Returns the single global IbaImRT instance (Meyers singleton).
  *
- * Ensures that only one instance of IbaImRT exists throughout the application.
+ * Creates and returns a pointer to a single static IbaImRT instance shared
+ * across the application. The instance is constructed on first call and
+ * has program-lifetime; the function is thread-safe under C++11 and later.
  *
- * @return Pointer to the single IbaImRT instance.
+ * @return IbaImRT* Pointer to the singleton IbaImRT instance.
  */
 IbaImRT* IbaImRT::GetInstance() {
   static IbaImRT instance;

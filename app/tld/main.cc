@@ -8,13 +8,20 @@
 #include <locale.h>
 
 /**
- * @brief Entry point for the simulation application, handling environment setup, configuration, and execution.
+ * @brief Application entry point — prepares environment, configures services, and runs the simulation.
  *
- * Initializes the locale, embedded Python interpreter, logging, and core services. Parses command-line arguments to configure simulation parameters such as thread count, number of events, configuration file, output directory, and log level. Validates user input, loads configuration from a TOML file if specified, and manages the simulation lifecycle from initialization to finalization. Prints help or error messages as appropriate and exits with a success or failure code.
+ * Initializes the C locale, the embedded Python interpreter (and appends PROJECT_PY_PATH to sys.path),
+ * and the logging subsystem. Acquires configuration and runtime services, parses command-line options
+ * to configure thread count, number of events, TOML job file, output directory, and global log level,
+ * validates inputs, loads TOML configuration when provided, initializes the run service with the world
+ * construction singleton, executes the run, and finalizes services.
+ *
+ * The function prints help or error messages to stdout/stderr as needed and returns EXIT_SUCCESS on
+ * normal completion or a non-zero exit code on failure.
  *
  * @param argc Number of command-line arguments.
  * @param argv Array of command-line argument strings.
- * @return int Exit code indicating success or failure.
+ * @return int Process exit code (EXIT_SUCCESS on success).
  */
 int main(int argc, const char *argv[]) {
   // Force POSIX "C" locale to ensure consistent scientific notation (e.g., 1.23e-12).

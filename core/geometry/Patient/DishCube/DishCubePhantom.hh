@@ -31,9 +31,11 @@ class DishCubePhantom : public VPatient {
     G4bool Update() override;
 
     /**
- * @brief Resets the phantom to its initial state.
+ * @brief Reset the phantom to its initial state.
  *
- * Currently not implemented; outputs a placeholder message.
+ * This is a placeholder implementation: it currently performs no state reset
+ * and emits a diagnostic message. Replace with logic that restores all
+ * geometry, material, and detector state to their defaults.
  */
     void Reset() override { G4cout << "Implement me." << G4endl; }
 

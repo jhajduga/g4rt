@@ -21,9 +21,12 @@ G4double D3DDetector::COVER_WIDTH = 1.00 * mm;
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Constructs a D3DDetector with the specified label and registers it with the geometry service.
+ * @brief Create a D3DDetector and register it with the geometry service.
  *
- * @param label Unique identifier for the detector instance.
+ * Constructs a detector instance using the given label and immediately registers
+ * the instance as a scoring component with the geometry service.
+ *
+ * @param label Detector identifier used for labeling and registration.
  */
 D3DDetector::D3DDetector(const std::string& label) : VPatient(label), m_label(label) { AcceptGeoVisitor(Service<GeoSvc>()); }
 
@@ -40,17 +43,21 @@ D3DDetector::~D3DDetector() { Destroy(); }
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Outputs information about the Dose3D module.
+ * @brief Print basic info about the Dose3D detector module.
  *
- * Currently a placeholder with no implemented functionality.
+ * This is a placeholder/no-op function intended to report human-readable
+ * information about the Dose3D module. Currently it does not modify state
+ * and exists for future expansion (e.g., printing configured parameters or
+ * runtime statistics).
  */
 void D3DDetector::WriteInfo() { INFO_GEO("The Dose3D module info: Implement me."); }
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Destroys the detector's physical volume and releases associated resources.
+ * @brief Release the detector's constructed physical volume and associated resources.
  *
- * Deletes the physical volume if it exists and resets the internal pointer to null.
+ * Deletes the currently stored physical volume (if any) and clears the internal
+ * physical-volume pointer. Safe to call when no physical volume is present.
  */
 void D3DDetector::Destroy() {
   INFO_GEO("Destroing the {} volume. ", GetName());
@@ -63,9 +70,19 @@ void D3DDetector::Destroy() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Parses and loads detector and cell configuration from a TOML file.
+ * @brief Load detector and cell settings from the TOML configuration file.
  *
- * Reads geometry, translation, voxelization, medium, and scoring settings from a TOML configuration file using a required prefix. Updates internal configuration fields and sets static scoring flags for cells. Exits the program if the configuration file is missing or the prefix is undefined.
+ * Parses the TOML file pointed to by GetTomlConfigFile() using the required
+ * configuration prefix from GetTomlConfigPrefix() and updates the detector's
+ * internal Config fields (translation, cell/voxel counts, STL paths, and
+ * cell material). Also sets the global static scoring flags on D3DCell
+ * (CellScorer and CellVoxelisedScorer) according to the parsed values.
+ *
+ * The function performs validation and will abort on fatal configuration
+ * errors: it exits the process if the TOML file is missing and throws a
+ * G4Exception (FatalErrorInArgument) when the configuration prefix is not
+ * defined. Values not present in the TOML are replaced with sensible defaults
+ * (zeros or empty strings) via toml::value_or.
  */
 void D3DDetector::ParseTomlConfig() {
   auto configFile = GetTomlConfigFile();
@@ -147,11 +164,12 @@ G4bool D3DDetector::LoadDefaultParameterization() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Loads detector parameterization from configuration or defaults.
+ * @brief Ensure detector parameterization is loaded.
  *
- * Attempts to load detector parameters from a TOML configuration file if available; otherwise, loads default parameters. Marks the configuration as initialized.
+ * Loads parameterization from the TOML configuration when present; otherwise falls back to built-in defaults.
+ * The call is idempotent: if the configuration is already marked initialized this returns immediately.
  *
- * @return `true` if parameterization is loaded successfully.
+ * @return true on successful load (this function always returns true when it completes).
  */
 G4bool D3DDetector::LoadParameterization() {
   if (m_config.m_initialized) return true;
@@ -166,9 +184,13 @@ G4bool D3DDetector::LoadParameterization() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Sets the detector configuration and marks it as initialized.
+ * @brief Replace the detector configuration and mark it initialized.
  *
- * Replaces the current configuration with the provided one and updates its initialization status.
+ * Replaces the current configuration with the provided one and sets the
+ * configuration's initialized flag to true so subsequent operations treat
+ * the detector as configured.
+ *
+ * @param config New configuration to apply to the detector.
  */
 void D3DDetector::SetConfig(const D3DDetector::Config& config) {
   m_config = config;
@@ -275,9 +297,14 @@ void D3DDetector::DefineSensitiveDetector() {
 void D3DDetector::AcceptGeoVisitor(GeoSvc* visitor) const { visitor->RegisterScoringComponent(this); }
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Exports cell and voxel positioning data to a ROOT TFile.
+ * @brief Export cell- and voxel-level positioning and ID data to a ROOT file.
  *
- * Writes the global positions and IDs of all scoring cells and voxels to a ROOT file in the specified output directory. The data is stored under the "Geometry" directory, with separate objects for positions, local IDs, and global IDs for both cell and voxel scoring types.
+ * Writes flattened XYZ centers and corresponding local/global ID triplets for both
+ * Cell and Voxel scoring volumes into a ROOT file named
+ * "detector_scoring_volume_positioning.root" inside the provided output directory.
+ * Data are stored under the "Geometry" directory with objects named
+ * "<Type>Position", "<Type>ID", and "<Type>GlobalID" where <Type> is "Cell" or "Voxel".
+ * The function queries scoring volumes using the run collection "Dose3D".
  *
  * @param path_to_out_dir Directory where the output ROOT file will be created.
  */
@@ -322,11 +349,15 @@ void D3DDetector::ExportPositioningToTFile(const std::string& path_to_out_dir) c
 }
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Exports voxel positioning data for each run collection to CSV files.
+ * @brief Export per-voxel positioning for each run collection to CSV files.
  *
- * For each run collection with voxelized scoring, writes a CSV file containing the cell label, cell and voxel indices, cell global position, and voxel position for all voxels. The output files are named according to the run collection and voxelization size and are saved in the specified output directory.
+ * Writes one CSV file per run collection that contains voxel-level records for every voxel
+ * that was scored (cell label, cell indices, voxel indices, cell center [mm], voxel center [mm]).
+ * Output filenames are created as:
+ *   detector_<RunCollection>_<nCellsX>x<nCellsY>x<nCellsZ>_<nVoxX>x<nVoxY>x<nVoxZ>_voxel_positioning.csv
  *
- * @param path_to_out_dir Directory where the CSV files will be saved.
+ * @param path_to_out_dir Directory where the CSV files will be written. The function will create
+ *                        one file per run collection that has voxelized scoring data.
  */
 void D3DDetector::ExportVoxelPositioningToCsv(const std::string& path_to_out_dir) const {
   auto run_collections = ControlPoint::GetRunCollectionNames();
@@ -394,11 +425,20 @@ void D3DDetector::ExportVoxelPositioningToCsv(const std::string& path_to_out_dir
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Exports cell positioning information to a CSV file.
+ * @brief Export cell centers and IDs to a CSV file.
  *
- * Writes the label, indices, and global center coordinates of each cell in the detector to a CSV file in the specified output directory. The output file is named according to the cell grid size and includes a header row.
+ * Writes one CSV file containing each cell's label, grid indices (CellIdX, CellIdY, CellIdZ)
+ * and global center coordinates (in millimeters) for this detector.
  *
- * @param path_to_out_dir Directory where the CSV file will be saved.
+ * The function uses the first available run collection as a reference (cell positioning is
+ * assumed identical across runs). If no run collections are available the function logs a
+ * warning and returns without creating a file.
+ *
+ * The output filename is formed as: "detector_<NX>x<NY>x<NZ>_cell_positioning.csv" where
+ * NX, NY, NZ are the configured number of cells in X, Y and Z. The CSV includes a header row
+ * and columns: CellLabel, CellIdX, CellIdY, CellIdZ, CellPosX[mm], CellPosY[mm], CellPosZ[mm].
+ *
+ * @param path_to_out_dir Directory where the CSV file will be written.
  */
 void D3DDetector::ExportCellPositioningToCsv(const std::string& path_to_out_dir) const {
   auto run_collections = ControlPoint::GetRunCollectionNames();
@@ -467,13 +507,21 @@ void D3DDetector::ExportToGateCsv(const std::string& path_to_out_dir) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Generates a hashed map of scoring volumes (cells or voxels) for a given run collection.
+ * @brief Build a hashed map of scoring volumes for a specific run collection.
  *
- * Depending on the specified scoring type, returns a map of either all voxels or all cells in the detector, each keyed by a unique hash and containing their position, IDs, volume, mass, and label. If the detector label does not match the run collection, returns an empty map.
+ * Returns a map keyed by a deterministic hash of indices to VoxelHit objects representing
+ * either every cell (Scoring::Type::Cell) or every voxel inside voxelised cells
+ * (Scoring::Type::Voxel) for the given run collection.
  *
- * @param run_collection Name of the run collection to retrieve scoring volumes for.
- * @param type Scoring type: cell-level or voxel-level.
- * @return std::map<std::size_t, VoxelHit> Map of hashed indices to VoxelHit objects representing the scoring volumes.
+ * If this detector's label does not contain the provided run_collection string, an empty
+ * map is returned. For voxel-level scoring the function skips cells that have no
+ * voxelisation for the requested run collection. Each VoxelHit contains centre position,
+ * local IDs, global cell IDs, volume, mass (computed from the configured cell medium density),
+ * tracking-storage flag, and the cell label.
+ *
+ * @param run_collection Name of the run collection to query.
+ * @param type Scoring level to export: cell-level or voxel-level.
+ * @return std::map<std::size_t, VoxelHit> Map from hashed index to prepared VoxelHit.
  */
 std::map<std::size_t, VoxelHit> D3DDetector::GetScoringHashedMap(const G4String& run_collection, Scoring::Type type) const {
   if (!m_label.contains(run_collection)) return std::map<std::size_t, VoxelHit>();  // return empty map
@@ -545,11 +593,21 @@ bool D3DDetector::IsAnyCellVoxelised(const G4String& run_collection) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Determines the geometry source type for constructing the detector.
+ * @brief Determine which source will provide detector cell geometry.
  *
- * Selects the geometry construction method based on the presence of geometry database data, STL geometry file, and cell positioning CSV file. Returns a string indicating the geometry source type: "GeometryDB", "Standard", "PositioningFromCsv", or "StlDetectorWithPositioningFromCsv". If required files are missing, logs an error and returns an empty string.
+ * Evaluates available inputs (geometry database, configured STL filepath, and
+ * CSV positioning filepath) and selects the construction mode. Side effects:
+ * - If GeometryDB data is present, no further positioning is computed.
+ * - If STL is "None", a regular grid is computed via ComputeRegularCellPositioning().
+ * - If a positioning CSV is supplied, positions are loaded via ReadCellsPositioning().
+ * - If an STL file is provided but no CSV positioning is supplied, an error is logged.
  *
- * @return std::string The geometry source type used for detector construction.
+ * @return std::string One of:
+ * - "GeometryDB"                       — use GeometryDB-provided positioning,
+ * - "Standard"                         — compute a regular grid (no STL),
+ * - "PositioningFromCsv"               — use CSV positioning without STL,
+ * - "StlDetectorWithPositioningFromCsv"— use STL mesh with CSV positioning,
+ * - "" (empty string)                  — error (e.g., STL provided but no CSV).
  */
 std::string D3DDetector::SetGeometrySource() {
   auto geo_type = "";
@@ -583,9 +641,16 @@ std::string D3DDetector::SetGeometrySource() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Reads cell positioning coordinates from a CSV file and populates the cell positioning vector.
+ * @brief Load cell center coordinates from a CSV positioning file into m_d3d_cells_positioning.
  *
- * The method parses a CSV file specified by the STL positioning file path in the configuration. Each non-comment, non-header line is expected to contain three comma-separated values representing the X, Y, and Z coordinates of a cell center. If the file cannot be opened or a line does not contain exactly three values, a fatal exception is thrown.
+ * Reads the CSV file path configured in m_config.m_stl_positioning_file_path (if the path is relative,
+ * it is prefixed with PROJECT_DATA_PATH). Lines beginning with `#` are ignored; lines containing the
+ * substring "layer" are treated as headers and skipped. Each data line must contain exactly three
+ * comma-separated numeric values (X, Y, Z) which are converted to doubles and appended as a G4ThreeVector
+ * to m_d3d_cells_positioning.
+ *
+ * @throws G4Exception with FatalErrorInArgument if the file cannot be opened or if any data line does not
+ * contain exactly three numeric values.
  */
 void D3DDetector::ReadCellsPositioning() {
   std::string line;
@@ -622,9 +687,15 @@ void D3DDetector::ReadCellsPositioning() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Computes and populates the regular grid of cell positions for the detector.
+ * @brief Populate m_d3d_cells_positioning with a regular 3D grid of cell centers.
  *
- * If cell positioning data is available from the geometry database, imports it directly. Otherwise, calculates cell positions based on configured translation, cell counts, and cell sizes, arranging them in a regular 3D grid centered around the translation vector.
+ * If GeometryDBReader provides cell positioning entries, those are appended unchanged.
+ * Otherwise computes a centered regular grid of cell centers from the detector configuration:
+ * uses each cell's nominal size plus a COVER_WIDTH envelope to derive spacing, centers the
+ * grid on m_config.m_translation_in_local_frame, and fills m_d3d_cells_positioning by
+ * iterating Z, then Y, then X (outer-to-inner loops) and appending each (x,y,z) position.
+ *
+ * The method appends positions to the existing m_d3d_cells_positioning container.
  */
 void D3DDetector::ComputeRegularCellPositioning() {
   const auto& db_cells_positioning = GeometryDBReader::Instance().GetCellsPositioning();

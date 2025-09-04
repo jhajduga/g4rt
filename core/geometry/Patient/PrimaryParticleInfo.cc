@@ -17,9 +17,13 @@ void PrimaryParticleInfo::Print() const { }
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Stores the initial total energy of the given primary particle in keV.
+ * @brief Record the primary particle's initial total energy (in keV).
  *
- * Extracts the total energy from the provided `G4PrimaryParticle` object, converts it to keV, and saves it in the member variable `m_initial_total_energy`.
+ * Retrieves the particle's total energy from the given G4PrimaryParticle, converts it to kiloelectronvolts
+ * (by dividing by the `keV` unit), and stores the result in the member variable `m_initial_total_energy`.
+ *
+ * @param pparticle Pointer to the primary particle whose total energy will be recorded.
+ *                  Must be non-null; the function does not perform a null-pointer check.
  */
 void PrimaryParticleInfo::FillInfo(G4PrimaryParticle* pparticle){
     m_initial_total_energy = pparticle->GetTotalEnergy() / keV;

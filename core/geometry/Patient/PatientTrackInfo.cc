@@ -9,17 +9,24 @@ G4ThreadLocal G4Allocator<PatientTrackInfo>* aPatientTrackInfoAllocator = nullpt
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Prints the tracking information for the patient.
+ * @brief Print the patient's tracking information.
  *
- * This method is intended to output the current tracking information. The implementation is currently empty.
+ * Outputs human-readable tracking details for this PatientTrackInfo instance.
+ * Currently implemented as a no-op; present for API completeness and may be
+ * overridden or extended to emit tracking diagnostics in the future.
  */
 void PatientTrackInfo::Print() const { }
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Updates tracking status and accumulates track length from the given step.
+ * @brief Update this object's tracking state and accumulate step length.
  *
- * If tracking is already active, adds the step length from `aStep` to the total track length. Otherwise, activates tracking.
+ * If tracking is already active (m_trackingStatus == 1), adds the step length
+ * from the provided G4Step to m_trackLength. If tracking is not active, this
+ * call activates tracking by setting m_trackingStatus to 1 and does not add
+ * length for the current step.
+ *
+ * @param aStep Pointer to the current Geant4 step from which the step length is taken.
  */
 void PatientTrackInfo::FillInfo(G4Step* aStep){
     if(m_trackingStatus==1){

@@ -64,9 +64,9 @@ class MlcHd120 :  public IPhysicalVolume, public VMlc {
     MlcHd120();
 
     /**
- * @brief Destroys the MlcHd120 object.
+ * @brief Defaulted destructor for MlcHd120.
  *
- * Default destructor; cleans up resources used by the MlcHd120 instance.
+ * Default implementation; performs standard object teardown. No custom cleanup is required.
  */
     ~MlcHd120() = default;
 

@@ -10,9 +10,18 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Assigns a sensitive detector to a logical volume.
+ * @brief Attach a sensitive detector to a named logical volume.
  *
- * Associates the provided sensitive detector with the specified logical volume name, registers it with the Geant4 sensitive detector manager, and sets it in the world geometry.
+ * Stores the provided VPatientSD as this patient's sensitive detector (if one is not already set),
+ * registers it with the Geant4 sensitive detector manager, and assigns it to the world geometry
+ * for the given logical volume name.
+ *
+ * The call is idempotent with respect to the stored detector: if a detector has already been
+ * stored, the existing one is reused and the provided pointer will not replace it.
+ *
+ * @param logicalVName Name of the target logical volume to receive the sensitive detector.
+ * @param sensitiveDetectorPtr Pointer to the sensitive detector to attach (used only if no detector
+ *                             is currently stored).
  */
 void VPatient::SetSensitiveDetector(const G4String& logicalVName, VPatientSD* sensitiveDetectorPtr){
   if(m_patientSD.Get()==0) // NOTE: this should be checked already from the caller!
@@ -24,10 +33,14 @@ void VPatient::SetSensitiveDetector(const G4String& logicalVName, VPatientSD* se
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the stored volume of the patient.
+ * @brief Returns the stored patient volume.
  *
- * If the volume is unset or invalid (less than -1), logs a fatal error and throws a Geant4 exception.
- * @return G4double The volume value.
+ * Returns the stored volume value. If the internal volume is less than -1 (invalid/unset),
+ * logs a fatal geometry error and throws a G4Exception with severity FatalErrorInArgument.
+ *
+ * @return G4double The stored patient volume.
+ *
+ * @throws G4Exception Thrown with severity FatalErrorInArgument when the stored volume is invalid (< -1).
  */
 G4double VPatient::GetVolume() const {
   if(m_volume<-1){

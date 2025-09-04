@@ -62,9 +62,11 @@ VMlc* GetMlc() const { return m_mlc; }
   static G4double BeforeJaws;
   static G4double ParticleAngleTreshold;
   /**
- * @brief Returns a pointer to the multi-leaf collimator (MLC) object.
+ * @brief Return a mutable pointer to the managed multi-leaf collimator (MLC).
  *
- * @return VMlc* Pointer to the MLC instance managed by the collimation system.
+ * May return nullptr if the MLC has not been constructed.
+ *
+ * @return VMlc* Pointer to the MLC instance (ownership is not transferred).
  */
 VMlc* GetMlc() { return m_mlc; }
 
@@ -124,9 +126,10 @@ BeamCollimation &operator=(BeamCollimation &&) = delete;
   std::unordered_map<std::string, double> m_apertures;
 
   /**
- * @brief Placeholder for defining sensitive detectors in the collimation system.
+ * @brief No-op placeholder for registering sensitive detectors for the collimation system.
  *
- * This method is currently unimplemented.
+ * Left intentionally empty; reserved for future implementation where collimator-related
+ * sensitive detector(s) will be created and associated with the geometry.
  */
   void DefineSensitiveDetector() {}
 

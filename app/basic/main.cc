@@ -9,13 +9,18 @@
 #include <locale.h>
 
 /**
- * @brief Entry point for the Geant-RT simulation application.
+ * @brief Program entry point for the Geant-RT simulation application.
  *
- * Initializes the environment, embedded Python interpreter, logging, and core services. Parses command-line arguments to configure application mode, geometry export options, threading, event count, configuration files, output directory, and log level. Validates inputs, loads configuration, and executes the main simulation or geometry-building workflow. Handles errors in argument parsing and missing files, and ensures clean shutdown of services before exiting.
+ * Initializes runtime environment (POSIX locale), embedded Python, logging, and core
+ * services. Parses command-line options to configure operational mode, geometry export
+ * formats, threading, event count, TOML configuration, output directory, and log level.
+ * Loads configuration when a TOML file is provided, runs the World/Run services workflow,
+ * finalizes services and shuts down logging before exiting.
  *
  * @param argc Number of command-line arguments.
- * @param argv Array of command-line argument strings.
- * @return int Exit status code (EXIT_SUCCESS on normal termination).
+ * @param argv Command-line argument strings.
+ * @return int Exit status code (returns EXIT_SUCCESS on normal termination; may exit
+ * early after printing help/version or on option parsing errors).
  */
 int main(int argc, const char *argv[]) {
   // Force POSIX "C" locale to ensure consistent scientific notation (e.g., 1.23e-12).

@@ -31,9 +31,14 @@ StepAnalysis *StepAnalysis::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Initializes analysis ntuples for hits and tracks at the start of a simulation run.
+ * @brief Initialize the analysis manager and book ntuples for per-step hit and track data.
  *
- * Defines the structure of two ntuples in the Geant4 analysis manager: one for storing per-step hit data and one for per-step track data. Each ntuple is configured with columns for relevant physical quantities such as positions, energy deposits, track IDs, particle types, and process IDs. This setup prepares the analysis framework to collect and store simulation data during the run.
+ * Creates and configures two ntuples used during the run:
+ * - "HitsEventTree": per-event hit summary (nHits, EDeposit) and per-hit arrays (HitX, HitY, HitZ, HitEDeposit, HitProcessId).
+ * - "TracksEventTree": per-step track arrays (HitTrkE, HitTrkX, HitTrkY, HitTrkZ, HitTrkTheta, HitTrkId, HitTrkTypeId, HitTrkCrProcessId).
+ *
+ * @param runPtr Pointer to the current G4Run (unused in this implementation).
+ * @param isMaster True when invoked for the master thread/process.
  */
 void StepAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
   // Extract from VPatient geometry information, and define NTuples structure
@@ -77,9 +82,20 @@ void StepAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /**
- * @brief Extracts and stores track information from a G4Track object for analysis.
+ * @brief Extracts and records track-level observables from a Geant4 track for analysis.
  *
- * Records the track ID, position (in cm), kinetic energy (in keV), momentum theta angle, particle type ID, and creator process ID. Particle and process types are mapped to integer IDs for downstream analysis.
+ * Collects and appends to internal per-event containers:
+ * - track ID,
+ * - position (stored in centimeters),
+ * - kinetic energy (stored in keV),
+ * - momentum polar angle theta,
+ * - integer particle-type code (Gamma=1, Electron=2, Positron=3, Neutron=4, Proton=5, unknown = -1),
+ * - integer creator-process code (mapped from common process names; unknown = -1).
+ *
+ * If the track's creator process name is not recognized, the creator process object
+ * has its DumpInfo() called and the process name is printed to G4cout (debug output).
+ *
+ * @param aTrack Pointer to the G4Track whose information will be recorded.
  */
 void StepAnalysis::FillTrack(G4Track* aTrack){
   //__
@@ -138,9 +154,17 @@ void StepAnalysis::FillTrack(G4Track* aTrack){
 ////////////////////////////////////////////////////////////////////////////////
 ///
 /**
- * @brief Records hit information from a simulation step.
+ * @brief Record hit information from a simulation step into the current event buffers.
  *
- * Extracts and stores the pre-step position (in cm), total energy deposit (in keV), and the process ID of the post-step process for the given step. Increments the hit count and appends the data to internal event containers. If the process name is unrecognized, outputs debug information.
+ * Extracts the pre-step position, total energy deposited during the step, and the post-step
+ * process identifier and appends them to the per-event hit containers. Also increments the
+ * per-event hit counter.
+ *
+ * Position values are stored in centimeters and energy deposits are stored in kiloelectronvolts.
+ * If the post-step process is not recognized, a debug dump is emitted and the stored process ID
+ * for that hit will be -1.
+ *
+ * @param aStep The Geant4 step whose hit information will be recorded.
  */
 void StepAnalysis::FillHit(G4Step* aStep){
 
@@ -186,9 +210,11 @@ void StepAnalysis::FillHit(G4Step* aStep){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Records accumulated hit and track data for the current event into analysis ntuples.
+ * @brief Write per-event hit and track data to the analysis ntuples.
  *
- * Stores the number of hits and total event energy deposit in the hits ntuple, and commits the current track data to the tracks ntuple.
+ * Records the event's aggregated hit information into the HitsEventTree ntuple
+ * (fills the number of hits and the total event energy deposit) and commits the
+ * accumulated per-step track rows to the TracksEventTree ntuple.
  *
  * @param evtEnergyDeposit Total energy deposited in the event, in keV.
  */
@@ -244,11 +270,14 @@ void StepAnalysis::ClearEventData(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Collects and stores both hit and track data for a simulation step.
+ * @brief Process a Geant4 step and record its hit and associated track data.
  *
- * Calls the appropriate methods to extract and record hit information from the provided step and track information from the associated track.
+ * Delegates processing to FillHit and FillTrack to extract per-step hit information
+ * and the corresponding track information, appending both to the analysis' per-event
+ * buffers (ntuples/containers). This function updates internal event state and does
+ * not itself write rows to the output ntuples (that occurs at event commit).
  *
- * @param aStep Pointer to the Geant4 step object to process.
+ * @param aStep Pointer to the Geant4 step to process; must be non-null.
  */
 void StepAnalysis::FillStep(G4Step* aStep){
   FillHit(aStep);

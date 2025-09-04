@@ -24,9 +24,10 @@ class VMlc: public RunComponet {
         static G4ThreeVector m_isocentre;
     public:
         /**
- * @brief Deleted default constructor to enforce construction with a name.
+ * @brief Deleted default constructor to require construction with a name.
  *
- * Prevents instantiation of VMlc without specifying a name parameter.
+ * The class cannot be default-constructed; callers must use the explicit
+ * VMlc(const std::string& name) constructor.
  */
 VMlc() = delete;
         explicit VMlc(const std::string& name);

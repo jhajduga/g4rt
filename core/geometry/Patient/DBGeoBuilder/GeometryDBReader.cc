@@ -43,11 +43,11 @@ GeometryDBReader& GeometryDBReader::Instance() {
 }
 
 /**
- * @brief Loads and parses geometry data from Excel and CSV files into internal structures.
+ * @brief Load geometry entries from Excel/CSV into internal storage.
  *
- * Reads geometry definitions from specified Excel and CSV files using a Python parser module. Extracts component names, body identifiers, material names, scintillator IDs, center of mass positions (with coordinate transformations), nodes, vertices, and normals for each geometry entry. Populates internal storage with parsed geometry data and updates the static cell positioning vector with valid scintillator IDs and their positions.
+ * Loads geometry definitions by calling the embedded Python parser module and converts each returned entry into a GeometryData instance stored in geoms_. For each entry the function extracts component, body, material, scintillator ID, center-of-mass (COM), nodes, vertices and normals. The COM is converted to mm, rotated 180° about the X axis, then translated according to the PatientGeometry "EnviromentPatientEnvelop" configuration. Valid scintillator IDs are recorded in the static m_db_cells_positioning vector paired with their world COM. The parser handle is released after loading.
  *
- * @param path Directory path containing the geometry Excel and CSV files.
+ * @param path Directory containing D3DF_bodies.xlsx and D3DF_bodies.csv (the workbook/CSV passed to the Python parser).
  */
 void GeometryDBReader::LoadDataBase(const std::string& path)
 {

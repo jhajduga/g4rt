@@ -19,9 +19,10 @@ class PrimariesAnalysis {
 
   private:
   /**
- * @brief Default constructor for PrimariesAnalysis.
+ * @brief Defaulted private constructor.
  *
- * Initializes the PrimariesAnalysis singleton instance. Constructor is private to enforce singleton pattern.
+ * Defaulted constructor for PrimariesAnalysis. It is private to enforce the singleton
+ * pattern — use PrimariesAnalysis::GetInstance() to obtain the single instance.
  */
   PrimariesAnalysis() = default;
 

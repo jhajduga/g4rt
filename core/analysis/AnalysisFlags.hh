@@ -34,10 +34,13 @@ AnalysisFlags() = default;
 bool operator[](AnalysisFlag flag) const { return m_bitset_flags.test(static_cast<size_t>(flag)); }
 
   /**
- * @brief Sets the specified analysis flag to the given state.
+ * @brief Enable or disable a specific analysis flag in this container.
  *
- * @param flag The analysis flag to modify.
- * @param value If true, the flag is enabled; if false, the flag is disabled. Defaults to true.
+ * Sets the bit corresponding to the provided AnalysisFlag to the given boolean
+ * value (defaults to true).
+ *
+ * @param flag The AnalysisFlag to modify.
+ * @param value True to enable the flag, false to disable it. Defaults to true.
  */
 void Set(AnalysisFlag flag, bool value = true) { m_bitset_flags.set(static_cast<size_t>(flag), value); }
 
@@ -79,9 +82,10 @@ void ResetAll() { m_analysis_flags.Reset(); }
 
  private:
   /**
- * @brief Default constructor for AnalysisFlagRegistry.
+ * @brief Default (private) constructor.
  *
- * Initializes the registry instance. Constructor is private to enforce the singleton pattern.
+ * Creates an AnalysisFlagRegistry instance. The constructor is private to enforce
+ * singleton usage; callers should obtain the registry via AnalysisFlagRegistry::Instance().
  */
 AnalysisFlagRegistry() = default;
   AnalysisFlags m_analysis_flags;

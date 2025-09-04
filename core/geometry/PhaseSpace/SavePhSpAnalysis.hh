@@ -34,9 +34,9 @@ class SavePhSpAnalysis {
   SavePhSpAnalysis(const SavePhSpAnalysis &) = delete;
 
   /**
- * @brief Deleted copy assignment operator to enforce the singleton pattern.
+ * @brief Deleted copy-assignment operator to enforce singleton semantics.
  *
- * Prevents copying of the SavePhSpAnalysis instance.
+ * Prevents assigning one SavePhSpAnalysis instance to another.
  */
 SavePhSpAnalysis &operator=(const SavePhSpAnalysis &) = delete;
 

@@ -23,9 +23,11 @@ class PatientTrackInfo : public G4VUserTrackInformation {
 
   public:
     /**
- * @brief Constructs a PatientTrackInfo object with default values.
+ * @brief Default-constructs a PatientTrackInfo.
  *
- * Initializes tracking status and track length for a new particle track within the patient volume.
+ * Initializes internal state to indicate the track has not reached the patient
+ * volume (m_trackingStatus = 0) and sets the track length inside the patient
+ * to 0.0 (m_trackLength = 0.0).
  */
     PatientTrackInfo() = default;
 
@@ -52,9 +54,12 @@ class PatientTrackInfo : public G4VUserTrackInformation {
     void FillInfo(G4Step* aStep);
 
     /**
- * @brief Returns the track length within the patient volume.
+ * @brief Get the accumulated track length inside the patient volume.
  *
- * @return G4double The length of the track inside the patient volume.
+ * Returns the stored track length accumulated while the track was inside the patient volume,
+ * expressed in Geant4 length units.
+ *
+ * @return G4double Track length inside the patient volume.
  */
     G4double GetTrackLength() const { return m_trackLength; }
 };
@@ -78,9 +83,13 @@ inline void* PatientTrackInfo::operator new(size_t){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Deallocates memory for a PatientTrackInfo object using the thread-local allocator.
+ * @brief Deallocates a PatientTrackInfo instance using the thread-local allocator.
  *
- * Frees the memory previously allocated for a PatientTrackInfo instance via the custom allocator.
+ * Releases memory for a PatientTrackInfo previously allocated via its custom
+ * operator new and the thread-local allocator.
+ *
+ * @param aTrackInfo Pointer to the PatientTrackInfo object to free; must be a pointer
+ *                   returned by PatientTrackInfo::operator new.
  */
 inline void PatientTrackInfo::operator delete(void *aTrackInfo){
   aPatientTrackInfoAllocator->FreeSingle((PatientTrackInfo*)aTrackInfo);

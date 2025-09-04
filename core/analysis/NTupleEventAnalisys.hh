@@ -21,9 +21,10 @@ class G4Run;
 class NTupleEventAnalisys {
  private:
   /**
- * @brief Default constructor for NTupleEventAnalisys.
+ * @brief Default (private) constructor.
  *
- * Initializes the NTupleEventAnalisys instance. Intended for internal use to enforce singleton pattern.
+ * Constructs an NTupleEventAnalisys instance. This constructor is private and defaulted to enforce
+ * the class's singleton semantics (non-copyable and non-movable).
  */
 NTupleEventAnalisys() = default;
   /**
@@ -144,9 +145,14 @@ NTupleEventAnalisys& operator=(NTupleEventAnalisys&&) = delete;
  */
 static G4bool IsAnyTTreeDefined() { return m_ttree_collection.Get().empty() ? false : true; }
   /**
- * @brief Returns the collection of all defined tree configurations.
+ * @brief Return the collection of all defined TTree configurations.
  *
- * @return Reference to a vector containing all TTreeCollection objects currently defined.
+ * Returns a reference to the internal vector of TTreeCollection objects that
+ * have been defined via DefineTTree(). The returned reference aliases the
+ * class's internal storage; callers must not assume ownership and should not
+ * modify the vector.
+ *
+ * @return const std::vector<TTreeCollection>& Reference to the current tree collection.
  */
 static const std::vector<TTreeCollection>& TreeCollection() { return m_ttree_collection.Get(); }
 

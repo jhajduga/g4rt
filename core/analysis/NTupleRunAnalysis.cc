@@ -19,9 +19,14 @@ NTupleRunAnalysis *NTupleRunAnalysis::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Writes the field mask data for each data type of the current control point to a ROOT file.
+ * @brief Write 3D field-mask data for the current control point into a ROOT file.
  *
- * Retrieves the current control point, constructs an output filename and directory, linearizes the 3D field mask vectors for each data type, and writes them as objects into the specified ROOT file directory. The output file is named with a "_field_mask.root" suffix.
+ * For the current control point (obtained from the run service) this writes each non-empty
+ * field mask (per data type) as a linearized vector into a ROOT file named
+ * "<control-point-output>_field_mask.root" under the directory "RT_Plan/CP_<id>".
+ * Each object is written with the name "FieldMask_<type>".
+ *
+ * @param runPtr Unused in this implementation; present for API compatibility.
  */
 void NTupleRunAnalysis::WriteFieldMaskToTFile(const G4Run* runPtr){
     auto cp = Service<RunSvc>()->CurrentControlPoint();
@@ -46,9 +51,19 @@ void NTupleRunAnalysis::WriteFieldMaskToTFile(const G4Run* runPtr){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Writes dose volume data from the current control point to a ROOT file.
+ * @brief Export dose-volume scoring data for the current control point to a ROOT file.
  *
- * For each scoring collection in the current control point's run, extracts position, field scaling factor, and dose values, linearizes the position data, and writes these vectors to a ROOT file under descriptive names. The output file is named based on the control point and suffixed with "_dose.root".
+ * Retrieves the current control point from RunSvc and writes, for each scoring collection and
+ * scoring type, three flat vectors into a ROOT file named "<control_point_output>_dose.root"
+ * under the directory "RT_Plan/CP_<id>":
+ *  - "<collection>_VolumeFieldScalingFactorPosition_<type>": linearized 3D positions (double vector)
+ *  - "<collection>_VolumeFieldScalingFactorValue_<type>": field scaling factors (double vector)
+ *  - "<collection>_Dose_<type>": dose values (double vector)
+ *
+ * The function linearizes each 3D position into a flat double vector before writing. The file is
+ * written to disk and closed after all collections are processed.
+ *
+ * @param runPtr Unused: the function obtains the run via the current control point from RunSvc.
  */
 void NTupleRunAnalysis::WriteDoseToTFile(const G4Run* runPtr){
     auto cp = Service<RunSvc>()->CurrentControlPoint();

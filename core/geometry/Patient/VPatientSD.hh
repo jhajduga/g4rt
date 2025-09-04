@@ -29,9 +29,13 @@ class VPatientSD : public G4VSensitiveDetector{
 
         public:
           /**
- * @brief Default constructor for ScoringVolume.
+ * @brief Default construct a ScoringVolume.
  *
- * Initializes a ScoringVolume instance with default parameters.
+ * Creates an empty scoring volume with safe defaults:
+ * voxel counts set to 0, identifier set to -1, shape defaulted to "Box",
+ * envelope pointer null, hit-collection pointer null, and position/index
+ * vectors left empty. Use the provided setters or voxelization routines
+ * to configure geometry and voxel grid before use.
  */
 ScoringVolume(){}
           /// 
@@ -61,21 +65,21 @@ ScoringVolume(){}
           VoxelHitsCollection*  m_voxelHCollectionPtr = nullptr;
 
           /**
- * @brief Returns the full size of the scoring volume along the X axis.
+ * @brief Returns the full extent of the scoring volume along the X axis.
  *
- * @return G4double The length of the scoring volume in the X direction.
+ * @return G4double Full length of the scoring volume in the X direction.
  */
           G4double GetSizeX() const { return 2.*m_envelopeBoxPtr->GetXHalfLength(); }
           /**
- * @brief Returns the full size of the scoring volume along the Y axis.
+ * @brief Get the total length of the scoring volume along the Y axis.
  *
- * @return G4double The total length of the envelope box in the Y direction.
+ * @return G4double Total Y length of the envelope box (in the simulation's length units).
  */
 G4double GetSizeY() const { return 2.*m_envelopeBoxPtr->GetYHalfLength(); }
           /**
- * @brief Returns the full size of the scoring volume along the Z axis.
+ * @brief Get the full length of the scoring volume along the Z axis.
  *
- * @return G4double The total length of the envelope box in the Z direction.
+ * @return G4double Full extent (total length) of the envelope box in Z.
  */
 G4double GetSizeZ() const { return 2.*m_envelopeBoxPtr->GetZHalfLength(); }
 

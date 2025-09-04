@@ -62,9 +62,12 @@ class ControlPointRun : public G4Run {
 
   public:
     /**
-     * @brief Constructs a ControlPointRun and optionally initializes scoring collections.
+     * @brief Construct a ControlPointRun.
      *
-     * @param scoring If true, initializes scoring collections for the run.
+     * Creates a per-control-point G4Run. If `scoring` is true, scoring collections
+     * required for this run are initialized.
+     *
+     * @param scoring Whether to initialize scoring collections for the run (default: false).
      */
     ControlPointRun(bool scoring=false) {
       if(scoring)
@@ -72,9 +75,10 @@ class ControlPointRun : public G4Run {
     };
 
     /**
-     * @brief Destructor for the ControlPointRun class.
+     * @brief Destructor.
      *
-     * Cleans up resources associated with the ControlPointRun instance.
+     * Releases any resources held by the ControlPointRun instance.
+     * Emits a debug message to G4cout when invoked.
      */
     ~ControlPointRun(){
       G4cout << "DESTRUCOTOR OF ControlPointRun..." << G4endl;
@@ -87,14 +91,21 @@ class ControlPointRun : public G4Run {
     ScoringMap& GetScoringCollection(const G4String& name);
 
     /**
- * @brief Returns all scoring collections associated with the run.
+ * @brief Get all scoring collections recorded for this run.
  *
- * @return Reference to a map from run collection names to their corresponding scoring maps.
+ * Returns a const reference to the internal map that associates run collection
+ * names with their ScoringMap (mapping Scoring::Type to per-index VoxelHit maps).
+ *
+ * @return const std::map<G4String,ScoringMap>& Map from run collection name to scoring data.
  */
     const std::map<G4String,ScoringMap>& GetScoringCollections() const {return m_hashed_scoring_map;}
 
     /**
- * @brief Returns a reference to the vector of simulation mask points.
+ * @brief Access the mutable container of simulation mask points for this run.
+ *
+ * Returns a reference to the internal vector of G4ThreeVector that stores
+ * simulation mask points for the run. Callers may read or modify the vector;
+ * changes apply to this ControlPointRun instance.
  *
  * @return std::vector<G4ThreeVector>& Reference to the simulation mask points.
  */
@@ -117,9 +128,11 @@ const std::vector<G4ThreeVector>& GetSimMaskPoints() const {return m_sim_mask_po
     double GetBeamMaskArea() const { return m_beam_mask_area; }
 
     /**
- * @brief Returns the gravity center coordinates of the beam mask.
+ * @brief Return the beam mask gravity center coordinates.
  *
- * @return A pair of doubles representing the (x, y) coordinates of the beam mask's gravity center.
+ * Returns the (x, y) coordinates of the beam mask gravity center in the simulation's length units.
+ *
+ * @return std::pair<double,double> Pair {x, y} representing the gravity center.
  */
     std::pair<double, double> GetBeamMaskeGravCentre() const { return m_beam_mask_gravity_centre; }
 };
@@ -149,9 +162,13 @@ std::string GetPlanFile() const { return m_config.PlanFile; }
  */
 int GetNEvts() const { return m_config.NEvts; }
     /**
- * @brief Returns the rotation matrix associated with the control point.
+ * @brief Get the control point's rotation matrix.
  *
- * @return Pointer to the G4RotationMatrix representing the control point's orientation.
+ * Returns the internal G4RotationMatrix that describes this control point's orientation.
+ * May be nullptr if no rotation has been set. The caller must not delete or take ownership
+ * of the returned pointer.
+ *
+ * @return G4RotationMatrix* Pointer to the rotation matrix, or nullptr if unset.
  */
 G4RotationMatrix* GetRotation() const { return m_rotation; }
     /**
@@ -180,9 +197,13 @@ void SetNEvts(int nevts) { m_config.NEvts = nevts; }
     G4Run* GenerateRun(bool scoring=false);
 
     /**
- * @brief Returns the current run instance associated with this control point.
+ * @brief Get the thread-local run instance for this control point.
  *
- * @return Pointer to the current ControlPointRun object, or nullptr if not set.
+ * Returns the pointer to the ControlPointRun associated with the calling thread.
+ * This is a non-owning pointer; it may be nullptr if no run has been created for
+ * this control point on the current thread.
+ *
+ * @return ControlPointRun* Pointer to the current thread-local ControlPointRun, or nullptr if unset.
  */
 ControlPointRun* GetRun() {return m_cp_run.Get();}
     /**
@@ -200,16 +221,18 @@ const ControlPointRun* GetRun() const {return m_cp_run.Get();}
 std::string GetFieldType() const { return m_config.FieldType; } 
 
     /**
- * @brief Returns the size of the radiation field along the A axis for this control point.
+ * @brief Get the radiation field size along the A axis for this control point.
  *
- * @return G4double Field size in millimeters along the A axis.
+ * @return G4double Field size along the A axis.
  */
 G4double GetFieldSizeA() const { return m_config.FieldSizeA; }
 
     /**
- * @brief Returns the size of the radiation field along the B axis for this control point.
+ * @brief Get the radiation field dimension along the B axis for this control point.
  *
- * @return Field size along the B axis.
+ * Returns the configured field size along the B axis (same units as stored in the control-point configuration).
+ *
+ * @return G4double Field size along the B axis.
  */
 G4double GetFieldSizeB() const { return m_config.FieldSizeB; }
     
@@ -241,9 +264,12 @@ const std::vector<std::string>& DataTypes() const { return m_data_types; }
     double GetJawAperture(const std::string& side) const;
 
     /**
- * @brief Returns the vector of 3D points defining the plan mask for the control point.
+ * @brief Access the plan field mask points for this control point.
  *
- * @return Reference to the vector of plan mask points.
+ * Returns a reference to the internal vector of 3D points that define the plan mask.
+ * Modifying the returned vector alters the ControlPoint's stored mask points.
+ *
+ * @return std::vector<G4ThreeVector>& Reference to the plan mask points.
  */
 std::vector<G4ThreeVector>& GetPlanMaskPoints() {return m_plan_mask_points;}
     void FillPlanFieldMask();

@@ -25,9 +25,25 @@ GeometryBuilder::GeometryBuilder():TomlConfigModule("GeometryBuilder"){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Parses the TOML configuration file to set geometry parameters.
+ * @brief Parse TOML configuration and populate geometry parameters.
  *
- * Loads position and rotation values, as well as an optional list of object names to exclude from geometry construction, from the specified TOML configuration file.
+ * Reads the configured TOML file (path and prefix obtained via the TomlConfigModule
+ * interface) and extracts geometry placement values into the instance members:
+ * - Centre position: m_centrePositionX, m_centrePositionY, m_centrePositionZ
+ * - Phantom rotation (degrees): m_phantomRotationX, m_phantomRotationY, m_phantomRotationZ
+ * - Excluded object name list: m_exclusde_object_list (case preserved)
+ *
+ * If a Position or Rotation array entry is missing, the corresponding value
+ * defaults to 0.0. If an ExcludeObjList array exists, each string entry is
+ * appended to m_exclusde_object_list. The function relies on toml::parse_file
+ * to read and parse the file.
+ *
+ * @note The function obtains the TOML file path and prefix by calling
+ * SetTomlConfigFile(), GetTomlConfigFile(), and GetTomlConfigPrefix() on the
+ * TomlConfigModule base. It does not perform additional validation of the
+ * file path beyond the parser.
+ *
+ * @throws toml::parse_error If the TOML file cannot be parsed.
  */
 void GeometryBuilder::ParseTomlConfig(){
   SetTomlConfigFile();
@@ -120,12 +136,14 @@ G4bool GeometryBuilder::LoadDefaultParameterization(){
 
 
 /**
- * @brief Returns a lowercase copy of the input string.
+ * @brief Return a lowercase copy of the given string.
  *
- * Converts all characters in the input string to their lowercase equivalents.
+ * Converts each character in the input to its lowercase equivalent and returns
+ * the resulting string. Characters are cast to `unsigned char` before calling
+ * `std::tolower` to avoid undefined behavior for negative `char` values.
  *
  * @param input The string to convert.
- * @return std::string The lowercase version of the input string.
+ * @return std::string Lowercase copy of `input`.
  */
 static std::string to_lower(const std::string& input) {
     std::string out;
@@ -137,11 +155,21 @@ static std::string to_lower(const std::string& input) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
-   * @brief Constructs and places geometry components into the parent Geant4 physical volume.
+   * @brief Build and place tessellated geometry from the database into a parent world volume.
    *
-   * Iterates over geometry objects from the database, filtering out excluded components and those with a non-empty or non-"nan" `sc_id`. For each included object, creates a tessellated solid from its vertex and facet data, assigns the specified material, and places the resulting logical volume into the parent world volume. Placement applies configured rotations and a translation determined by the environment type.
+   * Loads geometry parameterization, iterates database objects, and for each object that is not
+   * excluded (case-insensitive substring match against the configured exclusion list) and whose
+   * `sc_id` is empty or the literal string `"nan"`, constructs a G4TessellatedSolid from the
+   * object's vertices and triangle indices, assigns the material from the Materials service, and
+   * creates and places a corresponding G4LogicalVolume into the supplied parent world. Placement
+   * applies the configured phantom rotations and an environment-dependent translation.
    *
-   * @param parentWorld The parent Geant4 physical volume into which geometry components are placed.
+   * Notes:
+   * - Objects with `sc_id` that is neither empty nor `"nan"` are skipped.
+   * - Exclusion matching is case-insensitive and uses substring matching.
+   * - Material lookup is performed via ConfigSvc ("MaterialsSvc").
+   *
+   * @param parentWorld Parent Geant4 physical volume under which assembled volumes are placed.
    */
 void GeometryBuilder::Build(G4VPhysicalVolume *parentWorld) {
   LoadParameterization();
