@@ -1,4 +1,0 @@
-[Log_Global]
-LogLevel = "debug"
-ConsolePattern = "%n [%^%l%$] %v"
-Console = "true"
