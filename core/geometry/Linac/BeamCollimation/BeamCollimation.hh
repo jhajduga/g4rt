@@ -51,9 +51,9 @@ class BeamCollimation : public IPhysicalVolume, public RunComponet {
   static G4ThreeVector SetParticlePositionBeforeCollimators(G4PrimaryVertex* vrtx, G4double finalZ);
 
   /**
- * @brief Returns the pointer to the multi-leaf collimator (MLC) object.
+ * @brief Pointer to the multi-leaf collimator (MLC) managed by the collimation system.
  *
- * @return VMlc* Pointer to the MLC instance managed by the collimation system.
+ * @return VMlc* Pointer to the MLC instance, or `nullptr` if no MLC has been constructed.
  */
 VMlc* GetMlc() const { return m_mlc; }
 
@@ -62,11 +62,11 @@ VMlc* GetMlc() const { return m_mlc; }
   static G4double BeforeJaws;
   static G4double ParticleAngleTreshold;
   /**
- * @brief Return a mutable pointer to the managed multi-leaf collimator (MLC).
+ * @brief Access the managed multi-leaf collimator (MLC) for modification.
  *
  * May return nullptr if the MLC has not been constructed.
  *
- * @return VMlc* Pointer to the MLC instance (ownership is not transferred).
+ * @return VMlc* Pointer to the MLC instance; may be `nullptr` if not constructed. Ownership is not transferred.
  */
 VMlc* GetMlc() { return m_mlc; }
 

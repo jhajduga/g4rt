@@ -69,21 +69,20 @@ ModularWaterPhantom &operator=(ModularWaterPhantom &&) = delete;
         void WriteInfo() override {};
 
         /**
- * @brief Set the rotation matrix that defines the phantom's orientation.
+ * @brief Set the rotation matrix used to orient the phantom.
  *
- * Stores the given rotation matrix pointer as the phantom's internal rotation.
- * The pointer may be nullptr to indicate no rotation. The function stores the
- * pointer as-is (no copy); ownership is not transferred and the caller is
- * responsible for the pointer's lifetime.
+ * Stores the provided pointer without copying and without taking ownership;
+ * the caller remains responsible for the pointer's lifetime. Passing nullptr clears the rotation.
  *
- * @param rotation Pointer to a G4RotationMatrix representing the desired rotation, or nullptr.
+ * @param rotation Pointer to a G4RotationMatrix to use as the phantom's rotation, or nullptr to unset.
  */
         void SetRotation(G4RotationMatrix* rotation) { m_rotation = rotation; }
 
         /**
- * @brief Returns the current rotation matrix associated with the modular water phantom.
+ * @brief Get the current rotation matrix associated with the modular water phantom.
  *
- * @return Pointer to the internal G4RotationMatrix, or nullptr if not set.
+ * @return Pointer to the internal G4RotationMatrix, or `nullptr` if no rotation is set.
+ *         Ownership is not transferred; the caller must not delete the returned pointer.
  */
         G4RotationMatrix* GetRotation() const { return m_rotation; }
 

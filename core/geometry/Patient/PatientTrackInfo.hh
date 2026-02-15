@@ -32,9 +32,7 @@ class PatientTrackInfo : public G4VUserTrackInformation {
     PatientTrackInfo() = default;
 
     /**
- * @brief Destroys the PatientTrackInfo object.
- *
- * Ensures proper cleanup of resources when a PatientTrackInfo instance is destroyed.
+ * @brief Virtual default destructor for PatientTrackInfo.
  */
     virtual ~PatientTrackInfo() = default;
     

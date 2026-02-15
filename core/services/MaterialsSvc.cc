@@ -29,11 +29,11 @@ MaterialsSvc::~MaterialsSvc() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the singleton instance of the MaterialsSvc service.
+ * @brief Access the global MaterialsSvc singleton.
  *
- * Ensures that only one instance of MaterialsSvc exists throughout the application.
+ * Creates and returns the single shared MaterialsSvc instance for the process.
  *
- * @return Pointer to the singleton MaterialsSvc instance.
+ * @return Pointer to the single MaterialsSvc instance.
  */
 MaterialsSvc *MaterialsSvc::GetInstance() {
   static MaterialsSvc instance;
@@ -105,11 +105,11 @@ void MaterialsSvc::Configure() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Sets the default configuration for a specified material unit.
+ * @brief Configure and register the material identified by the given unit name in the service configuration.
  *
- * Initializes and registers the physical properties and composition of the given material unit, using either the Geant4 NIST database or custom definitions. Supports standard, modified, and custom materials by name, including alloys, polymers, composites, and doped materials. The resulting material is stored as a shared pointer in the configuration under the unit's name.
+ * For unit names starting with "G4_" the corresponding material is obtained from the Geant4 NIST database. For other recognized unit names a material with the appropriate composition, density, state, and properties is constructed (including custom alloys, polymers, composites, and doped materials). The resulting G4Material instance is stored in the service configuration under the provided unit name.
  *
- * @param unit The name of the material unit to configure.
+ * @param unit Name of the material unit to configure and register (e.g., "G4_WATER", "PMMA", "LiF:Mg,Ti").
  */
 void MaterialsSvc::DefaultConfig(const std::string &unit) {
 

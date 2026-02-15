@@ -29,11 +29,10 @@ MlcHd120::MlcHd120():IPhysicalVolume("MlcHd120"), VMlc("MlcHd120"){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Build and place the HD120 multi-leaf collimator (MLC) geometry into a parent volume.
+ * @brief Builds and places the HD120 multi-leaf collimator (MLC) geometry inside the given parent volume.
  *
- * Constructs the full MlcHd120 geometry (all leaf modules and placements) inside the given parent
- * Geant4 physical volume. The leaf material is retrieved from the configuration service
- * (key "tungstenAlloy1") and used for module construction via CreateMlcModules.
+ * Constructs and inserts all MLC leaf modules and their placements into the specified parent Geant4
+ * physical volume.
  *
  * @param parentPV Parent Geant4 physical volume that will contain the MLC geometry.
  */
@@ -401,14 +400,12 @@ G4VPhysicalVolume* MlcHd120::CreateMlcModules(G4VPhysicalVolume* parentPV, G4Mat
 /////////////////////////////////////////////////////////////////////////////
 //  Giving the shape to the central leaf.
 /**
- * @brief Build the Geant4 solid for a central HD120 MLC leaf.
+ * @brief Constructs the geometric solid for a central HD120 MLC leaf.
  *
- * Constructs the central leaf geometry by intersecting a cylindrical tube with a box,
- * subtracting two offset boxes to form the leaf profile, and removing an end-cap
- * region. The returned solid models the physical shape used for placement of
- * central leaves in the HD120 multi-leaf collimator.
+ * The returned solid models the final physical profile of a central leaf used for placement
+ * in the HD120 multi-leaf collimator.
  *
- * @return G4VSolid* Pointer to the constructed G4VSolid representing the central leaf.
+ * @return G4VSolid* Pointer to the constructed G4VSolid representing the central leaf geometry.
  */
 
 G4VSolid* MlcHd120::CreateCentralLeafShape() const {
@@ -467,11 +464,11 @@ G4VSolid* MlcHd120::CreateCentralLeafShape() const {
 /////////////////////////////////////////////////////////////////////////////
 //  Giving the shape to the side leaf.
 /**
- * @brief Creates the geometric solid representing a side leaf of the HD120 MLC.
+ * @brief Creates the geometric solid for a side leaf of the HD120 multi-leaf collimator.
  *
- * Constructs the side leaf shape by combining a cylindrical tube and multiple boxes using intersection and subtraction operations, then removes the end cap region. The resulting solid models the physical geometry of a side leaf for use in Geant4 simulations.
+ * The returned solid models the physical profile of a side leaf for use in Geant4 geometry and placement within the MLC assembly.
  *
- * @return G4VSolid* The constructed solid representing the side leaf.
+ * @return G4VSolid* Pointer to the constructed solid representing the side leaf.
  */
 
 G4VSolid* MlcHd120::CreateSideLeafShape() const {
@@ -606,9 +603,11 @@ G4VSolid* MlcHd120::CreateTransitionLeafShape(const std::string& type) const{
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Creates a box solid used for cutting the end caps of MLC leaves.
+ * @brief Creates a cubic box used to cut the end caps of MLC leaves.
  *
- * @return G4VSolid* Pointer to a 20 cm × 20 cm × 20 cm box solid centered at the origin.
+ * The box is centered at the origin and sized to fully encompass the leaf end-cap region.
+ *
+ * @return G4VSolid* Box solid centered at the origin with side length 20 cm (half-lengths 10 cm).
  */
 G4VSolid* MlcHd120::CreateEndCapCutBox() const {
     return new G4Box("EndCapCutBox", 10. * cm, 10. * cm, 10. * cm);
@@ -616,11 +615,11 @@ G4VSolid* MlcHd120::CreateEndCapCutBox() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Placeholder for updating the MLC state.
+ * @brief No-op update hook for the MLC.
  *
- * Currently returns true without performing any operations. Intended for future implementation of dynamic updates to the MLC geometry or state.
+ * Currently a placeholder that performs no action.
  *
- * @return G4bool Always returns true.
+ * @return `true` (always).
  */
 G4bool MlcHd120::Update(){
     // implement me.
@@ -629,11 +628,10 @@ G4bool MlcHd120::Update(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Reset internal state of the MlcHd120 instance.
+ * @brief Reset the MlcHd120 instance's runtime state used for leaf positioning and run configuration.
  *
- * Re-initializes runtime state used for leaf positioning and run configuration.
- * Currently a no-op placeholder; implementers should clear cached placements,
- * positioning vectors, and any runtime flags when adding reset behavior.
+ * @details Clears any cached placements, positioning vectors, and runtime flags associated with the MLC.
+ * Currently this function performs no action.
  */
 void MlcHd120::Reset(){
     // implement me.
@@ -685,15 +683,13 @@ void MlcHd120::SetRunConfiguration(const ControlPoint* control_point){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Apply custom MLC leaf positions from a control point.
+ * @brief Apply per-leaf X offsets from a control point to the MLC Y1 and Y2 leaf placements.
  *
- * Retrieves MLC positioning vectors "Y1" and "Y2" from the provided control point and applies them as offsets to the existing leaf placements:
- * - For each index i, subtracts mlc_a_positioning[i] from the X translation of m_y1_leaves[i], updates that leaf's physical placement, and appends the resulting X to VMlc::m_leaves_x_positioning.
- * - For each index i, subtracts mlc_b_positioning[i] from the X translation of m_y2_leaves[i] and updates that leaf's physical placement.
+ * Retrieves positioning vectors stored under the keys "Y1" and "Y2" from the provided control point and applies each element as an X offset to the corresponding Y1 and Y2 leaf placements. After updating each Y1 leaf translation, the resulting X positions are appended to VMlc::m_leaves_x_positioning.
  *
- * Assumes the control point supplies positioning vectors whose sizes match m_y1_leaves and m_y2_leaves; no size validation is performed.
+ * The function does not validate that the retrieved vectors match the number of existing leaves; callers must ensure sizes are consistent.
  *
- * @param control_point Control point supplying MLC positioning vectors under keys "Y1" and "Y2".
+ * @param control_point Control point that provides MLC positioning vectors under the keys "Y1" and "Y2".
  */
 void MlcHd120::SetCustomPositioning(const ControlPoint* control_point){
     const auto& mlc_a_positioning = control_point->GetMlcPositioning("Y1");
@@ -757,4 +753,3 @@ void MlcHd120::SetRTPlanPositioning(int current_beam, int current_controlpoint){
         m_y2_leaves[i]->SetTranslation(y2_translation);
     }
 }
-

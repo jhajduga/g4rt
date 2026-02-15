@@ -14,11 +14,9 @@ namespace fs = std::filesystem;
 
 ////////////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the current date and time as a formatted string.
+ * @brief Get the current date and time formatted as "YYYY-MM-DD.HH:MM:SS".
  *
- * The format of the returned string is "YYYY-MM-DD.HH:mm:ss".
- *
- * @return std::string Current date and time in the specified format.
+ * @return std::string Current date and time in the format "YYYY-MM-DD.HH:MM:SS".
  */
 std::string svc::currentDateTime() {
 	time_t     now = time(0);
@@ -33,9 +31,9 @@ std::string svc::currentDateTime() {
 
 ////////////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the current date as a string in "YYYY-MM-DD" format.
+ * @brief Get the current date in "YYYY-MM-DD" format.
  *
- * @return std::string The current date.
+ * @return std::string The current date as a string formatted "YYYY-MM-DD".
  */
 std::string svc::currentDate() {
     auto dateTime = currentDateTime();
@@ -46,11 +44,9 @@ std::string svc::currentDate() {
 
 ////////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Appends the current date to the given path, creates the directory if it does not exist, and returns the resulting path.
+ * @brief Append the current date (YYYY-MM-DD) to the given base path and ensure the resulting directory exists.
  *
- * The current date is formatted as "YYYY-MM-DD" and appended to the input path (with or without a trailing slash as appropriate). If the resulting directory does not exist, it is created.
- *
- * @param path Base directory path to which the current date will be appended.
+ * @param path Base directory path to which the date subdirectory will be appended.
  * @return std::string Full path including the appended date subdirectory.
  */
 std::string svc::createCurrentDateDirIfNotExits(const std::string& path){
@@ -68,11 +64,11 @@ std::string svc::createCurrentDateDirIfNotExits(const std::string& path){
 
 ////////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Retrieves and ensures the existence of the output directory specified in configuration.
+ * @brief Obtain the configured output directory, ensuring it exists.
  *
- * Obtains the output directory path from the configuration service. If the path is empty, the program exits with an error. If the directory does not exist, it is created (with a dated subdirectory if applicable). Returns the validated and created output directory path.
+ * Reads the RunSvc:OutputDir value from the configuration service. If the configured value is empty the function logs a fatal error and terminates the process. If the configured directory does not exist, it is created (a dated subdirectory may be created by the helper routines).
  *
- * @return std::string The absolute path to the output directory.
+ * @return std::string Absolute path to the validated (and created, if necessary) output directory.
  */
 std::string svc::getOutputDir(){ // const std::string& path
   auto configSvc = Service<ConfigSvc>();
@@ -159,9 +155,11 @@ bool svc::checkIfFileExist(const std::string& file_full_or_relative_path){
 
 ////////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Deletes the specified file if it exists.
+ * @brief Remove the file at the given path if it exists.
  *
- * If the file at the given path exists, it is removed from the filesystem.
+ * If a file exists at the provided path, the file is removed; if no file exists, the call has no effect.
+ *
+ * @param file_full_path Path to the file to remove (absolute or relative).
  */
 void svc::deleteFileIfExists(const std::string& file_full_path){
 	fs::path fp = file_full_path;
@@ -221,12 +219,10 @@ size_t svc::countDirsInLocation(const std::string& path,const std::string& subst
 
 ////////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns a list of file paths in a directory, optionally filtered by extension.
+ * @brief List files in a directory, optionally filtering by an extension substring.
  *
- * If the extension parameter is empty, all files in the specified directory are returned. Otherwise, only files whose paths contain the given extension substring are included.
- *
- * @param path Directory to search for files.
- * @param extension Optional substring to filter files by extension.
+ * @param path Directory to search.
+ * @param extension Optional substring to filter file paths (e.g., ".txt"); when empty, all files are returned.
  * @return std::vector<std::string> Vector of matching file paths.
  */
 std::vector<std::string> svc::getFilesInDir(const std::string& path, const std::string& extension){
@@ -248,12 +244,13 @@ std::vector<std::string> svc::getFilesInDir(const std::string& path, const std::
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Extracts and returns the file extension from a file path.
+ * @brief Return the file extension from a filesystem path.
  *
- * Returns an empty string if the path has no extension or starts with a dot (e.g., hidden files).
+ * If the path has no extension or the filename begins with a dot (e.g., hidden Unix files like ".gitignore"),
+ * an empty string is returned.
  *
- * @param filePath The path to the file.
- * @return std::string The file extension without the dot, or an empty string if none exists.
+ * @param filePath Path or filename to inspect.
+ * @return The file extension without the leading dot, or an empty string if none exists.
  */
 std::string svc::getFileExtenstion(const std::string& filePath){
   // Find the last dot position
@@ -267,10 +264,12 @@ std::string svc::getFileExtenstion(const std::string& filePath){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Extracts the file name without extension from a file path.
+ * @brief Extracts the file name (base name) without its extension from a file path.
  *
- * @param filePath The full path to the file.
- * @return std::string The file name without its extension.
+ * @param filePath Full or relative path to the file.
+ * @return std::string The file name with any trailing extension removed.
+ *
+ * @note If the file name begins with a leading dot (e.g., ".bashrc"), the leading dot is treated as the extension delimiter and this function will return an empty string.
  */
 std::string svc::getFileName(const std::string& filePath){
   // Find last occurrence of '/' or '\\' to handle different path separators
@@ -392,9 +391,13 @@ bool svc::readCsv(const std::string &fname, std::map<std::string, std::vector<do
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Reports an invalid argument error and throws an exception.
+ * @brief Report an invalid argument error for the given caller and message.
  *
- * Prints an error message including the caller and message, then throws a `std::invalid_argument` exception.
+ * Prints an error message including the caller and message to standard output, then throws `std::invalid_argument`.
+ *
+ * @param caller Identifier of the function or component reporting the error.
+ * @param message Human-readable description of the invalid argument.
+ * @throws std::invalid_argument Always thrown when this function is invoked.
  */
 void svc::invalidArgumentError(const std::string& caller, const std::string& message){
     std::cout << FRED("[ERROR]")<<"::"<< caller << ":: " << message << std::endl;
@@ -403,11 +406,11 @@ void svc::invalidArgumentError(const std::string& caller, const std::string& mes
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Rounds a double to the specified number of decimal places.
+ * @brief Rounds a floating-point value to the specified number of decimal places.
  *
- * @param val The value to round.
- * @param prec The number of decimal places to round to.
- * @return double The rounded value.
+ * @param val Value to round.
+ * @param prec Number of decimal places to round to.
+ * @return double Rounded value with the specified number of decimal places.
  */
 double svc::round_with_prec(double val, int prec){
   return  std::round(val * std::pow(10,prec)) / std::pow(10,prec);
@@ -431,12 +434,13 @@ G4ThreeVector svc::round_with_prec(const G4ThreeVector& val, int prec){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns a lowercase version of the input string.
+ * @brief Produce a lowercase copy of the input string.
  *
- * Converts all characters in the given string to their lowercase equivalents.
+ * Converts every character in the provided string to its lowercase equivalent
+ * using the C locale rules.
  *
- * @param source The input string to convert.
- * @return std::string The lowercase version of the input string.
+ * @param source Input string to convert.
+ * @return std::string Lowercase copy of `source`.
  */
 std::string svc::tolower(const std::string& source){
   auto data = source;
@@ -447,10 +451,10 @@ std::string svc::tolower(const std::string& source){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Converts a G4ThreeVector to a std::vector of three doubles.
+ * @brief Linearizes a G4ThreeVector into a std::vector of its components.
  *
- * @param vector The G4ThreeVector to convert.
- * @return std::vector<double> A vector containing the X, Y, and Z components.
+ * @param vector Source vector.
+ * @return std::vector<double> A 3-element vector containing [x, y, z] in that order.
  */
 std::vector<double> svc::linearizeG4ThreeVector(const G4ThreeVector& vector){
   return std::vector<double>{vector.getX(),vector.getY(),vector.getZ()};
@@ -490,14 +494,14 @@ G4ThreeVector svc::getHalfSize(G4VPhysicalVolume* volume){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Transforms a position vector between local and global coordinate frames by traversing the volume hierarchy.
+ * @brief Convert a position between a volume's local coordinate frame and the global frame by applying parent-frame rotations.
  *
- * Applies inverse or direct frame rotations at each parent volume in the hierarchy, depending on the specified transformation direction. Translation is not applied. Returns the transformed position vector.
+ * Traverses the parent-volume chain starting from the provided local frame and applies each parent frame's rotation to produce the position in the target frame. Translation components are intentionally not applied.
  *
- * @param localPosition The position vector in the local coordinate frame.
- * @param volumeOfLocalFrame The starting volume whose local frame is used as the reference.
- * @param direction Specifies whether to transform from local to global coordinates or vice versa.
- * @return G4ThreeVector The transformed position vector.
+ * @param localPosition Position expressed in the starting local frame.
+ * @param volumeOfLocalFrame The volume whose local frame is the reference for the input position.
+ * @param direction If `Transform::LocalToGlobal`, rotates the input toward the global frame; if `Transform::GlobalToLocal`, rotates toward the local frame.
+ * @return G4ThreeVector The input position rotated into the requested target coordinate frame.
  */
 G4ThreeVector svc::transformPosition(const G4ThreeVector& localPosition, IPhysicalVolume* volumeOfLocalFrame, Transform direction){
   G4cout << "transformPosition: " << localPosition << "..." << G4endl;
@@ -574,6 +578,5 @@ std::size_t svc::getHashedStrFromIndexes(const std::vector<int>& indexes){
     G4cout << "[WARNING]::Svc::getHashedStrFromIndexes:: Returning hashed key for empty string! " << G4endl;
   return std::hash<std::string>{}(hash_str);
 }
-
 
 

@@ -82,9 +82,7 @@ void GeometryBuilder::ParseTomlConfig(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the singleton instance of the GeometryBuilder class.
- *
- * Provides global access to the unique GeometryBuilder instance for geometry construction and configuration.
+ * @brief Provides global access to the unique GeometryBuilder instance.
  *
  * @return Pointer to the singleton GeometryBuilder instance.
  */

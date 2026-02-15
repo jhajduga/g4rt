@@ -39,9 +39,9 @@ void LogSvc::Init(int argc, const char* argv[], const std::string& default_log_f
 }
 
 /**
- * @brief Sets the verbosity level for terminal log output.
+ * @brief Sets the minimum verbosity required for log messages to be displayed in the terminal.
  *
- * Updates the minimum verbosity required for log messages to be displayed in the terminal.
+ * @param verbosity The minimum verbosity level for terminal output; messages below this level will be filtered from terminal output.
  */
 void LogSvc::SetTerminalLogLevel(loguru::Verbosity verbosity) {
     s_terminal_verbosity = verbosity;

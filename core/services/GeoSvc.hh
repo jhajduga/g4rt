@@ -94,31 +94,35 @@ GeoSvc &operator=(GeoSvc &&) = delete;
   WorldConstruction *Build();
 
   /**
- * @brief Returns a pointer to the main/top volume world geometry.
+ * @brief Access the top-level world geometry.
  *
- * @return Pointer to the current WorldConstruction instance representing the simulation's world volume.
+ * @return WorldConstruction* Pointer to the current top-level WorldConstruction instance representing the simulation world, or `nullptr` if no world has been set or built.
  */
   WorldConstruction *World() const { return my_world; }
   /**
- * @brief Returns a pointer to the main world geometry, building it if necessary.
+ * @brief Get the main world geometry, constructing it if necessary.
  *
- * If the world geometry has not been constructed yet, this method triggers its construction before returning the pointer.
+ * If the world has not been built, this method constructs it before returning.
  *
- * @return Pointer to the main world geometry object.
+ * @return WorldConstruction* Pointer to the main world geometry.
  */
 WorldConstruction *World() { return my_world ? my_world : Build(); }
   
   /**
- * @brief Sets the main world geometry pointer.
+ * @brief Set the current main/top world geometry.
  *
- * Assigns the provided WorldConstruction instance as the current main/top volume world.
+ * Assigns the given WorldConstruction instance as the service's current world.
+ *
+ * @param world Pointer to the WorldConstruction to use as the current world.
  */
   void SetWorld(WorldConstruction *world) { my_world = world; }
 
   /**
- * @brief Registers a patient geometry object with the geometry service.
+ * @brief Register the patient geometry used by the geometry service.
  *
- * Associates the provided patient geometry with the service for use in simulation.
+ * Associates the given VPatient instance with the service so it becomes the active patient geometry for subsequent geometry operations.
+ *
+ * @param patient Pointer to the patient geometry to register; may be `nullptr` to clear the current registration.
  */
   void RegisterPatient(VPatient* patient) { m_patient = patient; }
   

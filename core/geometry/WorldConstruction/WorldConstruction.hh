@@ -69,12 +69,9 @@ class WorldConstruction : public G4VUserDetectorConstruction,
  */
   PatientGeometry* PatientEnvironment() { return m_phantomEnv; }
   /**
- * @brief Returns the linac (gantry) geometry managed by WorldConstruction.
+ * @brief Access the linac (gantry) geometry managed by WorldConstruction.
  *
- * Returns a raw pointer to the LinacGeometry instance owned by WorldConstruction,
- * or nullptr if the linac environment has not been created.
- *
- * @return LinacGeometry* Pointer to the LinacGeometry, or nullptr.
+ * @return LinacGeometry* Pointer to the LinacGeometry instance, or `nullptr` if the linac environment has not been created.
  */
 LinacGeometry* LinacEnvironment() { return m_gantryEnv; }
 
@@ -151,9 +148,9 @@ WorldConstruction &operator=(WorldConstruction &&) = delete;
  */
   void Construct(G4VPhysicalVolume*) override {}  // <- IPhysicalVolume
   /**
- * @brief Returns the pointer to the world physical volume.
+ * @brief Access the world physical volume.
  *
- * @return G4VPhysicalVolume* Pointer to the constructed world volume, or nullptr if not yet constructed.
+ * @return G4VPhysicalVolume* Pointer to the constructed world physical volume, or `nullptr` if it has not been created.
  */
 
   G4VPhysicalVolume* GetWorldPV() { return m_worldPV; }

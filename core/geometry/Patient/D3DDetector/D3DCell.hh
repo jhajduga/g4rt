@@ -35,11 +35,11 @@ class D3DCell : public VPatient {
     G4bool Update() override;
 
     /**
- * @brief Reset the cell to its initial state.
+ * @brief Restore the cell's runtime state to its initial condition.
  *
- * Currently a no-op: it writes "Implement me." to G4cout and does not modify
- * internal state. Intended to be implemented to restore voxel indices, scoring
- * accumulators, and any transient runtime state.
+ * @note Currently a no-op: writes "Implement me." to G4cout and does not modify
+ * internal state. Intended to reset voxel indices, scoring accumulators, and
+ * other transient runtime state when implemented.
  */
     void Reset() override { G4cout << "Implement me." << G4endl; }
 
@@ -62,12 +62,12 @@ class D3DCell : public VPatient {
  */
     G4int GetIdX() const { return m_id_x; }
     /**
- * @brief Return the voxel index of this cell along the Y axis.
+ * @brief Gets the voxel index of this cell along the Y axis.
  *
- * Returns the integer index of the voxel in the Y direction for this cell.
+ * The returned value is the integer index of the voxel in the Y direction for this cell.
  * A value of -1 indicates the index has not been set.
  *
- * @return G4int Voxel index along Y (or -1 if unset).
+ * @return G4int The voxel index along Y; -1 if unset.
  */
 G4int GetIdY() const { return m_id_y; }
     /**
@@ -81,16 +81,16 @@ G4int GetIdY() const { return m_id_y; }
 G4int GetIdZ() const { return m_id_z; }
 
     /**
- * @brief Get the cell center in the local (mother-volume) coordinate frame.
+ * @brief Cell centre in the local (mother-volume) coordinate frame.
  *
- * @return G4ThreeVector Local center coordinates of the cell (copy).
+ * @return G4ThreeVector Local centre coordinates (copy).
  */
     G4ThreeVector GetCentre() const { return m_centre; }
 
     /**
- * @brief Get the cell center position expressed in global (world) coordinates.
+ * @brief Provides the cell center in global (world) coordinates.
  *
- * @return G4ThreeVector The cell center position in the global coordinate frame.
+ * @return The cell center position in the global coordinate frame.
  */
     G4ThreeVector GetGlobalCentre() const { return m_global_centre; }
 
@@ -110,21 +110,21 @@ G4int GetIdZ() const { return m_id_z; }
     bool IsRunCollectionScoringVolumeVoxelised(const G4String& run_collection) const;
 
     /**
- * @brief Number of voxels configured along the cell's local X axis.
+ * @brief Number of voxels along the cell's local X axis.
  *
- * @return int The configured voxel count along X.
+ * @return int The number of voxels configured along the cell's local X axis.
  */
     int GetNXVoxels() const { return m_cell_voxelization_x; }
     /**
- * @brief Returns the number of voxels along the y-axis in the cell.
+ * @brief Retrieve the number of voxels along the local Y axis.
  *
- * @return int Number of voxels along the y-axis.
+ * @return int The number of voxels along the local Y axis.
  */
 int GetNYVoxels() const { return m_cell_voxelization_y; }
     /**
- * @brief Returns the number of voxels along the z-axis in the cell.
+ * @brief Gets the number of voxels along the local Z axis of the cell.
  *
- * @return int Number of z-axis voxels.
+ * @return int Number of voxels along the local Z axis.
  */
 int GetNZVoxels() const { return m_cell_voxelization_z; }
 

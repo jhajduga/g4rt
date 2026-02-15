@@ -35,10 +35,7 @@ private:
         std::string sc_id; 
         G4ThreeVector com;
         /**
- * @brief Initialize a CellInfo with a scintillator identifier and its center of mass.
- *
- * Constructs a CellInfo by copying the provided scintillator ID and center-of-mass vector into
- * the struct's members.
+ * @brief Initialize a CellInfo with a scintillator identifier and its center-of-mass.
  *
  * @param id Scintillator identifier.
  * @param vec Center-of-mass position as a G4ThreeVector.
@@ -82,20 +79,19 @@ GeometryDBReader& operator=(const GeometryDBReader&) = delete;
     std::string csv_filename;
     std::string sheet;
     /**
- * @brief Access the parsed geometry entries.
+ * @brief Return the parsed geometry entries.
  *
- * Returns a const reference to the internal vector of GeometryData populated by LoadDataBase().
- * The reference points to the singleton's internal storage and remains valid until the
- * GeometryDBReader is finalized or destroyed.
+ * Returns a reference to the internal collection of parsed GeometryData entries populated by LoadDataBase().
+ * The reference remains valid until the GeometryDBReader singleton is finalized or destroyed.
  *
- * @return const std::vector<GeometryData>& Const reference to the parsed geometry data.
+ * @return const std::vector<GeometryData>& Reference to the parsed geometry data.
  */
     const std::vector<GeometryData>& GetData() const { return geoms_; }
 
     /**
- * @brief Returns the collection of cell positioning data.
+ * @brief Accesses the collection of cell positioning data.
  *
- * @return Reference to a vector of CellInfo structs containing scintillator IDs and center of mass positions for each cell.
+ * @return Const reference to a vector of CellInfo entries, each containing a scintillator ID and its center-of-mass position.
  */
     const std::vector<CellInfo>& GetCellsPositioning() const { return m_db_cells_positioning; } 
 };

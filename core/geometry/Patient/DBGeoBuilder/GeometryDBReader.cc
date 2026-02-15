@@ -31,11 +31,9 @@ void GeometryDBReader::Finalize() {
 }
 
 /**
- * @brief Returns the singleton instance of the GeometryDBReader.
+ * @brief Provides access to the single GeometryDBReader instance.
  *
- * Ensures that only one instance of GeometryDBReader exists throughout the application.
- *
- * @return Reference to the singleton GeometryDBReader instance.
+ * @return Reference to the sole GeometryDBReader instance.
  */
 GeometryDBReader& GeometryDBReader::Instance() {
     static GeometryDBReader instance;
@@ -43,11 +41,15 @@ GeometryDBReader& GeometryDBReader::Instance() {
 }
 
 /**
- * @brief Load geometry entries from Excel/CSV into internal storage.
+ * @brief Load geometry definitions from the specified directory into geoms_.
  *
- * Loads geometry definitions by calling the embedded Python parser module and converts each returned entry into a GeometryData instance stored in geoms_. For each entry the function extracts component, body, material, scintillator ID, center-of-mass (COM), nodes, vertices and normals. The COM is converted to mm, rotated 180° about the X axis, then translated according to the PatientGeometry "EnviromentPatientEnvelop" configuration. Valid scintillator IDs are recorded in the static m_db_cells_positioning vector paired with their world COM. The parser handle is released after loading.
+ * Reads geometry entries via the embedded Python parser and converts each entry's
+ * component, body, material, scintillator ID, center-of-mass (COM), nodes,
+ * vertices, and normals into a GeometryData stored in geoms_. Valid scintillator
+ * IDs are recorded in the static m_db_cells_positioning together with their
+ * world COM. The parser handle is released after loading.
  *
- * @param path Directory containing D3DF_bodies.xlsx and D3DF_bodies.csv (the workbook/CSV passed to the Python parser).
+ * @param path Directory containing D3DF_bodies.xlsx and D3DF_bodies.csv used by the parser.
  */
 void GeometryDBReader::LoadDataBase(const std::string& path)
 {
@@ -125,4 +127,3 @@ void GeometryDBReader::LoadDataBase(const std::string& path)
 
     std::cout<< "Got #" << m_db_cells_positioning.size() << " cell entries." << std::endl;
 }
-

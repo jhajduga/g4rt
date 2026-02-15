@@ -45,7 +45,9 @@ bool operator[](AnalysisFlag flag) const { return m_bitset_flags.test(static_cas
 void Set(AnalysisFlag flag, bool value = true) { m_bitset_flags.set(static_cast<size_t>(flag), value); }
 
   /**
- * @brief Clears all analysis flags, disabling every flag in the set.
+ * @brief Disable all analysis flags.
+ *
+ * Sets every flag in the container to false.
  */
 void Reset() { m_bitset_flags.reset(); }
 
@@ -82,10 +84,9 @@ void ResetAll() { m_analysis_flags.Reset(); }
 
  private:
   /**
- * @brief Default (private) constructor.
+ * @brief Default constructor.
  *
- * Creates an AnalysisFlagRegistry instance. The constructor is private to enforce
- * singleton usage; callers should obtain the registry via AnalysisFlagRegistry::Instance().
+ * Default (private) constructor that prevents direct instantiation and enforces the singleton pattern.
  */
 AnalysisFlagRegistry() = default;
   AnalysisFlags m_analysis_flags;

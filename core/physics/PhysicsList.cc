@@ -92,17 +92,16 @@ void PhysicsList::ConstructParticle() {
 }
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Attach a global hard step-limiter process to applicable particles.
+ * @brief Attach a global hard step-limiter to all applicable, non-short-lived particles.
  *
- * Creates a StepMax process configured with the PhysicsList's m_stepMax (in mm)
- * and registers it as a discrete process for every particle type for which the
- * StepMax is applicable and that is not short-lived. When active, this hard
- * limiter enforces an upper bound on the step length and will take effect when
- * its maximum is shorter than any competing (e.g., EM) step constraints.
+ * Creates a StepMax process, sets its maximum step to the PhysicsList's m_stepMax (converted to millimeters),
+ * and registers that same StepMax instance as a discrete process with each particle's process manager for which
+ * the StepMax is applicable.
  *
- * Side effects:
- * - Allocates a StepMax instance and registers the same process pointer with
- *   multiple particle process managers via AddDiscreteProcess.
+ * The installed StepMax enforces an upper bound on step length and will constrain stepping when its maximum
+ * is shorter than other competing step limitations.
+ *
+ * @note Allocates a single StepMax instance and registers the same pointer with multiple particle process managers.
  */
 void PhysicsList::AddStepMax()
 {
@@ -206,11 +205,11 @@ void PhysicsList::ConstructProcess() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Selects and activates an electromagnetic (EM) physics model by name.
+ * @brief Activate an electromagnetic physics model by name.
  *
- * If the specified model name matches a supported EM physics list, instantiates and sets it as the active EM physics model. If the name is unrecognized, outputs a warning and recursively falls back to the previously selected EM physics model. Prints the name of the activated EM physics model.
+ * Instantiates and sets the requested EM physics controller if the name matches a supported model; if the name is unrecognized, logs a warning and falls back to the current EM physics model name.
  *
- * @param name The name of the EM physics model to activate (e.g., "emstandard_opt3", "LowE_Livermore").
+ * @param name The name of the EM physics model to activate (e.g., "emstandard_opt3", "emstandard_opt4", "LowE_Livermore", "LowE_Polar_Livermore", "LowE_Penelope").
  */
 void PhysicsList::AddPhysicsList(const G4String &name) {
   auto vlevel = GetVerboseLevel();

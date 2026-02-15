@@ -20,12 +20,10 @@
 ///\brief Templated method to get a pointer to the different type of services.
 template<typename T>
 /**
- * @brief Returns the singleton instance pointer of the specified service type.
+ * @brief Retrieve the singleton instance of a service type.
  *
- * This templated function retrieves the singleton instance of a service class by invoking its static `GetInstance()` method.
- *
- * @tparam T Service class type that implements a static `GetInstance()` method.
- * @return Pointer to the singleton instance of type T.
+ * @tparam T Service class type that exposes a static `GetInstance()` returning a pointer to its singleton.
+ * @return T* Pointer to the service singleton.
  */
 T *Service() {
   return T::GetInstance();
@@ -79,13 +77,13 @@ namespace svc {
   ///\param precision precision to be taken in the conversion.
   template<typename T>
   /**
-   * @brief Converts a value to a string with fixed precision and boolean formatting.
+   * @brief Format a value as a string using fixed two-decimal precision and text for booleans.
    *
-   * Converts the input value to a string using two decimal places for floating-point types and outputs boolean values as "true" or "false".
+   * Converts the input value to its string representation using fixed notation with two decimal places for floating-point values and "true"/"false" for boolean values.
    *
    * @tparam T Type of the value to convert.
    * @param v The value to convert to a string.
-   * @return std::string String representation of the value, or "*** error ***" if conversion fails.
+   * @return std::string The formatted string, or "*** error ***" if conversion fails.
    */
   std::string to_string(const T &v) {
     std::ostringstream stm;
@@ -97,9 +95,13 @@ namespace svc {
   ///\brief Function to check if the given key exists in a given std::map.
   template<typename K, typename V>
   /**
-   * @brief Checks if a given key exists in a map.
+   * @brief Determine whether a key exists in a map.
    *
-   * @return true if the key is present in the map, false otherwise.
+   * @tparam K Type of map keys.
+   * @tparam V Type of map values.
+   * @param items Map to search for the key.
+   * @param key Key to look up in the map.
+   * @return `true` if the key is present in `items`, `false` otherwise.
    */
   bool checkItem(std::map<K, V> &items, const K key) {
     if (items.find(key) != items.end())

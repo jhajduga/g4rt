@@ -28,11 +28,11 @@ class StepMax : public G4VDiscreteProcess
         G4VParticleChange* PostStepDoIt(const G4Track&, const G4Step&);
 
         /**
-         * @brief Returns the maximum possible mean free path for this process.
+         * @brief Indicate that mean free path is not applicable for this process.
          *
-         * This method always returns `DBL_MAX`, indicating that mean free path calculations are not relevant for the step limitation process.
+         * Always returns DBL_MAX to signal that no finite mean free path is used by this step-limiting process.
          *
-         * @return G4double The maximum double value (`DBL_MAX`).
+         * @return G4double `DBL_MAX`, the maximum representable double value.
          */
         G4double GetMeanFreePath(const G4Track&, G4double, G4ForceCondition*)
         {return DBL_MAX;};     // it is not needed here !

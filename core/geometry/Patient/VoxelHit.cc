@@ -388,11 +388,12 @@ void VoxelHit::SetGlobalId(G4int xId, G4int yId, G4int zId) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Updates the voxel's gravitational center using a running half-average with the given position.
+ * @brief Update the voxel's gravitational center using a running half-average with the given position.
  *
- * The gravitational center is recalculated by averaging each coordinate with the new position, biasing toward recent updates. This is not a true arithmetic mean.
+ * Recomputes each coordinate of the stored gravitational center as the average of the current center and the provided position,
+ * thereby biasing the center toward more recent updates (not a true arithmetic mean over all samples).
  *
- * @param position The position vector to incorporate into the gravitational center calculation.
+ * @param position Position to incorporate into the gravitational center calculation.
  */
 void VoxelHit::SetGravCentre(const G4ThreeVector& position) {
   // TODO: Replace running 1/2-average with true arithmetic mean.
@@ -420,10 +421,10 @@ void VoxelHit::SetGravCentre(const G4ThreeVector& position) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the local voxel index for the specified axis.
+ * @brief Retrieve the local voxel index for a given axis.
  *
- * @param axisId Axis identifier: 0 for x, 1 for y, 2 for z.
- * @return Local voxel index along the specified axis, or -1 if the axisId is invalid.
+ * @param axisId Axis identifier: 0 = x, 1 = y, 2 = z.
+ * @return G4int Local voxel index for the specified axis; returns -1 if axisId is invalid.
  */
 G4int VoxelHit::GetID(G4int axisId) const {
   switch (axisId) {
@@ -441,10 +442,10 @@ G4int VoxelHit::GetID(G4int axisId) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the global voxel index for the specified axis.
+ * @brief Retrieve the global voxel index for a given axis.
  *
- * @param axisId Axis identifier: 0 for x, 1 for y, 2 for z.
- * @return Global voxel index along the specified axis, or -1 if the axisId is invalid.
+ * @param axisId Axis identifier where 0 = x, 1 = y, 2 = z.
+ * @return Global voxel index for the specified axis, or -1 if axisId is invalid.
  */
 G4int VoxelHit::GetGlobalID(G4int axisId) const {
   switch (axisId) {
@@ -462,9 +463,9 @@ G4int VoxelHit::GetGlobalID(G4int axisId) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Prints voxel hit information, including IDs, mass, and volume.
+ * @brief Print voxel hit information to the Geant4 output stream.
  *
- * Calls the non-const Print() method to output details about the voxel hit.
+ * Outputs the voxel's global and local indices, mass, and volume.
  */
 void VoxelHit::Print() const { const_cast<VoxelHit*>(this)->Print(); }
 
@@ -481,13 +482,12 @@ void VoxelHit::Print() {INFO_GEO("Voxel ID ({},{},{})/({},{},{}) \n\tMass {}, Vo
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Return track ID → kinetic energy pairs for all tracks stored in this voxel.
+ * @brief Provide (track ID, kinetic energy) pairs for tracks stored in this voxel.
  *
- * The returned vector contains pairs in the same order as the internal track storage: each
- * pair is (trackID, kineticEnergy). Assumes the internal parallel containers of track IDs
- * and energies are consistent; returns an empty vector if no tracks are recorded.
+ * The returned container preserves the internal storage order: each element is a pair
+ * (trackID, kineticEnergy). If no tracks are recorded, the returned vector is empty.
  *
- * @return std::vector<std::pair<G4int, G4double>> List of (track ID, kinetic energy) pairs.
+ * @return std::vector<std::pair<G4int, G4double>> Vector of (trackID, kineticEnergy) pairs in storage order.
  */
 std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdEnergyMappingList() const {
   std::vector<std::pair<G4int, G4double>> trkIdE;
@@ -498,11 +498,9 @@ std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdEnergyMappingList() co
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Return a list mapping stored track IDs to their momentum theta angles.
+ * @brief Map stored track IDs to their corresponding momentum theta angles in stored order.
  *
- * The returned vector preserves the same order as the internal track-ID list; each element
- * is a pair {trackId, theta}. This function assumes the internal parallel arrays for track
- * IDs and thetas are synchronized.
+ * The vector preserves the internal track order; each element is a pair {trackId, theta}.
  *
  * @return std::vector<std::pair<G4int, G4double>> Vector of (track ID, theta) pairs.
  */
@@ -515,14 +513,9 @@ std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdThetaMappingList() con
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Get mapping of track IDs to their recorded track lengths in this voxel.
+ * @brief Produce a list pairing stored track IDs with their corresponding recorded track lengths.
  *
- * Returns a vector of (trackID, length) pairs constructed by iterating the
- * internal parallel containers that store track IDs and their lengths.
- * The i-th pair corresponds to the i-th entry in the internal track ID and
- * length arrays. If no tracks are stored the result is empty.
- *
- * @return std::vector<std::pair<G4int, G4double>> Pairs of track ID and track length.
+ * @return std::vector<std::pair<G4int, G4double>> Vector of (track ID, track length) pairs; empty if no tracks are stored.
  */
 std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdLengthMappingList() const {
   std::vector<std::pair<G4int, G4double>> trkIdLength;
@@ -533,16 +526,15 @@ std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdLengthMappingList() co
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Return mapping of user track IDs to their stored user-track lengths.
+ * @brief Map stored user track IDs to their corresponding stored user-track lengths.
  *
- * Returns a vector of (userTrackId, userTrackLength) pairs built from the
- * internal parallel containers m_Voxel.m_usrTrksId and m_Voxel.m_usrTrksLength.
- * The i-th pair contains the i-th ID and the i-th length.
+ * Produces a vector of (userTrackId, userTrackLength) pairs where each pair contains
+ * the i-th entry from the stored user track ID list and the i-th entry from the
+ * stored user track length list.
  *
  * @return std::vector<std::pair<G4int, G4double>> Vector of (userTrackId, userTrackLength) pairs.
  *
- * @note The function assumes the ID and length containers are kept in sync; if their
- * sizes differ, behavior follows the shorter container (no bounds checks are performed).
+ * @note If the ID and length lists differ in size, the result is truncated to the shorter list.
  */
 std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdUserLengthMappingList() const {
   std::vector<std::pair<G4int, G4double>> trkIdLength;
@@ -553,15 +545,14 @@ std::vector<std::pair<G4int, G4double>> VoxelHit::GetTrkIdUserLengthMappingList(
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the mapping between stored track lengths and their pre-step positions.
+ * @brief Map stored track lengths to their corresponding pre-step positions.
  *
- * Each element is a pair (trackLength, preStepPosition) taken from the parallel vectors
- * holding per-track lengths and positions. The returned list preserves the iteration order
- * of those internal vectors.
+ * Returns a list that pairs each stored track length with the pre-step position recorded
+ * for that track, preserving the internal stored order.
  *
- * @return std::vector<std::pair<G4int, G4ThreeVector>> Vector of (trackLength, preStepPosition) pairs.
+ * @return std::vector<std::pair<G4int, G4ThreeVector>> Vector of (track length, pre-step position) pairs in stored order.
  *
- * @note The mapping uses track length as the key (not the track ID); track lengths may be non-unique.
+ * @note Track length is used as the key in the pair and may be non-unique across entries.
  */
 std::vector<std::pair<G4int, G4ThreeVector>> VoxelHit::GetTrkIdPositionMappingList() const {
   std::vector<std::pair<G4int, G4ThreeVector>> trkPosition;
@@ -572,13 +563,12 @@ std::vector<std::pair<G4int, G4ThreeVector>> VoxelHit::GetTrkIdPositionMappingLi
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Return a list mapping stored track IDs to their particle-type codes.
+ * @brief Map stored track IDs to their particle-type codes in recorded order.
  *
- * The returned vector contains pairs (trackId, particleTypeCode) in the same order
- * as tracks were recorded (i.e., the parallel ordering of m_trksId and m_trksTypeId).
- * It assumes the two internal arrays are aligned.
+ * The returned vector preserves the recording order by pairing each entry from the
+ * track-ID container with the corresponding entry from the particle-type container.
  *
- * @return std::vector<std::pair<G4int, G4int>> List of (track ID, particle type code).
+ * @return std::vector<std::pair<G4int, G4int>> Each pair is (track ID, particle type code) in recorded order.
  */
 std::vector<std::pair<G4int, G4int>> VoxelHit::GetTrackIdTypeMappingList() const {
   std::vector<std::pair<G4int, G4int>> trkTypeId;
@@ -637,9 +627,9 @@ std::vector<std::pair<G4int, G4int>> VoxelHit::GetTrkIdElectronOriginTypeMapping
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the kinetic energy of the primary track in the voxel.
+ * @brief Get the kinetic energy of the primary track recorded in this voxel.
  *
- * @return The kinetic energy of the primary track (track ID 1), or -1 if no primary track is present in this voxel hit.
+ * @return The kinetic energy of the primary track (track ID 1), or -1 if no primary track is recorded in this voxel.
  */
 G4double VoxelHit::GetPrimaryTrkEnergy() const {
   for (auto& iIdE : GetTrkIdEnergyMappingList())
@@ -649,12 +639,11 @@ G4double VoxelHit::GetPrimaryTrkEnergy() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Compute the mean energy deposited per recorded step in this voxel.
+ * @brief Returns the mean energy deposited per recorded step in this voxel.
  *
- * Computes the arithmetic mean of all entries stored in m_Voxel.m_stepsEdep.
- * Returns -1 when no per-step energy-deposition records exist.
+ * Calculates the arithmetic mean of the values stored in m_Voxel.m_stepsEdep.
  *
- * @return Mean energy deposited per step (in the simulation's energy units), or -1 if no steps recorded.
+ * @return The arithmetic mean of per-step energy deposits (simulation energy units), or -1 if no steps recorded.
  */
 G4double VoxelHit::GetMeanEnergyDeposit() const {
   if (m_Voxel.m_stepsEdep.size() > 0) {
@@ -680,21 +669,20 @@ void VoxelHit::PrintEvtInfo() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns a hashed identifier based on the global voxel indices.
+ * @brief Computes a hash derived from the voxel's global x, y, and z indices.
  *
- * The hash is computed from the voxel's global x, y, and z indices to provide a unique identifier for the voxel's global position.
- *
- * @return std::size_t Hashed value representing the global voxel indices.
+ * @return std::size_t Hashed value representing the voxel's global position indices.
  */
 std::size_t VoxelHit::GetGlobalHashedStrId() const { return svc::getHashedStrFromIndexes({m_Voxel.m_global_idx_x, m_Voxel.m_global_idx_y, m_Voxel.m_global_idx_z}); }
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns a hashed identifier string based on both global and local voxel indices.
+ * @brief Compute a hash identifier from the voxel's global and local indices.
  *
- * The hash uniquely represents the voxel using its global and local indices.
+ * The hash uniquely identifies the voxel by combining the global indices
+ * (global x, y, z) and the local indices (local x, y, z).
  *
- * @return std::size_t Hashed identifier for the voxel.
+ * @return std::size_t Hash value derived from the voxel's global and local indices.
  */
 std::size_t VoxelHit::GetHashedStrId() const {
   return svc::getHashedStrFromIndexes({m_Voxel.m_global_idx_x, m_Voxel.m_global_idx_y, m_Voxel.m_global_idx_z, m_Voxel.m_idx_x, m_Voxel.m_idx_y, m_Voxel.m_idx_z});

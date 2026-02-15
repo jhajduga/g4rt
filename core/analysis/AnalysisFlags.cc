@@ -4,11 +4,11 @@
 #include <iomanip>
 
 /**
- * @brief Returns the singleton instance of the AnalysisFlagRegistry.
+ * @brief Access the global AnalysisFlagRegistry singleton.
  *
- * Ensures that only one instance of the registry exists throughout the program's lifetime.
+ * Provides the single shared registry instance used for global analysis flags.
  *
- * @return Pointer to the singleton AnalysisFlagRegistry instance.
+ * @return Pointer to the global singleton AnalysisFlagRegistry instance.
  */
 AnalysisFlagRegistry* AnalysisFlagRegistry::Instance() {
   static AnalysisFlagRegistry instance;
@@ -19,11 +19,8 @@ AnalysisFlagRegistry* AnalysisFlagRegistry::Instance() {
 /**
  * @brief Print the enabled/disabled state of every global analysis flag.
  *
- * Iterates all values of the AnalysisFlag enumeration and writes each flag's
- * name and boolean state ("true"/"false") to standard output in a human-
- * readable, column-aligned format.
- *
- * @note Uses IsEnabled(flag) to determine each flag's state.
+ * Prints each AnalysisFlag name and its state ("true"/"false") to standard output
+ * in a column-aligned, human-readable format.
  */
 void AnalysisFlagRegistry::PrintAllFlags() const {
   std::cout << "[AnalysisFlagRegistry] Active global flags:\n";

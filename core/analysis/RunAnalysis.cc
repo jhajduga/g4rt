@@ -35,11 +35,11 @@ RunAnalysis::RunAnalysis(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the singleton instance of the RunAnalysis class.
+ * @brief Provides global access to the RunAnalysis singleton.
  *
- * Ensures that only one instance of RunAnalysis exists throughout the application's lifetime.
+ * Ensures a single RunAnalysis instance exists for the process lifetime and returns its address.
  *
- * @return Pointer to the global RunAnalysis instance.
+ * @return RunAnalysis* Pointer to the single global RunAnalysis instance.
  */
 RunAnalysis *RunAnalysis::GetInstance() {
     static RunAnalysis instance = RunAnalysis();

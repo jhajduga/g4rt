@@ -37,9 +37,9 @@ RunAction::RunAction() : G4UserRunAction(), fAnalysisManager(nullptr) {
 
 /////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Destructor for RunAction, cleaning up the analysis manager on the master thread.
+ * @brief Release the Geant4 analysis manager when running on the master thread.
  *
- * Deletes the analysis manager singleton and resets its pointer to null if called on the master thread.
+ * Deletes the analysis manager singleton and clears its pointer if invoked on the master thread.
  */
 RunAction::~RunAction(){
   if (IsMaster()) {
@@ -73,21 +73,14 @@ G4Run* RunAction::GenerateRun(){
 }
 /////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Initialize analyses and output at the beginning of a Geant4 run.
+ * @brief Prepare and initialize analyses and output for a new Geant4 run.
  *
- * Prepares the analysis manager and enabled analysis modules for a new run:
- * sets and opens the analysis output file, prints a master/worker run-start message,
+ * Sets the analysis manager output file and opens it, emits a master/worker run-start message,
  * invokes BeginOfRun on each enabled analysis module (SavePhSpAnalysis, RunAnalysis,
- * PrimariesAnalysis, BeamAnalysis, StepAnalysis, NTupleEventAnalisys when applicable),
- * and starts the internal run timer. When executing on the master thread, also
- * writes geometry information to the console.
+ * PrimariesAnalysis, BeamAnalysis, StepAnalysis, and NTupleEventAnalisys when applicable),
+ * writes geometry information when running on the master thread, and starts the internal run timer.
  *
- * Side effects:
- * - Opens the analysis output file via the analysis manager.
- * - Starts the internal timer (m_timer).
- * - May produce console output.
- *
- * @param aRun Pointer to the current Geant4 run (used for run ID and passed to analyses).
+ * @param aRun Pointer to the current Geant4 run used for run identification and passed to analyses.
  */
 void RunAction::BeginOfRunAction(const G4Run* aRun) {
   auto configSvc = Service<ConfigSvc>();

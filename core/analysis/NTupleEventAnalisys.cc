@@ -24,11 +24,12 @@ AnalysisFlagRegistry* NTupleEventAnalisys::m_analysis_reg = AnalysisFlagRegistry
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the singleton instance of NTupleEventAnalisys.
+ * @brief Provides access to the global NTupleEventAnalisys singleton.
  *
- * Ensures a single global instance of the NTupleEventAnalisys class is used throughout the application.
+ * Returns the single shared instance used for managing ntuple definitions and per-event
+ * analysis state across the application.
  *
- * @return Pointer to the singleton NTupleEventAnalisys instance.
+ * @return Pointer to the global NTupleEventAnalisys singleton instance.
  */
 NTupleEventAnalisys* NTupleEventAnalisys::GetInstance() {
   static NTupleEventAnalisys instance;

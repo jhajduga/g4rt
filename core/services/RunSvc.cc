@@ -51,9 +51,9 @@ RunSvc::~RunSvc() { configSvc()->Unregister(thisConfig()->GetName()); }
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the singleton instance of the RunSvc service.
+ * @brief Provides access to the global RunSvc singleton.
  *
- * @return Pointer to the unique RunSvc instance.
+ * @return Pointer to the singleton RunSvc instance.
  */
 RunSvc* RunSvc::GetInstance() {
   static RunSvc instance;
@@ -70,9 +70,9 @@ void RunSvc::RegisterRunComponent(RunComponet* element) { m_run_components.empla
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Defines and initializes the configuration parameters for the run service.
+ * @brief Register and initialize all configurable parameters for RunSvc.
  *
- * Registers all configurable units required for simulation control, including job metadata, run parameters, primary generator settings, phase space options, analysis flags, output management, and DICOM output. Sets up default values for these parameters and initializes the materials service.
+ * Defines configuration units for job metadata, run parameters, primary generator settings, phase-space options, analysis flags, output controls, and DICOM output, applies default values for those units, and initializes the materials service.
  */
 void RunSvc::Configure() {
   // G4cout << "[INFO]:: RunSvc :: Service default configuration " << G4endl;
@@ -249,9 +249,11 @@ void RunSvc::DefaultConfig(const std::string& unit) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Validates the current run service configuration.
+ * @brief Validate the run service configuration.
  *
- * @return true Always returns true, indicating configuration validation is not enforced.
+ * Performs configuration validation for the run service. This implementation does not enforce any checks and always considers the configuration valid.
+ *
+ * @return `true` if the configuration is considered valid (always `true` in the current implementation).
  */
 bool RunSvc::ValidateConfig() const { return true; }
 
@@ -519,9 +521,11 @@ void RunSvc::ParseTomlConfig() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Defines the simulation configuration and control points.
+ * @brief Establishes the simulation configuration and prepares control points.
  *
- * Loads simulation configuration from a TOML file if available; otherwise, sets a default configuration. After configuration is established, defines the simulation control points.
+ * Loads configuration from a TOML file when present; otherwise applies the default
+ * simulation configuration. After the configuration is established, finalizes the
+ * set of simulation control points.
  */
 void RunSvc::DefineSimConfiguration() {
   if (IsTomlConfigExists())  // TODO Actually it is always true for now...
@@ -534,9 +538,11 @@ void RunSvc::DefineSimConfiguration() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Initializes the list of simulation control points from the configuration.
+ * @brief Populate the service's control-point list from the configured control-point definitions and select the first as the current control point.
  *
- * Copies control point configurations into the internal control points vector and sets the current control point pointer. Throws a fatal exception if no control points are defined.
+ * Copies entries from the internal control-point configuration container into the runtime control-point vector and sets the current control point pointer to the first element.
+ *
+ * @throws G4Exception Thrown with `FatalErrorInArgument` if no control points are defined.
  */
 void RunSvc::DefineControlPoints() {
   for (const auto& icpc : m_control_points_config) {
@@ -667,11 +673,11 @@ void RunSvc::SetNofThreads(int val) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the job name label formatted for use in file and directory names.
+ * @brief Produce a filesystem-safe job label derived from the configured job name.
  *
- * Retrieves the job name from the configuration, replaces spaces with underscores, and converts all characters to lowercase.
+ * Replaces spaces with underscores and converts all characters to lowercase.
  *
- * @return std::string The sanitized job name label.
+ * @return std::string Sanitized job name label suitable for use in file and directory names.
  */
 std::string RunSvc::GetJobNameLabel() {
   auto job_name = Service<ConfigSvc>()->GetValue<std::string>("RunSvc", "JobName");

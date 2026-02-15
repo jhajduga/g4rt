@@ -10,12 +10,11 @@ using namespace py::literals;
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the singleton instance of CsvRunAnalysis.
+ * @brief Get the process-wide singleton CsvRunAnalysis instance.
  *
- * Returns a pointer to a Meyers-style singleton; the instance is created on first call
- * and lives for the lifetime of the program.
+ * The instance is constructed on first use and persists for the lifetime of the program.
  *
- * @return CsvRunAnalysis* Pointer to the single CsvRunAnalysis instance.
+ * @return Pointer to the single CsvRunAnalysis instance.
  */
 CsvRunAnalysis *CsvRunAnalysis::GetInstance() {
     static CsvRunAnalysis instance = CsvRunAnalysis();
@@ -136,5 +135,4 @@ void CsvRunAnalysis::WriteFieldMaskToCsv(const G4Run* runPtr){
         }
     }
 }
-
 

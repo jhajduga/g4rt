@@ -27,11 +27,9 @@ LinacGeometry::LinacGeometry()
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the singleton instance of the LinacGeometry class.
+ * @brief Get the single global LinacGeometry instance.
  *
- * Ensures that only one instance of LinacGeometry exists throughout the application.
- *
- * @return Pointer to the global LinacGeometry instance.
+ * @return LinacGeometry* Pointer to the single global LinacGeometry instance.
  */
 LinacGeometry *LinacGeometry::GetInstance() {
   static LinacGeometry instance;
@@ -180,9 +178,9 @@ void LinacGeometry::WriteInfo() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Resets the accelerator head geometry to its initial state.
+ * @brief Restore the accelerator head to its initial configuration.
  *
- * If an accelerator head instance exists, calls its reset method to restore default configuration or state.
+ * If a head instance is present, its configuration and state are restored to defaults; otherwise no action is taken.
  */
 void LinacGeometry::ResetHead() {
   if (m_headInstance) m_headInstance->Reset();
@@ -203,9 +201,9 @@ void LinacGeometry::SetIsocentreDistance(double distance_cm) {
 }
 
 /**
- * @brief Returns the current isocentre distance in centimeters.
+ * @brief Retrieve the current isocentre distance used for geometry construction.
  *
- * @return The isocentre distance value in centimeters.
+ * @return The isocentre distance in centimeters.
  */
 double LinacGeometry::GetIsocentreDistance() {
   return s_isocentre_distance_cm;

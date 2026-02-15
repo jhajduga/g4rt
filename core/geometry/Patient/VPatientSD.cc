@@ -17,10 +17,10 @@ VPatientSD::VPatientSD(const G4String& sdName):G4VSensitiveDetector(sdName){}
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
-   * @brief Constructs a VPatientSD sensitive detector with a specified name and center position.
+   * @brief Create a VPatientSD sensitive detector with the given name and world-space center.
    *
-   * @param sdName Name of the sensitive detector.
-   * @param centre Center position of the sensitive detector in world coordinates.
+   * @param sdName Sensitive detector name.
+   * @param centre World-space center position used for geometry and voxel placement.
    */
 VPatientSD::VPatientSD(const G4String& sdName, const G4ThreeVector& centre)
   :G4VSensitiveDetector(sdName),m_sd_centre(centre){}
@@ -91,16 +91,16 @@ void VPatientSD::AddScoringVolume(const G4String& runCollName, const G4String& h
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Verify that a newly added hits collection's scoring volume is compatible with existing ones in the same run collection.
+ * @brief Ensure a newly added scoring volume is compatible with existing volumes in the same run collection.
  *
- * Compares the provided scoring volume against the first previously registered scoring volume that belongs to the same run collection.
- * If no other scoring volume for that run collection exists yet, the function returns without action.
- * If a mismatch is detected between voxelization/geometry parameters of the new and the reference scoring volume, this routine logs a fatal error and raises a G4Exception with FatalException severity.
+ * If another scoring volume for the same run collection already exists, compares the new volume's voxelization
+ * and geometric parameters against the first matching existing volume; on mismatch the function logs a fatal error
+ * and triggers a fatal G4Exception.
  *
- * @param runCollName Name of the run collection to which the hits collection is being added.
- * @param scoring_volume Pair whose first element is the hits collection name and whose second element is the scoring volume pointer to be checked.
+ * @param runCollName Name of the run collection the hits collection is being added to.
+ * @param scoring_volume Pair whose first element is the hits collection name and whose second element is the scoring volume to check.
  *
- * @throws G4Exception Thrown with FatalException if the new scoring volume is incompatible with an existing scoring volume in the same run collection.
+ * @throws G4Exception Thrown with FatalException severity when the new scoring volume is incompatible with an existing one in the same run collection.
  */
 void VPatientSD::AcknowledgeHitsCollection(const G4String& runCollName, const std::pair<G4String, std::unique_ptr<ScoringVolume>>& scoring_volume) {
   bool is_ok = false;
@@ -169,13 +169,13 @@ bool VPatientSD::ScoringVolume::operator == (const ScoringVolume& other){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Initialize per-event voxel hits collections for all configured scoring volumes.
+ * @brief Create and register per-event voxel hit collections for all configured scoring volumes.
  *
- * Ensures per-voxel channel indices are prepared, creates a VoxelHitsCollection for each
- * scoring volume, obtains or assigns its hits-collection ID from the G4SDManager if unset,
- * and registers each collection with the provided G4HCofThisEvent.
+ * Prepares per-voxel channel indices, allocates a VoxelHitsCollection for each scoring volume,
+ * ensures each scoring volume has a valid hits-collection identifier, and adds the collections
+ * to the provided event-level hits collection container.
  *
- * @param hCofThisEvent Event-level hits collection container to which the newly created voxel hit collections are added.
+ * @param hCofThisEvent Event-level hits collection container that will receive the newly created voxel hit collections.
  */
 void VPatientSD::Initialize(G4HCofThisEvent* hCofThisEvent){
 
@@ -200,9 +200,9 @@ void VPatientSD::Initialize(G4HCofThisEvent* hCofThisEvent){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the names of all scoring volumes managed by this sensitive detector.
+ * @brief List all hits-collection names for the scoring volumes managed by this detector.
  *
- * @return Vector of hits collection names corresponding to each scoring volume.
+ * @return std::vector<G4String> Vector of hits collection names in the same order as the internal scoring-volume list.
  */
 std::vector<G4String> VPatientSD::GetScoringVolumeNames() const{
   std::vector<G4String> names;
@@ -234,16 +234,12 @@ void VPatientSD::SetScoringParameterization(const G4String& hitsCollName, int nX
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Get the hits collection ID for a scoring hits collection by name.
+ * @brief Retrieve the hits collection ID for the scoring hits collection with the given name.
  *
- * Looks up the scoring-volume index for the given hits-collection name and returns its associated
- * hits collection ID.
+ * @param hitsCollName Name of the scoring hits collection to query.
+ * @return G4int Hits collection ID corresponding to the named scoring hits collection.
  *
- * @param hitsCollName Hits collection name to query.
- * @return G4int The hits collection ID.
- *
- * @note If no scoring volume with the given name exists, this delegates to GetScoringVolumeIdx which
- * will raise a fatal error / throw.
+ * @throws G4Exception If no scoring volume with the given name exists.
  */
 G4int VPatientSD::GetScoringHcId(const G4String& hitsCollName) const{
   auto scoringSdIdx = GetScoringVolumeIdx(hitsCollName);
@@ -252,14 +248,12 @@ G4int VPatientSD::GetScoringHcId(const G4String& hitsCollName) const{
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Return the hits-collection ID for the scoring volume at the given index.
- *
- * The index is zero-based and must be less than the number of configured scoring volumes.
+ * @brief Get the hits-collection ID for the scoring volume at the given zero-based index.
  *
  * @param scoringSdIdx Zero-based index of the scoring volume.
- * @return G4int The hits collection ID associated with that scoring volume.
+ * @return G4int Hits collection ID associated with the scoring volume.
  *
- * @throws FatalException if scoringSdIdx is out of range (logs and raises a G4Exception).
+ * @throws G4Exception if scoringSdIdx is out of range.
  */
 G4int VPatientSD::GetScoringHcId(const G4int scoringSdIdx) const{
   G4int nElements = m_scoring_volumes.size();
@@ -275,16 +269,11 @@ G4int VPatientSD::GetScoringHcId(const G4int scoringSdIdx) const{
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Get the 0-based index of the scoring volume for a given hits collection name.
+ * @brief Finds the 0-based index of the scoring volume with the specified hits collection name.
  *
- * Searches the internal scoring-volume list for a scoring volume whose hits collection
- * name matches hitsCollName and returns its 0-based index.
- *
- * @param hitsCollName Hits collection name to look up.
+ * @param hitsCollName Name of the hits collection to locate.
  * @return G4int 0-based index of the matching scoring volume.
- *
- * @throws FatalException If no scoring volume with the given hits collection name exists
- *                        (the function calls G4Exception with FatalException severity).
+ * @throws G4Exception with FatalException severity if no scoring volume with the given name exists.
  */
 G4int VPatientSD::GetScoringVolumeIdx(const G4String& hitsCollName) const {
   G4int idx = -1;
@@ -321,14 +310,11 @@ bool VPatientSD::IsHitsCollectionExist(const G4String& hitsCollName) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Return the scoring volume at the given 0-based index.
+ * @brief Retrieve the scoring volume for the given 0-based index.
  *
- * Returns a raw pointer to the ScoringVolume stored for the specified index.
- * If the index is out of range a fatal G4Exception is raised (execution does not continue).
- *
- * @param scoringSdIdx 0-based index of the scoring volume.
- * @return ScoringVolume* Pointer to the scoring volume.
- * @throws G4Exception Thrown with FatalException severity when scoringSdIdx is invalid.
+ * @param scoringSdIdx 0-based index of the scoring volume to retrieve.
+ * @return ScoringVolume* Pointer to the scoring volume corresponding to scoringSdIdx.
+ * @throws G4Exception Thrown with FatalException severity when scoringSdIdx is out of range.
  */
 VPatientSD::ScoringVolume* VPatientSD::GetScoringVolumePtr(G4int scoringSdIdx){
   G4int nElements = m_scoring_volumes.size();
@@ -370,12 +356,10 @@ VPatientSD::ScoringVolume* VPatientSD::GetScoringVolumePtr(G4int scoringSdIdx) c
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Get the scoring volume pointer for a hits collection name.
+ * @brief Retrieve the ScoringVolume pointer for a given hits collection name.
  *
- * Returns the ScoringVolume associated with the given hits collection name.
- *
- * @param hitsCollName Hits collection name to look up.
- * @return ScoringVolume* Pointer to the corresponding ScoringVolume (never null).
+ * @param hitsCollName The hits collection name to look up.
+ * @return ScoringVolume* Pointer to the corresponding ScoringVolume; never null.
  *
  * @throws G4Exception If no scoring volume exists with the provided name (fatal).
  */
@@ -386,13 +370,11 @@ VPatientSD::ScoringVolume* VPatientSD::GetScoringVolumePtr(const G4String& hitsC
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns a pointer to a scoring volume associated with the specified run collection name.
+ * @brief Locate a scoring volume registered for a given run collection.
  *
- * If `voxelisation_check` is true, only returns a scoring volume if it is voxelized; otherwise, returns any matching scoring volume. Returns nullptr if no suitable scoring volume is found.
- *
- * @param runCollName Name of the run collection to search for.
- * @param voxelisation_check If true, only consider voxelized scoring volumes.
- * @return Pointer to the matching ScoringVolume, or nullptr if not found.
+ * @param runCollName Name of the run collection to search.
+ * @param voxelisation_check If true, only consider scoring volumes that are voxelized.
+ * @return ScoringVolume* Pointer to the matching scoring volume, or `nullptr` if none is found.
  */
 VPatientSD::ScoringVolume* VPatientSD::GetRunCollectionReferenceScoringVolume(const G4String& runCollName, bool voxelisation_check) const{
   for(const auto& i_sd : m_scoring_volumes){
@@ -411,10 +393,10 @@ VPatientSD::ScoringVolume* VPatientSD::GetRunCollectionReferenceScoringVolume(co
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the hits collection name corresponding to the given collection ID.
+ * @brief Retrieve the hits collection name for a given collection index.
  *
- * @param hitsCollId Index of the hits collection.
- * @return The name of the hits collection if the ID is valid; otherwise, an empty string.
+ * @param hitsCollId Zero-based index of the hits collection.
+ * @return The hits collection name if the index is valid, empty string otherwise.
  */
 G4String VPatientSD::GetScoringHcName(G4int hitsCollId) const {
   if (hitsCollId < m_scoring_volumes.size())
@@ -589,16 +571,13 @@ G4int VPatientSD::ScoringVolume::LinearizeIndex(int idX, int idY, int idZ) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Get the world-space center of a voxel identified by its 3D indices.
- *
- * Returns the precomputed center position for the voxel at (idX, idY, idZ).
+ * @brief Return the world-space center of the voxel at the given 3D indices.
  *
  * @param idX Voxel index along the X axis (0..nX-1).
  * @param idY Voxel index along the Y axis (0..nY-1).
  * @param idZ Voxel index along the Z axis (0..nZ-1).
- * @return G4ThreeVector Center position of the specified voxel.
- *
- * @throws std::out_of_range If the provided indices are outside the valid voxel range.
+ * @return G4ThreeVector Center position of the specified voxel in world coordinates.
+ * @throws std::out_of_range If any index is outside the valid voxel range.
  */
 G4ThreeVector VPatientSD::ScoringVolume::GetVoxelCentre(int idX, int idY, int idZ) const {
     auto index = LinearizeIndex(idX,idY,idZ);
@@ -607,14 +586,11 @@ G4ThreeVector VPatientSD::ScoringVolume::GetVoxelCentre(int idX, int idY, int id
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Return the world-space center of a voxel by its linear index.
+ * @brief Get the world-space center position of a voxel by its linear index.
  *
- * Returns the precomputed center position for the voxel identified by
- * linearizedId (0..Nvoxels-1).
- *
- * @param linearizedId Linear index of the voxel.
+ * @param linearizedId Linear 0-based index of the voxel.
  * @return G4ThreeVector Center position of the specified voxel.
- * @throws std::out_of_range if linearizedId is out of range.
+ * @throws std::out_of_range if linearizedId is outside the valid range.
  */
 G4ThreeVector VPatientSD::ScoringVolume::GetVoxelCentre(int linearizedId) const {
     return m_channelCentrePosition.at(linearizedId);
@@ -622,13 +598,15 @@ G4ThreeVector VPatientSD::ScoringVolume::GetVoxelCentre(int linearizedId) const 
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Computes the voxel index along a specified axis for a given position.
+ * @brief Determine the voxel index along a specified axis for a given position.
  *
- * Determines the voxel ID (index) along the X, Y, or Z axis for the provided hit position within the scoring volume. Handles boundary conditions and issues a warning if the position is outside the expected range.
+ * Computes the voxel index (0-based) along axis X (0), Y (1) or Z (2) for the provided hit position inside this scoring volume.
+ * If the scoring volume envelope is not set the function returns 0. If the position is below the axis minimum a warning is issued and 0 is returned;
+ * if the position is above the axis maximum a warning is issued and the last voxel index (nVoxels-1) is returned. Exact-edge positions are mapped to valid indices.
  *
  * @param axisId Axis index: 0 for X, 1 for Y, 2 for Z.
- * @param hitPosition The position to evaluate.
- * @return G4int The voxel index along the specified axis.
+ * @param hitPosition Position to evaluate (world coordinates).
+ * @return G4int The computed voxel index along the specified axis (in range [0, nVoxels-1]); 0 if the envelope is unset or underflow; nVoxels-1 on overflow.
  */
 G4int VPatientSD::ScoringVolume::GetVoxelID(G4int axisId, const G4ThreeVector& hitPosition)  const {
   G4int voxelId = 0;
@@ -690,13 +668,14 @@ G4int VPatientSD::ScoringVolume::GetVoxelID(G4int axisId, const G4ThreeVector& h
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Compute the linearized (1D) voxel index for a world position.
+ * @brief Map a world-space position to the linearized (1D) voxel index.
  *
- * Determines the voxel indices along X, Y and Z for the given position and maps them to the single linear index
- * used to address per-voxel arrays.
+ * Determines the voxel indices along X, Y and Z for the provided world position and returns the single
+ * linear index used to address per-voxel arrays.
  *
  * @param hitPosition World-space position to locate inside the scoring volume.
- * @return G4int Linearized voxel index, or -1 if the position falls outside the voxelization (any axis index is invalid).
+ * @return G4int Linearized voxel index computed from the X, Y and Z voxel indices. If the position lies
+ * outside the defined voxelization the returned value may be outside the valid range for this volume.
  */
 G4int VPatientSD::ScoringVolume::GetLinearizedVoxelID(const G4ThreeVector& hitPosition)  const {
   auto idX = GetVoxelID(0, hitPosition);
@@ -707,12 +686,12 @@ G4int VPatientSD::ScoringVolume::GetLinearizedVoxelID(const G4ThreeVector& hitPo
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Determines whether a given position is inside the scoring volume.
+ * @brief Tests whether a position lies inside the scoring volume.
  *
- * Checks if the specified position lies within the geometric boundaries of the scoring volume, considering its shape ("Box", "Farmer30013ScanZBox", or "Farmer30013").
+ * Considers the volume's configured shape and axis-aligned bounds; for the "Farmer30013" shape a specialized containment check is applied.
  *
- * @param position The position to test for inclusion.
- * @return G4bool True if the position is inside the scoring volume; false otherwise.
+ * @param position World-space position to test.
+ * @return G4bool `true` if the position is inside the scoring volume, `false` otherwise.
  */
 G4bool VPatientSD::ScoringVolume::IsInside(const G4ThreeVector& position) const {
   if(m_shape=="Box" || m_shape=="Farmer30013ScanZBox"){
@@ -802,21 +781,20 @@ G4ThreeVector VPatientSD::GetSDCentre() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Process a single Geant4 step for the specified hits collection, creating or updating voxel hits.
+ * @brief Map a Geant4 step into the specified scoring volume and create or update the corresponding voxel hit.
  *
- * Checks the step's pre-step position against the scoring volume for hitsCollectionName using the pre-step point.
- * If the position is outside the scoring volume, or lies on the scoring-volume border and the step deposits no energy,
- * the step is ignored. Otherwise the position is mapped to a voxel (X,Y,Z) and a linear voxel index. For a voxel
- * with no existing hit a new VoxelHit is created, initialized (volume, centre, IDs, global centre, track/primary info)
- * and inserted into the volume's hits collection; for an existing voxel the corresponding VoxelHit is updated and its
- * per-track user information is appended.
+ * Processes the step's pre-step position to determine whether it falls inside the named scoring volume,
+ * ignoring steps that are outside the volume or that lie on the volume border while depositing zero energy.
+ * When inside, the position is mapped to a voxel (X,Y,Z) and a linear voxel index; the function either
+ * creates a new VoxelHit for that voxel (initializing volume, centre, IDs, global centre, and track/primary info)
+ * or updates the existing VoxelHit for that voxel and appends per-track information.
  *
  * Side effects:
  * - May allocate and insert a new VoxelHit into the scoring volume's voxel hits collection.
- * - Updates the scoring volume's m_channelHCollectionIndex to point from voxel linear index -> collection index.
+ * - Updates the scoring volume's m_channelHCollectionIndex to map voxel linear index -> collection index.
  *
- * @param hitsCollectionName Name of the hits collection / scoring volume to which the step should be mapped.
- * @param aStep The Geant4 step to process; the function uses the pre-step point position and the step's energy deposit.
+ * @param hitsCollectionName Name of the hits collection / scoring volume to which the step is mapped.
+ * @param aStep Geant4 step to process; the function uses the step's pre-step position and total energy deposit.
  */
 void VPatientSD::ProcessHitsCollection(const G4String& hitsCollectionName, G4Step* aStep){
     auto position = aStep->GetPreStepPoint()->GetPosition(); // in world volume frame;

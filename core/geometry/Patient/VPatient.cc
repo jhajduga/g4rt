@@ -33,14 +33,13 @@ void VPatient::SetSensitiveDetector(const G4String& logicalVName, VPatientSD* se
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the stored patient volume.
+ * @brief Retrieves the stored patient volume.
  *
- * Returns the stored volume value. If the internal volume is less than -1 (invalid/unset),
- * logs a fatal geometry error and throws a G4Exception with severity FatalErrorInArgument.
+ * If the stored volume is less than -1, logs a fatal geometry error and throws a G4Exception
+ * with severity FatalErrorInArgument.
  *
  * @return G4double The stored patient volume.
- *
- * @throws G4Exception Thrown with severity FatalErrorInArgument when the stored volume is invalid (< -1).
+ * @throws G4Exception Thrown with severity FatalErrorInArgument when the stored volume is less than -1.
  */
 G4double VPatient::GetVolume() const {
   if(m_volume<-1){
