@@ -40,9 +40,9 @@ class PatientGeometry : public IPhysicalVolume,
   G4bool Update() override;
 
   /**
- * @brief Resets the patient geometry state.
+ * @brief No-op reset of the patient geometry; does not modify internal state.
  *
- * This implementation is intentionally left empty to satisfy interface requirements.
+ * This implementation intentionally performs no action.
  */
   void Reset() override {}
 

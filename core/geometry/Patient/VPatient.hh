@@ -39,10 +39,9 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule{
     VPatient() = delete;
     
     /**
-     * @brief Create a VPatient with the given name.
+     * @brief Construct a VPatient identified by the given logical name.
      *
-     * Initializes IPhysicalVolume and TomlConfigModule with the provided name and sets the internal
-     * sensitive-detector cache to nullptr.
+     * Resets the per-thread sensitive-detector cache to nullptr.
      *
      * @param name Logical name of this patient volume.
      */
@@ -51,53 +50,53 @@ class VPatient : public IPhysicalVolume, public TomlConfigModule{
     }
 
     /**
- * @brief Destroys the VPatient object.
+ * @brief Default destructor.
  *
- * Default destructor; performs no additional cleanup.
+ * Uses compiler-generated cleanup; no additional actions are performed.
  */
     ~VPatient() = default;
 
     ///
 
     /**
- * @brief Determines whether a point is inside the patient volume.
+ * @brief Check whether a point lies inside this patient volume.
  *
- * Always returns false in the base class. Derived classes should override this method to implement geometry-specific containment logic.
+ * The base implementation always returns false; derived classes should override to provide geometry-specific containment.
  *
  * @param x X-coordinate of the point.
  * @param y Y-coordinate of the point.
  * @param z Z-coordinate of the point.
- * @return G4bool True if the point is inside the volume; false otherwise.
+ * @return G4bool `true` if the point is inside the volume, `false` otherwise.
  */
     virtual G4bool IsInside(double x, double y, double z) { return false; }
 
     /**
-     * @brief Returns an empty scoring map for the specified name and voxelization flag.
+     * @brief Provide a scoring hashed map for a named scoring region, optionally voxelised.
      *
-     * This method is a placeholder and is marked for deletion. It always returns an empty map.
+     * Default implementation provides no scoring data.
      *
-     * @return std::map<std::size_t, VoxelHit> An empty map.
+     * @param name Identifier of the scoring region.
+     * @param voxelised If `true`, request voxelised scoring; otherwise request region-level scoring.
+     * @return std::map<std::size_t, VoxelHit> An empty map (no scored voxels).
      */
     virtual std::map<std::size_t, VoxelHit> GetScoringHashedMap(const std::string& name, bool voxelised) const {
       return std::map<std::size_t, VoxelHit>();
     }
     /**
- * @brief Get the associated sensitive detector.
+ * @brief Retrieves the non-owning sensitive detector pointer associated with this patient.
  *
- * Returns the (non-owning) pointer to the patient sensitive detector stored in the per-thread cache.
- * May be nullptr if no sensitive detector has been set.
+ * The pointer is stored per-thread in an internal cache and may be nullptr if no sensitive detector has been set.
  *
  * @return VPatientSD* Pointer to the sensitive detector, or nullptr if none is configured.
  */
 VPatientSD* GetSD() const { return m_patientSD.Get(); }
 
     /**
-     * @brief Default fallback: return an empty scoring hashed map for the requested scoring type.
+     * @brief Fallback that returns an empty hashed map for the requested scoring type.
      *
-     * The base implementation logs a warning and returns an empty std::map. Derived patient volumes
-     * should override this to return actual voxel scoring data for the given scoring type.
+     * Derived patient volumes should override this to provide voxel scoring data for the given scoring type.
      *
-     * @return std::map<std::size_t, VoxelHit> Empty map when no scoring is available.
+     * @return std::map<std::size_t, VoxelHit> Empty map when no scoring data is available for the requested type.
      */
     virtual std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String&,Scoring::Type) const {
       WARN_GEO("Returning empty scoring hashed map!");
@@ -105,10 +104,9 @@ VPatientSD* GetSD() const { return m_patientSD.Get(); }
     }
 
     /**
- * @brief Set the patient's total volume.
+ * @brief Store the patient's total volume in cubic millimeters.
  *
- * Records the patient volume (used by GetVolume() and the default
- * GetCellVolume()).
+ * Records the value used by GetVolume() and, by default, GetCellVolume().
  *
  * @param volume Total volume in cubic millimeters (mm^3).
  */
@@ -118,11 +116,11 @@ VPatientSD* GetSD() const { return m_patientSD.Get(); }
     G4double GetVolume() const;
 
     /**
- * @brief Returns the volume of a single cell within the patient volume.
+ * @brief Provides the volume of a single cell within the patient volume.
  *
- * By default, this returns the total volume. Derived classes can override this method to provide cell-specific volume calculations.
+ * By default this returns the total volume; derived classes may override to return a cell-specific volume.
  *
- * @return G4double The cell volume in cubic millimeters.
+ * @return G4double Cell volume in cubic millimeters.
  */
     virtual G4double GetCellVolume() const { return GetVolume(); };
 

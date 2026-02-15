@@ -29,13 +29,10 @@ class VPatientSD : public G4VSensitiveDetector{
 
         public:
           /**
- * @brief Default construct a ScoringVolume.
+ * @brief Constructs an empty ScoringVolume with safe default values.
  *
- * Creates an empty scoring volume with safe defaults:
- * voxel counts set to 0, identifier set to -1, shape defaulted to "Box",
- * envelope pointer null, hit-collection pointer null, and position/index
- * vectors left empty. Use the provided setters or voxelization routines
- * to configure geometry and voxel grid before use.
+ * Initializes voxel counts to 0, `id` to -1, `m_shape` to "Box", `m_envelopeBoxPtr`
+ * and `m_voxelHCollectionPtr` to null, and leaves position and index vectors empty.
  */
 ScoringVolume(){}
           /// 
@@ -65,15 +62,15 @@ ScoringVolume(){}
           VoxelHitsCollection*  m_voxelHCollectionPtr = nullptr;
 
           /**
- * @brief Returns the full extent of the scoring volume along the X axis.
+ * @brief Report the scoring volume's extent along the X axis.
  *
- * @return G4double Full length of the scoring volume in the X direction.
+ * @return Full length of the scoring volume along the X axis.
  */
           G4double GetSizeX() const { return 2.*m_envelopeBoxPtr->GetXHalfLength(); }
           /**
- * @brief Get the total length of the scoring volume along the Y axis.
+ * @brief Total length of the scoring volume along the Y axis.
  *
- * @return G4double Total Y length of the envelope box (in the simulation's length units).
+ * @return G4double Length of the envelope box in the Y direction (in the simulation's length units).
  */
 G4double GetSizeY() const { return 2.*m_envelopeBoxPtr->GetYHalfLength(); }
           /**
@@ -84,9 +81,9 @@ G4double GetSizeY() const { return 2.*m_envelopeBoxPtr->GetYHalfLength(); }
 G4double GetSizeZ() const { return 2.*m_envelopeBoxPtr->GetZHalfLength(); }
 
           /**
- * @brief Returns the total volume of the scoring volume.
+ * @brief Compute the total volume of the scoring volume's envelope.
  *
- * @return The product of the envelope box dimensions along X, Y, and Z axes.
+ * @return Volume of the envelope box (GetSizeX() * GetSizeY() * GetSizeZ()).
  */
           G4double GetVolume() const { return GetSizeX()*GetSizeY()*GetSizeZ(); }
           // G4double GetVoxelVolume() const { return (GetSizeX()/m_nVoxelsX)*(GetSizeY()/m_nVoxelsY)*(GetSizeZ()/m_nVoxelsZ); }

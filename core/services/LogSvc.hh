@@ -41,21 +41,21 @@ public:
     static void SetTerminalLogLevel(loguru::Verbosity verbosity);
 
     /**
- * @brief Sets the folder path where log files are stored.
+ * @brief Set the folder path used for storing log files.
  *
- * Updates the internal log folder path to the specified directory.
+ * @param folder Path to the directory where new log files will be created; replaces the previously configured log folder.
  */
 static void SetLogFolder(const std::string& folder) { s_log_folder = folder; }
     /**
- * @brief Returns the current log folder path used for storing log files.
+ * @brief Get the current log folder path used for storing log files.
  *
- * @return std::string The path to the log folder.
+ * @return std::string The path to the directory where log files are stored.
  */
 static std::string GetLogFolder() { return s_log_folder; }
 
 
     /**
- * @brief Returns the current terminal verbosity level for logging output.
+ * @brief Retrieves the current verbosity level configured for terminal output.
  *
  * @return loguru::Verbosity The verbosity level used for terminal logs.
  */
@@ -96,10 +96,17 @@ static loguru::Verbosity GetVerbosity() { return s_terminal_verbosity; }
 
     template<typename... Args>
     /**
-     * @brief Logs a formatted warning-level message for a specific module.
+     * @brief Logs a warning-level message for the specified module including source location.
      *
-     * Logs a message with warning verbosity, including the module name, source file, and line number.
-     * The message is formatted using the provided format string and arguments.
+     * The message is produced by formatting `format` with the provided `args` and is emitted with
+     * warning verbosity, prefixed or tagged by `module` and annotated with `file` and `line`.
+     *
+     * @tparam Args Variadic types used to format the message.
+     * @param module Module name used as the log tag.
+     * @param file Source file path to associate with the log record.
+     * @param line Source line number to associate with the log record.
+     * @param format Format string used to produce the log message.
+     * @param args Values referenced by `format` to produce the final message.
      */
     static void LogWarning(const std::string& module, const char* file, int line, const char* format, const Args&... args) {
         logToModule(module, loguru::Verbosity_WARNING, file, line, format, args...);
@@ -141,17 +148,18 @@ private:
 
 template<typename... Args>
 /**
- * @brief Logs a formatted message to the specified module with given verbosity, file, and line information.
+ * @brief Log a message tagged with a module name at the specified verbosity and source location.
  *
- * Formats the message using the provided format string and arguments, then logs it with the module name as a tag.
+ * The message is constructed from a `fmt`-style format string and its arguments, then emitted to the logging backend
+ * with the module name prefixed.
  *
  * @tparam Args Types of the format arguments.
- * @param module Name of the module to tag the log entry.
- * @param verbosity Verbosity level for the log message.
- * @param file Source file name where the log is generated.
- * @param line Line number in the source file.
- * @param format Format string compatible with `fmt`.
- * @param args Arguments for the format string.
+ * @param module Module name to prefix the log entry.
+ * @param verbosity Verbosity level to use for the log entry.
+ * @param file Source file name associated with the log entry.
+ * @param line Source line number associated with the log entry.
+ * @param format `fmt`-style format string for the message.
+ * @param args Arguments matching the format string.
  */
 static void logToModule(const std::string& module, loguru::Verbosity verbosity, const char* file, int line, const char* format, const Args&... args) {
     std::string formatted_message = fmt::vformat(format, fmt::make_format_args(args...));
@@ -199,5 +207,4 @@ static void logToModule(const std::string& module, loguru::Verbosity verbosity, 
 #define WARN_GEO(                   msg, ...)       LOGSVC_WARN(        GEOMETRY_MODULE,            msg, ##__VA_ARGS__)
 #define ERROR_GEO(                  msg, ...)       LOGSVC_ERROR(       GEOMETRY_MODULE,            msg, ##__VA_ARGS__)
 #define FATAL_GEO(                  msg, ...)       LOGSVC_FATAL(       GEOMETRY_MODULE,            msg, ##__VA_ARGS__)
-
 

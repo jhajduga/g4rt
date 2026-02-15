@@ -35,13 +35,11 @@ class D3DDetector : public VPatient, public GeoComponet {
     G4bool Update() override;
 
     /**
- * @brief Reset detector state to its initial condition.
+ * @brief Restore the detector's mutable runtime state to its defaults.
  *
- * This is a placeholder implementation and does not modify detector state.
- * Currently it emits a message to G4cout indicating it is unimplemented.
- *
- * Implementations should restore any mutable runtime state (counters, cached
- * data, per-run accumulators, etc.) to their defaults.
+ * Resets counters, cached data, per-run accumulators, and other mutable state used
+ * during simulation runs. Current implementation is a placeholder and does not
+ * modify state; it emits an "Implement me." message to G4cout.
  */
     void Reset() override { G4cout << "Implement me." << G4endl; }
 
@@ -67,11 +65,9 @@ class D3DDetector : public VPatient, public GeoComponet {
     std::map<std::size_t, VoxelHit> GetScoringHashedMap(const G4String& scoring_name,Scoring::Type type) const override;
 
     /**
- * @brief Returns the volume of a single Dose3D cell.
+ * @brief Compute the volume of a single Dose3D cell.
  *
- * The volume is calculated as the product of the cell's dimensions along the X, Y, and Z axes.
- *
- * @return G4double The computed cell volume.
+ * @return G4double The volume of the cell.
  */
     G4double GetCellVolume() const override { return D3DCell::SIZE.getX() * D3DCell::SIZE.getY() * D3DCell::SIZE.getZ(); };
 
@@ -106,11 +102,9 @@ class D3DDetector : public VPatient, public GeoComponet {
     void SetConfig(const D3DDetector::Config& config);
 
     /**
- * @brief Return a read-only reference to the detector configuration.
+ * @brief Access the detector's configuration.
  *
- * Provides const access to the internal D3DDetector::Config used by this instance.
- *
- * @return const D3DDetector::Config& Reference to the internal configuration object.
+ * @return const D3DDetector::Config& Read-only reference to the internal configuration object.
  */
     const D3DDetector::Config& GetConfig() const { return m_config; }
 

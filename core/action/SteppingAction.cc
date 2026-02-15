@@ -8,9 +8,9 @@
 
 /////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Initialize a SteppingAction tied to an EventAction.
+ * @brief Create a SteppingAction associated with a specific EventAction.
  *
- * @param eventAct Pointer to the EventAction associated with this SteppingAction; stored for later use by stepping callbacks.
+ * @param eventAct Pointer to the EventAction that this SteppingAction will use during stepping callbacks; ownership is not transferred.
  */
 SteppingAction::SteppingAction(EventAction* eventAct):G4UserSteppingAction(), m_EventAction(eventAct){}
 
@@ -30,7 +30,6 @@ void SteppingAction::UserSteppingAction(const G4Step* aStep) {
   //G4cout << "\n  [debug]:: step " << stepNb << "   position  " << position << G4endl;
 
 }
-
 
 
 

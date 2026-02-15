@@ -145,16 +145,14 @@ void SetStoreTracks(bool flag) { m_store_tracks = flag; }
   void SetGlobalId(G4int xId, G4int yId, G4int zId);
 
   /**
- * @brief Set the voxel's local center position.
+ * @brief Set the voxel local center.
  *
- * Sets the voxel's center in the voxel's local coordinate system.
- *
- * @param position Local center coordinates (G4ThreeVector).
+ * @param position Local center coordinates in the voxel's local coordinate system.
  */
   void SetCentre(const G4ThreeVector& position) { m_Voxel.m_Centre = position; }
 
   /**
- * @brief Set the voxel's centre in the global coordinate system.
+ * @brief Store the voxel centre in global coordinates.
  *
  * @param position Global coordinates of the voxel centre.
  */
@@ -164,16 +162,16 @@ void SetStoreTracks(bool flag) { m_store_tracks = flag; }
   void SetGravCentre(const G4ThreeVector& position);
 
   /**
- * @brief Sets the label for this voxel hit.
+ * @brief Set the descriptive label for this voxel hit.
  *
- * Assigns a descriptive string label to the voxel hit, which can be used for identification or categorization.
+ * @param label Text used to identify or categorize the voxel.
  */
   void SetLabel(const G4String& label) { m_label = label; }
 
   /**
- * @brief Returns the label associated with this voxel hit.
+ * @brief Retrieves the label associated with this voxel hit.
  *
- * @return The label string.
+ * @return The voxel hit's label.
  */
   G4String GetLabel() const { return m_label; }
 
@@ -187,7 +185,7 @@ void SetStoreTracks(bool flag) { m_store_tracks = flag; }
   void SetVolume(G4double volume) { m_Voxel.m_Volume = volume; }
 
   /**
- * @brief Returns the volume of the voxel.
+ * @brief Retrieves the voxel's volume.
  *
  * @return The voxel's volume.
  */
@@ -196,9 +194,7 @@ void SetStoreTracks(bool flag) { m_store_tracks = flag; }
   /**
  * @brief Set the voxel mass.
  *
- * Assigns the given mass value to this voxel's stored mass.
- *
- * @param mass Mass value expressed in the code's unit system (e.g. Geant4 units).
+ * @param mass Mass value in the simulation's unit system (e.g., Geant4 units).
  */
   void SetMass(G4double mass) { m_Voxel.m_Mass = mass; }
 
@@ -210,22 +206,18 @@ void SetStoreTracks(bool flag) { m_store_tracks = flag; }
   G4ThreeVector GetGravCentre() const { return m_Voxel.m_GravitationalCentre; }
 
   /**
- * @brief Get the voxel's local geometric center.
+ * @brief Local geometric center of the voxel.
  *
- * Returns the voxel center expressed in the voxel's local coordinate frame.
- *
- * @return G4ThreeVector The local centre position (returned by value).
+ * @return G4ThreeVector Local center position expressed in the voxel's local coordinate frame.
  */
   G4ThreeVector GetCentre() const { return m_Voxel.m_Centre; }
 
   // G4ThreeVector GetCentreInGlobal() const { return m_Voxel.m_Centre + m_Voxel.m_GlobalCentre; } // if d3d detector will be broken cause of fix then we will use this...
 
   /**
- * @brief Get the voxel center in global coordinates.
+ * @brief Retrieves the voxel center in global coordinates.
  *
- * Returns the voxel's center position expressed in the global coordinate system.
- *
- * @return G4ThreeVector The global centre position.
+ * @return G4ThreeVector Global center position of the voxel.
  */
   G4ThreeVector GetGlobalCentre() const { return m_Voxel.m_GlobalCentre; }
 
@@ -236,18 +228,16 @@ void SetStoreTracks(bool flag) { m_store_tracks = flag; }
   G4int GetGlobalID(G4int axisId) const;
 
   /**
- * @brief Returns the absorbed dose for the voxel.
+ * @brief Absorbed dose stored for this voxel.
  *
- * @return The dose value stored in the voxel, typically in units of energy per mass.
+ * @return The absorbed dose for the voxel (energy deposited per unit mass).
  */
   G4double GetDose() const { return m_Voxel.m_Dose; }
   /**
-   * @brief Set the absorbed dose for this voxel and return the updated value.
-   *
-   * Sets the voxel's absorbed dose to the provided value and returns the stored dose.
+   * @brief Set the absorbed dose for this voxel.
    *
    * @param val Dose value to assign.
-   * @return G4double The updated absorbed dose stored in the voxel.
+   * @return Updated absorbed dose stored in the voxel.
    */
   G4double SetDose(G4double val) {
     m_Voxel.m_Dose = val;
@@ -255,9 +245,9 @@ void SetStoreTracks(bool flag) { m_store_tracks = flag; }
   }
 
   /**
- * @brief Returns the total energy deposited in the voxel.
+ * @brief Retrieve the total energy deposited in this voxel.
  *
- * @return The energy deposited in the voxel.
+ * @return G4double The total energy deposited in the voxel.
  */
   inline G4double GetEnergyDeposit() const { return m_Voxel.m_Edep; }
 
@@ -265,10 +255,10 @@ void SetStoreTracks(bool flag) { m_store_tracks = flag; }
   G4double GetMeanEnergyDeposit() const;
 
   /**
-   * @brief Sets the primary particle ID and its incident energy for the voxel.
+   * @brief Record the primary particle identifier and its incident energy for this voxel.
    *
-   * @param fId The primary particle's ID.
-   * @param fEn The incident energy of the primary particle.
+   * @param fId Primary particle identifier (primary track or particle index).
+   * @param fEn Incident total energy of that primary particle in the same units used elsewhere (typically MeV).
    */
   void SetPrimary(G4int fId, G4double fEn) {
     m_Voxel.m_primaryID = fId;
@@ -276,13 +266,9 @@ void SetStoreTracks(bool flag) { m_store_tracks = flag; }
   }
 
   /**
- * @brief Get the incident energy of the primary particle recorded for this voxel.
+ * @brief Retrieve the incident energy of the primary particle recorded for this voxel.
  *
- * Returns the primary particle's incident energy value stored in the voxel
- * (member m_Voxel.m_incidentE). This reflects the incident energy associated
- * with the primary that contributed to this voxel hit.
- *
- * @return G4double Incident energy recorded for the primary (as stored in the voxel).
+ * @return Incident energy of the primary particle stored for this voxel.
  */
   G4double GetPrimaryEnergy() const { return m_Voxel.m_incidentE; }
 
@@ -307,9 +293,9 @@ void SetStoreTracks(bool flag) { m_store_tracks = flag; }
   G4double GetPrimaryTrkEnergy() const;
 
   /**
- * @brief Returns the number of unique track types recorded in the voxel.
+ * @brief Number of unique track types recorded in the voxel.
  *
- * @return G4int Number of unique track IDs stored for this voxel.
+ * @return G4int Count of distinct track IDs stored for this voxel.
  */
   inline G4int GetNTrkType() const { return m_Voxel.m_trksId.size(); }
 
@@ -329,9 +315,9 @@ void SetStoreTracks(bool flag) { m_store_tracks = flag; }
   G4int GetTrkIdElectronOriginType(G4Step* aStep) const;
 
   /**
- * @brief Get the global time recorded for this voxel hit.
+ * @brief Global time recorded for this voxel hit.
  *
- * @return G4double The stored global time value for the hit.
+ * @return The stored global time for this voxel hit.
  */
   G4double GetGlobalTime() const { return m_global_time; }
 
@@ -347,20 +333,16 @@ void SetStoreTracks(bool flag) { m_store_tracks = flag; }
   void PrintEvtInfo() const;
 
   /**
- * @brief Get the incident energies of primaries for the current event.
+ * @brief Provides the incident energies of primary particles recorded for the current event.
  *
- * Returns a read-only reference to a vector of incident energies (G4double) for
- * primary particles recorded for the current event. The vector is populated by
- * FillPrimaryParticleUserInfo<T>() on first access for the event and may be
- * empty if no primaries were recorded.
- *
- * @return const std::vector<G4double>& Incident energies of event primaries.
+ * @return Incident energies of primary particles for the current event; may be empty if no primaries were recorded.
  */
   const std::vector<G4double>& GetEvtPrimariesEnergy() const { return m_evtPrimariesIncidentE; }
 
   /**
- * @brief Returns the number of primary particles in the current event.
- * @return G4int The number of primary particles for the current event.
+ * @brief Number of primary particles in the current event.
+ *
+ * @return G4int The count of primary particles recorded for the current event.
  */
   G4int GetEvtNPrimaries() const { return m_evtPrimariesIncidentMultiplicity; }
 
@@ -387,26 +369,23 @@ void SetStoreTracks(bool flag) { m_store_tracks = flag; }
   void SetFieldScalingFactor(double sf) { m_field_scaling_factor = sf; }
 
   /**
- * @brief Returns the field scaling factor applied to the voxel hit.
+ * @brief Retrieve the field scaling factor applied to this voxel hit.
  *
  * @return The current field scaling factor.
  */
   G4double GetFieldScalingFactor() const { return m_field_scaling_factor; }
 
   /**
- * @brief Set the multiplicative scaling factor applied to angle-dependent quantities for this voxel hit.
+ * @brief Set the multiplicative factor applied to angle-dependent quantities for this voxel hit.
  *
- * This factor is used to scale any angle-related calculations or weights associated with the voxel.
- * Default value is 1.0; provide a positive factor to increase or decrease angular contributions.
- *
- * @param sf Multiplicative angle-scaling factor (typically > 0).
+ * @param sf Multiplicative factor applied to angle-dependent quantities; values greater than 0 scale angular contributions.
  */
   void SetAngleScalingFactor(double sf) { m_angle_scaling_factor = sf; }
 
   /**
- * @brief Returns the angle scaling factor applied to the voxel hit.
+ * @brief Retrieves the angle scaling factor applied to this voxel hit.
  *
- * @return The current angle scaling factor.
+ * @return The angle scaling factor.
  */
   G4double GetAngleScalingFactor() const { return m_angle_scaling_factor; }
 
@@ -422,10 +401,9 @@ extern G4ThreadLocal G4Allocator<VoxelHit>* VoxelHitAllocator;
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Allocate storage for a single VoxelHit using the thread-local allocator.
+ * @brief Allocate raw memory for a single VoxelHit from the thread-local allocator.
  *
- * Ensures the thread-local VoxelHitAllocator is initialized (lazily) and returns
- * a pointer to memory for one VoxelHit obtained via G4Allocator::MallocSingle().
+ * Requests storage for one VoxelHit from the thread-local G4Allocator.
  *
  * @return void* Pointer to uninitialized memory suitable for placement of a VoxelHit.
  */
@@ -476,14 +454,12 @@ void VoxelHit::FillTrackUserInfo(G4Step* aStep) {
 ///
 template <typename T>
 /**
- * @brief Populate the vector of incident total energies for primaries in the current event.
+ * @brief Collect initial total energies from primaries' user-information for the current event.
  *
- * Reads each primary particle in the current G4 event once per event and, if the primary's
- * kinetic energy is positive and it carries user information of type `T`, appends the value
- * returned by `T::GetInitialTotalEnergy()` to the internal `m_evtPrimariesIncidentE` vector.
- * After the first successful population this function becomes a no-op for the remainder of the event.
- *
- * This also updates `m_evtPrimariesIncidentMultiplicity` to the number of collected primaries.
+ * Appends the value returned by `T::GetInitialTotalEnergy()` for each primary particle in the current
+ * event that has kinetic energy greater than zero and whose user-information is of type `T`.
+ * This population runs only once per event (subsequent calls are no-ops) and updates
+ * `m_evtPrimariesIncidentMultiplicity` to the number of collected primaries.
  *
  * @tparam T Type of the user-information object attached to primaries; must implement
  *           `double GetInitialTotalEnergy() const`.

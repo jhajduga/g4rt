@@ -167,14 +167,14 @@ void ControlPointRun::Merge(const G4Run* worker_run){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Return the scoring map for a registered run collection.
+ * @brief Retrieve the ScoringMap for a registered run collection.
  *
- * Retrieves the ScoringMap associated with the given run-collection name.
- * The name must correspond to a collection previously initialized/registered for this run.
+ * If the named collection is not present this method logs an error and then
+ * attempts to access the entry (which may throw).
  *
- * @param name Run collection name to look up.
+ * @param name Run-collection name to look up.
  * @return ScoringMap& Reference to the associated scoring map.
- * @throws std::out_of_range If the collection name is not present in the run's map.
+ * @throws std::out_of_range If no entry exists for `name`.
  */
 ScoringMap& ControlPointRun::GetScoringCollection(const G4String& name){
     if (m_hashed_scoring_map.find(name) == m_hashed_scoring_map.end())
@@ -333,24 +333,16 @@ void ControlPointRun::FillParameterization(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Initialize a ControlPoint from configuration.
+ * @brief Construct a ControlPoint from configuration.
  *
- * Constructs a ControlPoint using values supplied in `config`. This sets up
- * the internal rotation matrix, initializes the list of scoring types from
- * the Run service, and (for plan-based fields) loads jaw apertures and MLC
- * leaf positioning from the plan file.
+ * Initializes rotation and scoring types from the provided configuration and,
+ * when the field type is plan-based ("RTPlan" or "CustomPlan"), loads plan
+ * parameters (jaw apertures and MLC leaf positioning) required for masking
+ * and scoring.
  *
- * When `config.FieldType` is "RTPlan" or "CustomPlan", the constructor calls
- * DicomSvc to read:
- * - jaw apertures (X and Y) for the specified plan file, and
- * - MLC Y1/Y2 leaf positioning for the specified plan file.
- *
- * Side effects:
- * - Queries the global RunSvc and DicomSvc singletons.
- * - May populate internal vectors/maps used by scoring and mask generation.
- *
- * @param config ControlPointConfig containing identifiers and plan/field settings
- *               used to initialize rotation, scoring, and (if applicable) plan data.
+ * @param config Configuration values used to initialize rotation, scoring
+ *               types, and optional plan data (jaw apertures and MLC
+ *               positioning). 
  */
 ControlPoint::ControlPoint(const ControlPointConfig& config): m_config(config){
     G4cout << " DEBUG: ControlPoint:Ctr: nEvts: " << m_config.NEvts << G4endl;
@@ -392,9 +384,14 @@ ControlPoint::ControlPoint(const ControlPoint& cp):m_config(cp.m_config){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Move constructor for ControlPoint, transferring resources from another instance.
+ * @brief Move constructor that transfers ownership of ControlPoint resources from another instance.
  *
- * Transfers configuration, scoring types, rotation matrix pointer, mask points, jaw apertures, and MLC positioning from the source ControlPoint. The source's rotation matrix pointer is set to nullptr to prevent double deletion.
+ * Transfers configuration, scoring types, rotation matrix ownership, mask points, jaw apertures,
+ * and MLC positioning from the source into this object. The source object's rotation pointer
+ * is set to `nullptr` to relinquish ownership and prevent double deletion; the source is left
+ * in a valid but unspecified state.
+ *
+ * @param cp Source ControlPoint to move from.
  */
 ControlPoint::ControlPoint(ControlPoint&& cp):m_config(cp.m_config){
     m_scoring_types = cp.m_scoring_types;
@@ -461,7 +458,9 @@ void ControlPoint::SetRotation(double rotationInDegree) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the output directory path for simulation results, creating it if it does not exist.
+ * @brief Ensure the simulation output directory exists and return its path.
+ *
+ * Builds the path by joining the RunSvc `OutputDir` value with "sim" and creates the directory if it does not exist.
  *
  * @return std::string Path to the simulation output directory.
  */
@@ -474,12 +473,12 @@ std::string ControlPoint::GetOutputDir() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the base output file path for simulation results, ensuring the directory exists.
+ * @brief Constructs the base output file path for simulation results and ensures its directory exists.
  *
- * The returned path does not include a file extension and is constructed using the plan file name within the output directory.
- * The necessary directory structure is created if it does not already exist.
+ * The path is based on the current plan file's stem placed inside the run service output directory
+ * under a plan-specific subdirectory. The required directory structure is created if missing.
  *
- * @return std::string The base output file path for the current control point.
+ * @return std::string Base output file path without an extension (directory + filename stem).
  */
 std::string ControlPoint::GetOutputFileName() const {
     auto job = Service<RunSvc>()->GetJobNameLabel();
@@ -801,13 +800,15 @@ G4double ControlPoint::GetFieldScalingFactor(const G4ThreeVector& position) cons
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Calculates an angle-based scaling factor for a given position relative to the beam direction.
+ * @brief Compute an angle-dependent scaling factor for a 3D position relative to the beam line.
  *
- * Computes the perpendicular distance from the beam line at a specified rotation angle to the given position, then applies a modified sigmoid function to the angle to produce a scaling factor. Used for field scaling in radiation therapy simulations.
+ * The factor is the perpendicular distance from the beam line at the specified rotation
+ * multiplied by a modified sigmoid of the rotation angle, producing a value that grows
+ * with distance and is modulated by beam angle.
  *
  * @param angle Rotation angle in degrees.
- * @param position Position in 3D space for which the scaling factor is calculated.
- * @return G4double The computed angle scaling factor.
+ * @param position Position in world coordinates for which the scaling factor is computed.
+ * @return G4double Angle scaling factor: perpendicular distance to the beam line multiplied by a modified sigmoid of the rotation angle.
  */
 G4double ControlPoint::GetAngleScalingFactor(G4double angle, const G4ThreeVector& position) const {
     if (angle==180) // Edge case, not to divide by 0
@@ -935,9 +936,9 @@ void ControlPoint::RegisterRunHCollection(const G4String& run_collection_name, c
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the names of all registered run collections.
+ * @brief Retrieve the names of all registered run collections.
  *
- * @return Vector of run collection names.
+ * @return Vector of registered run collection names.
  */
 std::vector<G4String> ControlPoint::GetRunCollectionNames() {
     std::vector<G4String> run_collection_names;
@@ -950,11 +951,12 @@ std::vector<G4String> ControlPoint::GetRunCollectionNames() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the set of all unique hit collection names registered across all run collections.
+ * @brief Collects all unique hit collection names registered across run collections.
  *
- * The set is cached after the first call for efficiency.
+ * The result is computed once and cached for subsequent calls to avoid repeated iteration
+ * over the registered run collections.
  *
- * @return Set of unique hit collection names.
+ * @return A set containing every unique hit collection name present in the registered run collections.
  */
 std::set<G4String> ControlPoint::GetHitCollectionNames() {
     static std::set<G4String> hit_collection_names;
@@ -988,14 +990,14 @@ VMlc* ControlPoint::MLC() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Return the MLC leaf positions for the requested side.
+ * @brief Get MLC leaf positions for the specified side.
  *
  * Returns a reference to the internal leaf-positioning vector for side "Y1" or "Y2".
  *
  * @param side Which MLC side to retrieve ("Y1" or "Y2").
- * @return const std::vector<double>& Reference to the leaf-position vector for the given side.
+ * @return const std::vector<double>& Reference to the internal leaf-position vector for the given side.
  *
- * @note If an unknown side is provided, the function logs an error and terminates the process (calls exit(EXIT_FAILURE)).
+ * @note If an unknown side is provided the function logs an error and terminates the process with exit(EXIT_FAILURE).
  */
 const std::vector<double>& ControlPoint::GetMlcPositioning(const std::string& side) const {
     auto dicomSvc = DicomSvc::GetInstance();
@@ -1014,13 +1016,12 @@ const std::vector<double>& ControlPoint::GetMlcPositioning(const std::string& si
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the jaw aperture size for the specified side.
+ * @brief Get the aperture value for a specified jaw side.
  *
- * Retrieves the aperture value for one of the jaws ("X1", "X2", "Y1", or "Y2") of the radiation field.
- * Exits the program if an unknown side is provided.
+ * @param side The jaw side identifier: "X1", "X2", "Y1", or "Y2".
+ * @return double Aperture size for the specified jaw side.
  *
- * @param side The jaw side ("X1", "X2", "Y1", or "Y2").
- * @return double The aperture size for the specified jaw side.
+ * @note The process will terminate if an unknown side is provided.
  */
 double ControlPoint::GetJawAperture(const std::string& side) const{
     if(side=="X1"){
@@ -1041,7 +1042,6 @@ double ControlPoint::GetJawAperture(const std::string& side) const{
     }
     return 0.; // never reached, prevent warning
 }
-
 
 
 

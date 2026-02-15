@@ -46,9 +46,9 @@ class PrimaryParticleInfo : public G4VUserPrimaryParticleInformation {
     void FillInfo(G4PrimaryParticle* pparticle);
 
     /**
- * @brief Returns the stored initial total energy of the primary particle.
+ * @brief Retrieve the primary particle's initial total energy.
  *
- * @return The initial total energy value.
+ * @return Initial total energy of the primary particle.
  */
     G4double GetInitialTotalEnergy() const { return m_initial_total_energy; }
 };

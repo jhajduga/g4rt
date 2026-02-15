@@ -134,9 +134,9 @@ RunSvc &operator=(RunSvc &&) = delete;
   void SetNofThreads(int val);
 
   /**
- * @brief Returns the list of Geant4 macro (.mac) files to be processed for the simulation run.
+ * @brief Get the list of Geant4 macro files configured for the current run.
  *
- * @return Reference to a vector containing the paths of macro files.
+ * @return A const reference to the vector of macro file paths.
  */
   inline const std::vector<G4String> &GetMacFiles() const { return m_macFiles; }
 
@@ -172,24 +172,24 @@ RunSvc &operator=(RunSvc &&) = delete;
   void LoadSimulationPlan();
 
   /**
- * @brief Returns the pointer to the Geant4 run manager.
+ * @brief Access the Geant4 run manager used by the service.
  *
- * @return G4RunManager* Pointer to the current Geant4 run manager instance managed by the service.
+ * @return G4RunManager* Pointer to the current Geant4 run manager, or `nullptr` if it has not been initialized.
  */
   G4RunManager* G4RunManagerPtr() const { return m_g4RunManager; }
 
 
   /**
- * @brief Returns the list of defined control points for the simulation run.
+ * @brief Access the list of control points defined for the simulation run.
  *
- * @return Reference to a vector containing all control points.
+ * @return const std::vector<ControlPoint>& Const reference to the vector of defined control points.
  */
 const std::vector<ControlPoint>& GetControlPoints() const { return m_control_points; }
 
   /**
- * @brief Returns the current control point in the simulation.
+ * @brief Get the current control point for the run.
  *
- * @return Pointer to the current ControlPoint, or nullptr if not set.
+ * @return ControlPoint* Pointer to the current control point, or `nullptr` if no control point is set.
  */
   ControlPoint* CurrentControlPoint() const { return m_current_control_point; }
 
@@ -218,17 +218,17 @@ const std::vector<ControlPoint>& GetControlPoints() const { return m_control_poi
   void WriteGeometryData() const;
 
   /**
- * @brief Returns the set of enabled scoring types for the simulation.
+ * @brief Get the set of enabled scoring types for the simulation.
  *
- * @return Reference to the set of scoring types currently configured.
+ * @return const reference to the set of enabled scoring types.
  */
   const std::set<Scoring::Type>& GetScoringTypes() const { return m_scoring_types; }
   /**
- * @brief Returns a reference to the set of enabled scoring types for the simulation.
+ * @brief Accesses the set of enabled scoring types for the simulation.
  *
- * Allows modification of the scoring types used during the simulation run.
+ * Provides a mutable reference allowing inspection or modification of which scoring types are active for the run.
  *
- * @return Reference to the set of scoring types.
+ * @return std::set<Scoring::Type>& Reference to the mutable set of enabled scoring types.
  */
 std::set<Scoring::Type>& GetScoringTypes() { return m_scoring_types; }
 };

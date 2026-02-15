@@ -13,9 +13,10 @@
 
 /////////////////////////////////////////////////////////////////////////////
 /**
-     * @brief Constructs an EventAction object and initializes the progress print frequency.
+     * @brief Construct an EventAction and initialize the progress print frequency.
      *
-     * Retrieves the "PrintProgressFrequency" value from the configuration service to determine how often event progress is reported.
+     * Initializes the member `printProgress` by reading the "PrintProgressFrequency" key
+     * from the "RunSvc" section of the ConfigSvc.
      */
 EventAction::EventAction()
     : printProgress(Service<ConfigSvc>()->GetValue<double>("RunSvc", "PrintProgressFrequency")) {}

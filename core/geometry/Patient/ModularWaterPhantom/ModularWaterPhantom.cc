@@ -17,11 +17,11 @@ ModularWaterPhantom::ModularWaterPhantom():IPhysicalVolume("ModularWaterPhantom"
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the singleton instance of the ModularWaterPhantom class.
+ * @brief Accesses the unique ModularWaterPhantom singleton.
  *
- * Ensures that only one instance of ModularWaterPhantom exists throughout the application.
+ * The singleton instance is created on first use and remains valid for the program lifetime.
  *
- * @return Pointer to the singleton ModularWaterPhantom instance.
+ * @return Pointer to the unique ModularWaterPhantom instance.
  */
 ModularWaterPhantom* ModularWaterPhantom::GetInstance() {
   static ModularWaterPhantom instance;

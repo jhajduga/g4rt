@@ -70,9 +70,9 @@ D3DCell::D3DCell(const G4String& label, const G4ThreeVector& centre, G4String ce
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Destructor for the D3DCell class.
+ * @brief Release geometry and step-limit resources associated with this cell.
  *
- * Cleans up resources by destroying the associated physical volume and deleting the step limit if allocated.
+ * Destroys the placed physical volume (if any) and deletes the step limit object when allocated.
  */
 D3DCell::~D3DCell() {
   Destroy();
@@ -100,14 +100,12 @@ void D3DCell::WriteInfo() { INFO_GEO("The Dose3D cell {} info: Implement me.", G
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Destroy the cell's placed physical volume.
+ * @brief Release and clear the cell's placed physical volume.
  *
- * If a physical volume has been created for this D3DCell, delete it and clear
- * the internal physical-volume pointer so the cell no longer references the volume.
+ * If a physical volume exists for this D3DCell, it is deleted and the internal
+ * pointer to the physical volume is cleared so the cell no longer references it.
  *
- * Side effects:
- * - Deletes the G4VPhysicalVolume returned by GetPhysicalVolume() if non-null.
- * - Calls SetPhysicalVolume(nullptr) to clear the stored pointer.
+ * @note This deletes the G4VPhysicalVolume returned by GetPhysicalVolume() when present.
  */
 void D3DCell::Destroy() {
   INFO_GEO("Destroing the D3DCell volume.");
@@ -145,13 +143,13 @@ void D3DCell::SetNVoxels(char axis, int nv) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Build and place the 3D dose cell inside the given parent physical volume.
+ * @brief Build and place the 3D dose cell into the specified parent physical volume.
  *
- * Constructs a G4Box and its G4LogicalVolume using the configured cell material, computes and applies the local placement
- * from the stored global centre, places a G4PVPlacement into parentWorld, creates a G4Region with 0.1 mm production
- * cuts and assigns it to the logical volume, and updates the cell's stored centre and volume.
+ * Creates the cell geometry and logical volume using the configured material, places the physical volume
+ * inside parentWorld at the cell's computed local position, assigns a G4Region with production cuts (0.1 mm)
+ * to the logical volume, and updates the stored cell centre and volume metrics.
  *
- * @param parentWorld The parent physical volume into which the cell PV will be placed.
+ * @param parentWorld Parent physical volume into which the cell's physical volume will be placed.
  */
 void D3DCell::Construct(G4VPhysicalVolume* parentWorld) {
   // std::cout << "[INFO]:: D3DCell construction... " << std::endl;
@@ -192,11 +190,11 @@ void D3DCell::Construct(G4VPhysicalVolume* parentWorld) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Placeholder update method for the D3DCell.
+ * @brief Update the D3DCell state.
  *
- * Always returns true. Intended for future extension to update cell state if needed.
+ * Currently a no-op placeholder retained for future state-update logic.
  *
- * @return G4bool Always true.
+ * @return G4bool `true` always.
  */
 G4bool D3DCell::Update() { return true; }
 

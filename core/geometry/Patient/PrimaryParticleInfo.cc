@@ -9,9 +9,9 @@ G4ThreadLocal G4Allocator<PrimaryParticleInfo>* aPrimaryParticleInfoAllocator = 
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Placeholder for printing primary particle information.
+ * @brief Print primary particle information.
  *
- * Currently, this function does not perform any action.
+ * @note This function is currently a no-op (placeholder) and does not produce output.
  */
 void PrimaryParticleInfo::Print() const { }
 
@@ -28,6 +28,5 @@ void PrimaryParticleInfo::Print() const { }
 void PrimaryParticleInfo::FillInfo(G4PrimaryParticle* pparticle){
     m_initial_total_energy = pparticle->GetTotalEnergy() / keV;
 }
-
 
 

@@ -27,9 +27,9 @@ class StepAnalysis {
   StepAnalysis() = default;
 
   /**
- * @brief Destroys the StepAnalysis instance.
+ * @brief Destroy the StepAnalysis singleton.
  *
- * As a singleton, destruction is managed automatically and should not be invoked directly.
+ * Private destructor used to clean up the singleton instance during program teardown.
  */
   ~StepAnalysis() = default;
 

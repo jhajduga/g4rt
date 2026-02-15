@@ -32,9 +32,10 @@ class VMlc: public RunComponet {
 VMlc() = delete;
         explicit VMlc(const std::string& name);
         /**
- * @brief Virtual destructor for the VMlc class.
+ * @brief Virtual destructor to allow proper cleanup of derived VMlc instances.
  *
- * Ensures proper cleanup of resources in derived multi-leaf collimator classes.
+ * Ensures that when a VMlc pointer to a derived object is deleted, the derived
+ * class destructor is invoked so resources owned by the derived class are released.
  */
 virtual ~VMlc() = default;
         virtual bool IsInField(const G4ThreeVector& position, bool transformToIsocentre=false) = 0;

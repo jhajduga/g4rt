@@ -59,16 +59,17 @@ IbaImRT &operator=(IbaImRT &&) = delete;
         void Destroy() override {}
 
         /**
- * @brief Indicates that the IbaImRT volume is always up to date.
+ * @brief Reports that the IbaImRT volume is up to date.
  *
- * @return G4bool Always returns true.
+ * @return `true` indicating the volume is up to date.
  */
         G4bool Update() override { return true; }
 
         /**
- * @brief Resets the state of the IbaImRT volume.
+ * @brief Reset the IbaImRT volume to its default state.
  *
- * This implementation performs no action.
+ * @note This implementation performs no operation; lifecycle and state are
+ * managed externally by the singleton instance.
  */
         void Reset() override {}
 

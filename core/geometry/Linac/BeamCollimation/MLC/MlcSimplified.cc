@@ -16,9 +16,11 @@ MlcSimplified::MlcSimplified() : VMlc("Simplified"){
 };
 
 /**
- * @brief Configures the simplified MLC geometry for a given control point.
+ * @brief Configure MLC geometry for the specified control point.
  *
- * Initializes the MLC's internal state based on the provided control point, including field shape, field size parameters, and leaf positions. For rectangular and ellipsoidal fields, sets the field dimensions. For RTPlan or CustomPlan shapes, constructs the polygonal MLC aperture from leaf positions and transforms coordinates to the isocentre plane if the plan is a DICOM RT Plan. Marks the MLC as initialized for subsequent field membership queries.
+ * Updates internal MLC state to match the provided control point: stores the control point ID and field shape, sets rectangular or ellipsoidal field dimensions when applicable, constructs a polygonal aperture and leaf X positioning for RTPlan/CustomPlan shapes, optionally transforms polygon corners to the isocentre plane for DICOM RT plans, and marks the MLC as initialized for subsequent containment queries.
+ *
+ * @param control_point Pointer to the control point whose geometry and leaf positioning will be applied.
  */
 void MlcSimplified::SetRunConfiguration(const ControlPoint* control_point){
     INFO_GEO("Initializing MLC Simplified for position {} and control point {}", m_isocentre, control_point->Id());

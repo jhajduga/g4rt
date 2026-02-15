@@ -25,9 +25,13 @@ WorldConstruction::WorldConstruction()
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Destructor for the WorldConstruction class.
+ * @brief Clean up a WorldConstruction instance.
  *
- * Unregisters the configuration service for this instance and deletes the beam monitoring object.
+ * Unregisters this instance from the configuration service and releases the beam
+ * monitoring object owned by the instance.
+ *
+ * @note The top-level world physical volume is not deleted here; its lifetime is
+ * managed by the Geant4 geometry manager (G4RunManager).
  */
 WorldConstruction::~WorldConstruction() {
   configSvc()->Unregister(thisConfig()->GetName());
@@ -204,9 +208,9 @@ void WorldConstruction::Destroy() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the current physical volume representing the simulation world.
+ * @brief Get the current physical volume representing the simulation world.
  *
- * @return Pointer to the world physical volume.
+ * @return G4VPhysicalVolume* Pointer to the world physical volume, or `nullptr` if no world has been created.
  */
 G4VPhysicalVolume* WorldConstruction::Construct() { return GetPhysicalVolume(); }
 
@@ -326,21 +330,21 @@ void WorldConstruction::ConstructSDandField() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Updates the world geometry state.
+ * @brief No-op update that leaves the world geometry unchanged.
  *
- * This implementation performs no action and always returns true.
+ * Present for interface compatibility; performs no modifications.
  *
- * @return G4bool Always returns true.
+ * @return G4bool `true` indicating the update succeeded.
  */
 G4bool WorldConstruction::Update() { return true; } // override
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Updates the world geometry for a specific run.
+ * @brief Update world submodules for a specific run.
  *
- * Updates the phantom environment geometry if it exists. Returns `false` if the update fails; otherwise, returns `true`.
+ * Attempts to update the phantom environment (if present) for the provided run identifier.
  *
- * @param runId The identifier for the current run.
+ * @param runId Identifier of the current run.
  * @return G4bool `true` if the update succeeds, `false` otherwise.
  */
 G4bool WorldConstruction::Update(int runId) {
@@ -418,11 +422,11 @@ void WorldConstruction::checkVolumeOverlap() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Indicates whether a new geometry has been created.
+ * @brief Reports whether a new geometry was created since the last update.
  *
- * Currently unimplemented; always returns false.
+ * Currently unimplemented; this function always reports no new geometry.
  *
- * @return false Always returns false as new geometry creation is not implemented.
+ * @return `true` if new geometry was created, `false` otherwise (currently always `false`).
  */
 bool WorldConstruction::newGeometry() {
   G4cout << "[ERROR] :: WorldConstruction::newGeometry::Implement me." << G4endl;
@@ -484,9 +488,10 @@ std::string WorldConstruction::ExportToGDML(const std::string& path, const std::
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Writes informational output for the gantry and phantom environments if they exist.
+ * @brief Emit informational output for the active gantry and phantom environments.
  *
- * Calls the `WriteInfo()` method on the gantry and phantom geometry modules to output their configuration or status details.
+ * If the gantry or phantom environment modules are present, their `WriteInfo()` methods
+ * are invoked to produce configuration or status information.
  */
 void WorldConstruction::WriteInfo(){
   if(m_gantryEnv) m_gantryEnv->WriteInfo();

@@ -80,11 +80,10 @@ class MlcHd120 :  public IPhysicalVolume, public VMlc {
     void WriteInfo() override;
 
     /**
-     * @brief Always returns true, indicating any position is considered within the MLC field.
+     * @brief Report whether a position lies within the MLC field.
      *
-     * @param position The position to check.
-     * @param transformToIsocentre Ignored parameter; does not affect the result.
-     * @return true Always returns true.
+     * @param transformToIsocentre Ignored; this implementation treats all positions as inside the field regardless of transformation.
+     * @return `true` indicating the position is considered inside the MLC field.
      */
     bool IsInField(const G4ThreeVector& position, bool transformToIsocentre) override {
       return true;

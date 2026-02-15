@@ -18,13 +18,12 @@ IbaImRT::IbaImRT():IPhysicalVolume("IbaImRT"){}
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the single global IbaImRT instance (Meyers singleton).
+ * @brief Access the global IbaImRT singleton instance.
  *
- * Creates and returns a pointer to a single static IbaImRT instance shared
- * across the application. The instance is constructed on first call and
- * has program-lifetime; the function is thread-safe under C++11 and later.
+ * Constructs the single IbaImRT on first use and returns a pointer to it.
+ * The instance has program lifetime; initialization is thread-safe on C++11 and later.
  *
- * @return IbaImRT* Pointer to the singleton IbaImRT instance.
+ * @return IbaImRT* Pointer to the global IbaImRT instance.
  */
 IbaImRT* IbaImRT::GetInstance() {
   static IbaImRT instance;
@@ -36,11 +35,11 @@ IbaImRT* IbaImRT::GetInstance() {
 G4ThreeVector IbaImRT::IbaToLocalTranslation(0.0, 0.0, 0.0);
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Constructs and places the IbaImRT phantom geometry within the provided parent physical volume.
+ * @brief Constructs and places the IbaImRT phantom geometry into the provided parent physical volume.
  *
- * Depending on the configuration parameter "PatientGeometry.EnviromentPatientEnvelop", this method either builds a box or composite phantom geometry using Geant4 solids and places it in the simulation, or delegates construction to the GeometryBuilder for "IbaImRT_3mf" geometries.
+ * Depending on the configuration key "PatientGeometry.EnviromentPatientEnvelop", this either delegates construction to the GeometryBuilder for "IbaImRT_3mf" or creates and places a PMMA phantom (simple box or composite box+tube shape) using Geant4 solids, applying the configured rotation and position.
  *
- * @param parentPV The parent Geant4 physical volume in which the phantom geometry will be placed.
+ * @param parentPV Parent Geant4 physical volume into which the phantom will be placed.
  */
 void IbaImRT::Construct(G4VPhysicalVolume *parentPV) {
   

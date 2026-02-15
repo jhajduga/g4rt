@@ -11,16 +11,13 @@
 /**
  * @brief Program entry point for the Geant-RT simulation application.
  *
- * Initializes runtime environment (POSIX locale), embedded Python, logging, and core
- * services. Parses command-line options to configure operational mode, geometry export
- * formats, threading, event count, TOML configuration, output directory, and log level.
- * Loads configuration when a TOML file is provided, runs the World/Run services workflow,
- * finalizes services and shuts down logging before exiting.
+ * Initializes the runtime environment, parses command-line options to configure
+ * application mode and I/O (including optional TOML config), runs the World/Run
+ * workflow, and performs orderly shutdown of services and logging.
  *
  * @param argc Number of command-line arguments.
- * @param argv Command-line argument strings.
- * @return int Exit status code (returns EXIT_SUCCESS on normal termination; may exit
- * early after printing help/version or on option parsing errors).
+ * @param argv Array of command-line argument strings.
+ * @return int `EXIT_SUCCESS` on normal termination; non-zero on error or early exit (e.g., help/version or option parsing failures).
  */
 int main(int argc, const char *argv[]) {
   // Force POSIX "C" locale to ensure consistent scientific notation (e.g., 1.23e-12).

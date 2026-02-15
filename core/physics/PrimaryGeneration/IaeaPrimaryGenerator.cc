@@ -55,9 +55,9 @@ IaeaPrimaryGenerator::IaeaPrimaryGenerator(const G4String& fileName) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Generates a primary vertex for the given event using the IAEA phase-space reader.
+ * @brief Adds a primary vertex to the provided Geant4 event from the configured IAEA phase-space.
  *
- * Delegates the creation of the primary vertex to the shared `G4IAEAphspReader` instance for the specified Geant4 event.
+ * @param evt Geant4 event that will receive the generated primary vertex.
  */
 void IaeaPrimaryGenerator::GeneratePrimaryVertex(G4Event *evt) {
   // the actual generation is defined in G4IAEAphspReader, so it's being delegated:
@@ -66,13 +66,12 @@ void IaeaPrimaryGenerator::GeneratePrimaryVertex(G4Event *evt) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Retrieve all primary vertices for the given Geant4 event from the shared IAEA phase-space reader.
+ * @brief Retrieve the primary-vertex list produced for a Geant4 event by the shared IAEA phase-space reader.
  *
- * The function queries the shared phase-space reader using the event's ID and returns the
- * vector of G4PrimaryVertex pointers produced for that event.
+ * Queries the shared phase-space reader using the event's ID and returns the resulting vector of primary vertices.
  *
- * @param evt Geant4 event whose primary-vertex vector will be retrieved (must be non-null).
- * @return std::vector<G4PrimaryVertex*> Vector of primary vertices for the event; may be empty if the reader produces none.
+ * @param evt Geant4 event whose primary vertices will be retrieved (must not be null).
+ * @return std::vector<G4PrimaryVertex*> Vector of primary vertices for the event; may be empty if none were produced.
  */
 std::vector<G4PrimaryVertex*> IaeaPrimaryGenerator::GeneratePrimaryVertexVector(G4Event *evt) {
   return m_iaeaFileReader->ReadThisEventPrimaryVertexVector(evt->GetEventID());

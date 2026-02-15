@@ -16,13 +16,12 @@ WaterPhantomSD::WaterPhantomSD(const G4String& sdName):VPatientSD(sdName){}
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
-   * @brief Construct a WaterPhantom sensitive detector at a given center.
+   * @brief Create a WaterPhantom sensitive detector positioned at the given center.
    *
-   * Delegates construction to VPatientSD(sdName, centre) and initializes
-   * the internal voxel coordinate IDs (m_id_x, m_id_y, m_id_z) to zero.
+   * Initializes the detector and resets internal voxel coordinate IDs to zero.
    *
-   * @param sdName Sensitive detector name.
-   * @param centre Detector center position in world coordinates.
+   * @param sdName Name of the sensitive detector.
+   * @param centre Center position of the detector in world coordinates.
    */
 WaterPhantomSD::WaterPhantomSD(const G4String& sdName, const G4ThreeVector& centre)
   : VPatientSD(sdName,centre){

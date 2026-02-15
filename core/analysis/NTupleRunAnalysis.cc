@@ -5,11 +5,11 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the singleton instance of NTupleRunAnalysis.
+ * @brief Accesses the singleton NTupleRunAnalysis instance.
  *
- * Ensures that only one instance of NTupleRunAnalysis exists throughout the application.
+ * Ensures a single, function-local NTupleRunAnalysis object is used for the process lifetime.
  *
- * @return Pointer to the singleton NTupleRunAnalysis instance.
+ * @return NTupleRunAnalysis* Pointer to the singleton NTupleRunAnalysis instance.
  */
 NTupleRunAnalysis *NTupleRunAnalysis::GetInstance() {
     static NTupleRunAnalysis instance = NTupleRunAnalysis();
@@ -102,5 +102,4 @@ void NTupleRunAnalysis::WriteDoseToTFile(const G4Run* runPtr){
     file->Close();
     ANA_INFO("Writing Dose Volume Data to TFile {} - done!",file->GetName());
 }
-
 

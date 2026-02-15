@@ -145,10 +145,12 @@ void D3DDetector::ParseTomlConfig() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Loads default parameter values for the 3D detector configuration.
+ * @brief Apply default detector configuration parameters.
  *
- * Sets default translation, cell counts, voxelization per cell, and medium type.
- * @return `true` after successfully setting default parameters.
+ * Sets detector translation to the origin, cell grid to 4x4x4, per-cell voxelization to 4x4x4,
+ * and default cell material to "PMMA".
+ *
+ * @return `true` indicating default parameters were applied.
  */
 G4bool D3DDetector::LoadDefaultParameterization() {
   m_config.m_translation_in_local_frame = G4ThreeVector(0.0, 0.0, 0.0);
@@ -267,11 +269,11 @@ void D3DDetector::Construct(G4VPhysicalVolume* parentWorld) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Updates the detector state.
+ * @brief Performs a detector state update cycle.
  *
- * Currently a placeholder that always returns true.
+ * Executes pending state updates required between simulation steps.
  *
- * @return G4bool Always returns true.
+ * @return `true` if the update completed successfully, `false` otherwise.
  */
 G4bool D3DDetector::Update() {
   // TODO implement me.
@@ -593,21 +595,20 @@ bool D3DDetector::IsAnyCellVoxelised(const G4String& run_collection) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Determine which source will provide detector cell geometry.
+ * @brief Select the detector geometry construction mode from available inputs.
  *
- * Evaluates available inputs (geometry database, configured STL filepath, and
- * CSV positioning filepath) and selects the construction mode. Side effects:
- * - If GeometryDB data is present, no further positioning is computed.
- * - If STL is "None", a regular grid is computed via ComputeRegularCellPositioning().
- * - If a positioning CSV is supplied, positions are loaded via ReadCellsPositioning().
- * - If an STL file is provided but no CSV positioning is supplied, an error is logged.
+ * Chooses how cell geometry will be provided by inspecting GeometryDB, the
+ * configured STL filepath, and the CSV positioning filepath. Side effects:
+ * - May call ComputeRegularCellPositioning() to generate a regular grid.
+ * - May call ReadCellsPositioning() to load positions from CSV.
+ * - May emit an error and return an empty string if an STL is provided without CSV positioning.
  *
  * @return std::string One of:
- * - "GeometryDB"                       — use GeometryDB-provided positioning,
- * - "Standard"                         — compute a regular grid (no STL),
- * - "PositioningFromCsv"               — use CSV positioning without STL,
- * - "StlDetectorWithPositioningFromCsv"— use STL mesh with CSV positioning,
- * - "" (empty string)                  — error (e.g., STL provided but no CSV).
+ * - "GeometryDB"                        — use GeometryDB-provided positioning,
+ * - "Standard"                          — compute a regular grid (no STL),
+ * - "PositioningFromCsv"                — use CSV positioning without STL,
+ * - "StlDetectorWithPositioningFromCsv" — use STL mesh with CSV positioning,
+ * - "" (empty string)                   — error condition (e.g., STL provided but no CSV).
  */
 std::string D3DDetector::SetGeometrySource() {
   auto geo_type = "";

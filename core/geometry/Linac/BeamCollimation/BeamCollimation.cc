@@ -43,13 +43,11 @@ BeamCollimation::~BeamCollimation() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the singleton (Meyers) instance of BeamCollimation.
+ * @brief Provides access to the process-wide BeamCollimation singleton.
  *
- * The instance is created on first call and the local static ensures
- * safe initialization in C++11 and later. Use this to obtain the single
- * global BeamCollimation object for the process.
+ * The instance is constructed on first use (Meyers' singleton) and persists for the lifetime of the process.
  *
- * @return BeamCollimation* Pointer to the singleton instance.
+ * @return BeamCollimation* Pointer to the single BeamCollimation instance.
  */
 BeamCollimation *BeamCollimation::GetInstance() {
   static BeamCollimation instance;
@@ -113,9 +111,9 @@ void BeamCollimation::Construct(G4VPhysicalVolume *parentWorld) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Resets the state of the BeamCollimation component.
+ * @brief Reset internal state and geometry of the BeamCollimation component.
  *
- * This method is a placeholder for logic to reset internal state or geometry of the beam collimation system.
+ * Currently a no-op placeholder; intended to clear runtime state and release or rebuild jaw/MLC geometry when implemented.
  */
 void BeamCollimation::Reset() {
   // TODO

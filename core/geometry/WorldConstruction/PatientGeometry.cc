@@ -49,9 +49,7 @@ PatientGeometry::~PatientGeometry() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the singleton instance of the PatientGeometry class.
- *
- * Ensures that only one instance of PatientGeometry exists throughout the application.
+ * @brief Provide access to the single shared PatientGeometry instance.
  *
  * @return Pointer to the singleton PatientGeometry instance.
  */

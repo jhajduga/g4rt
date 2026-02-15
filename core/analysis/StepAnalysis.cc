@@ -17,9 +17,7 @@
 #include "G4VProcess.hh"
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Returns the singleton instance of the StepAnalysis class.
- *
- * Ensures only one StepAnalysis object exists throughout the application.
+ * @brief Provides access to the global StepAnalysis singleton.
  *
  * @return Pointer to the singleton StepAnalysis instance.
  */
@@ -31,13 +29,13 @@ StepAnalysis *StepAnalysis::GetInstance() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Initialize the analysis manager and book ntuples for per-step hit and track data.
+ * @brief Initialize the analysis manager and book ntuples for per-event hits and per-step tracks.
  *
  * Creates and configures two ntuples used during the run:
- * - "HitsEventTree": per-event hit summary (nHits, EDeposit) and per-hit arrays (HitX, HitY, HitZ, HitEDeposit, HitProcessId).
- * - "TracksEventTree": per-step track arrays (HitTrkE, HitTrkX, HitTrkY, HitTrkZ, HitTrkTheta, HitTrkId, HitTrkTypeId, HitTrkCrProcessId).
+ * - "HitsEventTree": per-event hit summary (columns: `nHits`, `EDeposit`) and per-hit arrays (`HitX`, `HitY`, `HitZ`, `HitEDeposit`, `HitProcessId`).
+ * - "TracksEventTree": per-step track arrays (`HitTrkE`, `HitTrkX`, `HitTrkY`, `HitTrkZ`, `HitTrkTheta`, `HitTrkId`, `HitTrkTypeId`, `HitTrkCrProcessId`).
  *
- * @param runPtr Pointer to the current G4Run (unused in this implementation).
+ * @param runPtr Pointer to the current G4Run (unused).
  * @param isMaster True when invoked for the master thread/process.
  */
 void StepAnalysis::BeginOfRun(const G4Run* runPtr, G4bool isMaster){
@@ -270,14 +268,11 @@ void StepAnalysis::ClearEventData(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
- * @brief Process a Geant4 step and record its hit and associated track data.
+ * @brief Record hit and track observables from a Geant4 step into per-event buffers.
  *
- * Delegates processing to FillHit and FillTrack to extract per-step hit information
- * and the corresponding track information, appending both to the analysis' per-event
- * buffers (ntuples/containers). This function updates internal event state and does
- * not itself write rows to the output ntuples (that occurs at event commit).
+ * Extracts per-step hit and associated track data and appends them to the analysis' in-memory event buffers; does not commit rows to output ntuples.
  *
- * @param aStep Pointer to the Geant4 step to process; must be non-null.
+ * @param aStep Pointer to the Geant4 step to process; must not be null.
  */
 void StepAnalysis::FillStep(G4Step* aStep){
   FillHit(aStep);

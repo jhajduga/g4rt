@@ -6,9 +6,12 @@
 G4ThreeVector VMlc::m_isocentre = G4ThreeVector();
 
 /**
- * @brief Constructs a VMlc instance and initializes the isocentre position.
+ * @brief Construct a VMlc and initialize its isocentre from configuration.
  *
- * Retrieves the isocentre vector from the configuration service and registers the instance with the run service.
+ * Initializes the static isocentre from the WorldConstruction.Isocentre configuration
+ * and registers this VMlc instance with the run service.
+ *
+ * @param name Identifier for this VMlc instance.
  */
 VMlc::VMlc(const std::string& name){
     m_isocentre = Service<ConfigSvc>()->GetValue<G4ThreeVector>("WorldConstruction", "Isocentre");
@@ -140,13 +143,12 @@ G4ThreeVector VMlc::GetMaskCentre() const{
 
 
 /**
- * @brief Get 3D positions of MLC leaves for the specified side.
+ * @brief Compute 3D positions of MLC leaves for the given side.
  *
- * Projects stored leaf X positions and the per-side Y positions from the current control point into 3D coordinates at the MLC Z plane.
- * The Y values are negated to match the simulation's orientation.
- * If the internal X positions are uninitialized or the counts of X and Y positions differ, an empty vector is returned.
+ * Projects stored X leaf positions and the control-point Y positions for the specified side onto the MLC Z plane and returns one 3D point per leaf.
+ * The Y values are negated to match the simulation's orientation. If X positions are uninitialized or the counts of X and Y positions differ, an empty vector is returned.
  *
- * @param side Side identifier — expected "Y1" or "Y2".
+ * @param side Side identifier, expected "Y1" or "Y2".
  * @return std::vector<G4ThreeVector> 3D positions for each leaf, or an empty vector if data is unavailable or mismatched.
  */
 std::vector<G4ThreeVector> VMlc::GetMlcPositioning(const std::string& side) const{
@@ -186,6 +188,5 @@ G4double VMlc::GetMlcZPosition() {
     auto sid = Service<ConfigSvc>()->GetValue<G4double>("LinacGeometry", "SID");
     return isocentre.z() - sid + 373.75; 
 }
-
 
 

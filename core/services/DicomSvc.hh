@@ -104,7 +104,12 @@ class DicomSvc {
  * @brief Deleted copy constructor to prevent copying of the DicomSvc singleton.
  */
     DicomSvc(const DicomSvc &) = delete;
-    DicomSvc &operator=(const DicomSvc &) = delete;
+    /**
+ * @brief Disable copy assignment to enforce singleton semantics.
+ *
+ * @return DicomSvc& Copy assignment operator is deleted; copying is not permitted.
+ */
+DicomSvc &operator=(const DicomSvc &) = delete;
     /**
  * @brief Move constructor is deleted to enforce singleton pattern.
  *
@@ -142,9 +147,9 @@ DicomSvc &operator=(DicomSvc &&) = delete;
     bool Initialized() const { return m_plan.get() ? true : false; }
 
     /**
-     * @brief Returns a pointer to the current plan interface.
+     * @brief Retrieve the active plan implementation.
      *
-     * @return IPlan* Pointer to the active plan implementation, or nullptr if not initialized.
+     * @return IPlan* Pointer to the active plan implementation; `nullptr` if no plan is set.
      */
     IPlan* GetPlan() const {
       return m_plan.get();
